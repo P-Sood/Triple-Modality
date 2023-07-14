@@ -1,8 +1,4 @@
-# BUGGY-CODE
-
-# Multi-Modal HateFul Meme Identification using Multi-Task Learning
-
-This repository covers the code for the Multi-Modal HateFul Meme 
+# The Three Musketeers: Audio, Text, and Video
 
 # Data
 
