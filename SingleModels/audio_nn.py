@@ -23,25 +23,27 @@ from torch.utils.data import DataLoader
 from torch.utils.data.distributed import DistributedSampler
 
 class BatchCollation:
-    def __init__(self,  check  ) -> None:
-        self.check = check
+    def __init__(self,  must  ) -> None:
+        self.must = must
     
     def __call__(self, batch):
-        return collate_batch(batch , self.check)
+        return collate_batch(batch , self.must)
 
 
-def prepare_dataloader(df , batch_size, label_task , epoch_switch , pin_memory=True, num_workers=4 , check = "train" , accum = False):
+def prepare_dataloader(df , dataset , batch_size, label_task , epoch_switch , pin_memory=True, num_workers=4 , check = "train" , accum = False):
     """
     we load in our dataset, and we just make a random distributed sampler to evenly partition our 
     dataset on each GPU
     say we have 32 data points, if batch size = 8 then it will make 4 dataloaders of size 8 each 
     """
-    num_workers = 64
+    num_workers = 8
+    must = True if "must" in str(dataset).lower() else False
     if accum:
         batch_size = 1
-        dataset = Wav2VecAudioDataset(df , batch_size, feature_col="audio_path" , label_col=label_task)
+        # df , dataset , batch_size , feature_col , label_col , accum = False , check = "test"
+        dataset = Wav2VecAudioDataset(df, dataset , batch_size, feature_col="audio_path" , label_col=label_task , accum=accum , check=check)
     else:
-        dataset = Wav2VecAudioDataset(df , batch_size, feature_col="audio_path" , label_col=label_task)
+        dataset = Wav2VecAudioDataset(df, dataset , batch_size, feature_col="audio_path" , label_col=label_task , accum=accum , check=check)
 
     if check == "train":
         labels = df[label_task].value_counts()
@@ -57,12 +59,12 @@ def prepare_dataloader(df , batch_size, label_task , epoch_switch , pin_memory=T
 
         dataloader = DataLoader(dataset, batch_size=batch_size, pin_memory=pin_memory, 
                 num_workers=num_workers ,drop_last=False, shuffle=False, sampler = sampler,
-                collate_fn=BatchCollation(check),
+                collate_fn=BatchCollation(must),
                 )
     else:
         dataloader = DataLoader(dataset, batch_size=batch_size, pin_memory=pin_memory, 
                 num_workers=num_workers ,drop_last=False, shuffle=False,
-                collate_fn=BatchCollation(check),
+                collate_fn=BatchCollation(must),
                 )
 
     return dataloader
@@ -90,6 +92,7 @@ def runModel( accelerator, df_train , df_val, df_test  ,param_dict , model_param
     epoch_switch = param_dict['epoch_switch']
 
     num_labels = model_param['output_dim']
+    dataset = model_param['dataset']
     
     if loss == "CrossEntropy":
         criterion = torch.nn.CrossEntropyLoss().to(device)
@@ -100,10 +103,10 @@ def runModel( accelerator, df_train , df_val, df_test  ,param_dict , model_param
 
     print(loss , flush = True)
     Metric = Metrics(num_classes = num_labels, id2label = id2label , rank = device)
-    df_train_accum = prepare_dataloader( df_train,  1 ,  label_task , epoch_switch , check = "train" , accum = True)
-    df_train_no_accum = prepare_dataloader(df_train,  batch_size ,  label_task , epoch_switch , check = "train" , accum = False)
-    df_val = prepare_dataloader(df_val,  batch_size ,  label_task , epoch_switch , check = "val")
-    df_test = prepare_dataloader(df_test ,  batch_size,  label_task , epoch_switch , check = "test")
+    df_train_accum = prepare_dataloader(df_train , dataset,  1 ,  label_task , epoch_switch , check = "train" , accum = True)
+    df_train_no_accum = prepare_dataloader(df_train , dataset,  batch_size ,  label_task , epoch_switch , check = "train" , accum = False)
+    df_val = prepare_dataloader(df_val , dataset,  batch_size ,  label_task , epoch_switch , check = "val")
+    df_test = prepare_dataloader(df_test , dataset ,  batch_size,  label_task , epoch_switch , check = "test")
     
     model = Wav2Vec2ForSpeechClassification(model_param).to(device)
 
@@ -134,7 +137,7 @@ def main():
         'patience': config.patience ,
         'lr': config.learning_rate,
         'clip': config.clip ,
-        'batch_size':config.batch_size ,
+        'batch_size':1,#config.batch_size ,
         'weight_decay':config.weight_decay ,
         'model':config.model,
         'T_max':config.T_max ,
@@ -177,6 +180,7 @@ def main():
         'early_div':config.early_div,
         'num_layers':config.num_layers,
         'learn_PosEmbeddings':config.learn_PosEmbeddings,
+        'dataset':config.dataset,
     }
     param_dict['weights'] = weights
     param_dict['label2id'] = label2id

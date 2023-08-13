@@ -19,14 +19,15 @@ def get_statistics(input , label , model , criterion , Metric , check="train" , 
     device = "cuda"
     audio_input_ids = input["audio_features"]
     audio_attention_mask = input["attention_mask"]
+    audio_context = input["audio_context"]
     del input
 
     
-    output = model( audio_input_ids.to(device) , check)  
+    output = model( audio_input_ids.to(device) , audio_context.to(device) , check)  
         
-    
     del audio_input_ids
     del audio_attention_mask
+    del audio_context
 
     label = label.type(torch.LongTensor).to(device)
     Metric.update_metrics(torch.argmax(output , dim = 1) , label.long())
@@ -41,18 +42,16 @@ def get_statistics_big_batch(input , label , model , criterion , Metric , check=
     batch_loss = None 
     device = "cuda"
     
+    audio_input_ids = input["audio_features"]
+    audio_attention_mask = input["attention_mask"]
+    audio_context = input["audio_context"]
+    del input
 
-    audio_features = input[1]
-    audio_input_ids = audio_features["audio_features"]
-    audio_attention_mask = audio_features["attention_mask"]
-    del audio_features
-
-   
-    output = checkpoint(model  , audio_input_ids.to(device), check , use_reentrant=False)  
-    
-   
+    output = checkpoint( model, audio_input_ids.to(device) , audio_context.to(device) , check)  
+        
     del audio_input_ids
     del audio_attention_mask
+    del audio_context
 
     label = label.type(torch.LongTensor).to(device)
     Metric.update_metrics(torch.argmax(output , dim = 1) , label.long())

@@ -4,8 +4,6 @@ sys.path.insert(0,'/'.join(os.getcwd().split('/')[:-2]))
 __package__ = 'SingleModels'
 
 import torch
-
-
 from .models.visual import VisualClassification
 from utils.data_loaders import VisualDataset
 import wandb
@@ -23,31 +21,28 @@ from utils.global_functions import arg_parse , Metrics  , MySampler , NewCrossEn
 from torch.utils.data import DataLoader
 from .models.visual import collate_batch
 ##
-
-
-
 class BatchCollation:
-    def __init__(self,  check  ) -> None:
-        self.check = check
+    def __init__(self, must) -> None:
+        self.must = must
     
     def __call__(self, batch):
-        return collate_batch(batch , self.check)
+        return collate_batch(batch , self.must)
 
 
-def prepare_dataloader(df , batch_size, label_task , epoch_switch , pin_memory=True, num_workers=2 , check = "train" , accum = False ): 
+def prepare_dataloader(df , dataset , batch_size, label_task , epoch_switch , pin_memory=True, num_workers=2 , check = "train" , accum = False ): 
     """
     we load in our dataset, and we just make a random distributed sampler to evenly partition our 
     dataset on each GPU
     say we have 32 data points, if batch size = 8 then it will make 4 dataloaders of size 8 each 
     """
     num_workers = 32//batch_size
-  
+    must = True if "must" in str(dataset).lower() else False
     # TODO: DATASET SPECIFIC
     if accum:
         batch_size = 1
-        dataset = VisualDataset(df , batch_size , feature_col="video_path" , label_col=label_task , timings="timings" , speaker="speaker" )
+        dataset = VisualDataset(df , dataset , batch_size , feature_col="video_path" , label_col=label_task , timings="timings" , accum=accum , check=check)
     else:
-        dataset = VisualDataset(df , batch_size , feature_col="video_path" , label_col=label_task , timings="timings" , speaker="speaker")
+        dataset = VisualDataset(df , dataset , batch_size , feature_col="video_path" , label_col=label_task , timings="timings" , accum=accum , check=check)
 
     if check == "train":
         labels = df[label_task].value_counts()
@@ -63,11 +58,11 @@ def prepare_dataloader(df , batch_size, label_task , epoch_switch , pin_memory=T
 
         dataloader = DataLoader(dataset, batch_size=batch_size, pin_memory=pin_memory, 
                 num_workers=num_workers ,drop_last=False, shuffle=False, sampler = sampler,
-                collate_fn = BatchCollation(check))
+                collate_fn = BatchCollation(must))
     else:
         dataloader = DataLoader(dataset, batch_size=batch_size, pin_memory=pin_memory, 
                 num_workers=num_workers ,drop_last=False, shuffle=False,
-                collate_fn = BatchCollation(check))
+                collate_fn = BatchCollation(must))
 
     return dataloader
 
@@ -94,6 +89,7 @@ def runModel( accelerator, df_train , df_val, df_test  ,param_dict , model_param
     epoch_switch = param_dict['epoch_switch']
 
     num_labels = model_param['output_dim']
+    dataset = model_param['dataset']
     
     if loss == "CrossEntropy":
         # criterion = NewCrossEntropyLoss(class_weights=weights.to(device)).to(device) # TODO: have to call epoch in forward function
@@ -106,10 +102,10 @@ def runModel( accelerator, df_train , df_val, df_test  ,param_dict , model_param
 
     print(loss , flush = True)
     Metric = Metrics(num_classes = num_labels, id2label = id2label , rank = device)
-    df_train_accum = prepare_dataloader( df_train,  1 ,  label_task , epoch_switch , check = "train" , accum = True)
-    df_train_no_accum = prepare_dataloader(df_train,  batch_size ,  label_task , epoch_switch , check = "train" , accum = False)
-    df_val = prepare_dataloader(df_val,  batch_size ,  label_task , epoch_switch , check = "val")
-    df_test = prepare_dataloader(df_test ,  batch_size,  label_task , epoch_switch , check = "test")
+    df_train_accum = prepare_dataloader(df_train , dataset,  1 ,  label_task , epoch_switch , check = "train" , accum = True)
+    df_train_no_accum = prepare_dataloader(df_train , dataset,  batch_size ,  label_task , epoch_switch , check = "train" , accum = False)
+    df_val = prepare_dataloader(df_val , dataset,  batch_size ,  label_task , epoch_switch , check = "val")
+    df_test = prepare_dataloader(df_test , dataset ,  batch_size,  label_task , epoch_switch , check = "test")
     
     model = VisualClassification(model_param).to(device)
 
@@ -155,13 +151,17 @@ def main():
     }
     
     df = pd.read_pickle(f"{config.dataset}.pkl")
-    # df = pd.read_pickle("/home/jupyter/multi-modal-emotion/data/TAV_MELD_bounding_box.pkl")
     if param_dict['label_task'] == "sentiment":
         number_index = "sentiment"
         label_index = "sentiment_label"
+    elif param_dict['label_task'] == "sarcasm":
+        number_index = "sarcasm"
+        label_index = "sarcasm_label"
     else:
         number_index = "emotion"
         label_index = "emotion_label"
+        
+    
 
     df_train = df[df['split'] == "train"] 
     df_test = df[df['split'] == "test"] 
@@ -185,9 +185,9 @@ def main():
         'early_div':config.early_div,
         'num_layers':config.num_layers,
         'learn_PosEmbeddings':config.learn_PosEmbeddings,
+        'dataset': config.dataset,
     }
-    param_dict = {'epoch': 6, 'patience': 10, 'lr': 1e-06, 'clip': 1, 'batch_size': 16, 'weight_decay': 1e-05, 'model': 'MAE_encoder', 'T_max': 2, 'seed': config.seed, 'label_task': 'emotion', 'mask': False, 'loss': 'NewCrossEntropy', 'beta': 1, 'epoch_switch': 3}
-    model_param = {'output_dim': 7, 'dropout': 0.4, 'early_div': True, 'num_layers': 12, 'learn_PosEmbeddings': False}
+
     param_dict['weights'] = weights
     param_dict['label2id'] = label2id
     param_dict['id2label'] = id2label
