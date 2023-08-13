@@ -151,23 +151,25 @@ def main():
     
     df = pd.read_pickle(f"{config.dataset}.pkl")
     # df = pd.read_pickle("/home/jupyter/multi-modal-emotion/data/TAV_MELD_bounding_box.pkl")
-    if param_dict['label_task'] == "sentiment":
-        number_index = "sentiment"
-        label_index = "sentiment_label"
-    else:
-        number_index = "emotion"
-        label_index = "emotion_label"
-
     df_train = df[df['split'] == "train"] 
     df_test = df[df['split'] == "test"] 
     df_val = df[df['split'] == "val"] 
+    
+    if param_dict['label_task'] == "sentiment":
+        number_index = "sentiment"
+        label_index = "sentiment_label"
+    elif param_dict['label_task'] == "sarcasm":
+        number_index = "sarcasm"
+        label_index = "sarcasm_label"
+        df = df[df['context'] == False]
+    else:
+        number_index = "emotion"
+        label_index = "emotion_label"
 
     """
     Due to data imbalance we are going to reweigh our CrossEntropyLoss
     To do this we calculate 1 - (num_class/len(df)) the rest of the functions are just to order them properly and then convert to a tensor
     """
-    
-    
     # weights = torch.Tensor(list(dict(sorted((dict(1 - (df[number_index].value_counts()/len(df))).items()))).values()))
     weights = torch.sort(torch.Tensor(list(dict(sorted((dict( 1 / np.sqrt( (df[number_index].value_counts() ))).items()))).values())) ).values
     weights = weights / weights.sum()

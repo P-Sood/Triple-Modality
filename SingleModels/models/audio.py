@@ -83,7 +83,7 @@ class Wav2Vec2ForSpeechClassification(nn.Module):
             aud_context = self.wav2vec2(context_audio)[0]
             aud_context = torch.mean(aud_context, dim=1)
             aud_context = self.aud_norm(aud_context)
-            aud_outputs = (aud_outputs*self.p + aud_context*(1-self.p)).mean()
+            aud_outputs = (aud_outputs*self.p + aud_context*(1-self.p))/2
             
         
         if check == "train":

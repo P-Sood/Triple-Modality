@@ -97,7 +97,7 @@ class VisualClassification(nn.Module):
             del video_context
             vid_context = torch.mean(vid_context, dim=1) # Now it has 2 dimensions 
             vid_context = self.vid_norm(vid_context) 
-            vid_outputs = (vid_outputs*self.p + vid_context*(1-self.p)).mean()
+            vid_outputs = (vid_outputs*self.p + vid_context*(1-self.p))/2
             
         del video_embeds
         del visual_mask

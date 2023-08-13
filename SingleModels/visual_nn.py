@@ -143,7 +143,7 @@ def main():
         'model':config.model,
         'T_max':config.T_max ,
         'seed':config.seed,
-        'label_task':config.label_task,
+        'label_task':"sarcasm",#config.label_task,
         'mask':config.mask,
         'loss':config.loss,
         'beta':config.beta,
@@ -151,21 +151,24 @@ def main():
     }
     
     df = pd.read_pickle(f"{config.dataset}.pkl")
+    df_train = df[df['split'] == "train"] 
+    df_test = df[df['split'] == "test"] 
+    df_val = df[df['split'] == "val"] 
+    
+    
     if param_dict['label_task'] == "sentiment":
         number_index = "sentiment"
         label_index = "sentiment_label"
     elif param_dict['label_task'] == "sarcasm":
         number_index = "sarcasm"
         label_index = "sarcasm_label"
+        df = df[df['context'] == False]
     else:
         number_index = "emotion"
         label_index = "emotion_label"
         
     
 
-    df_train = df[df['split'] == "train"] 
-    df_test = df[df['split'] == "test"] 
-    df_val = df[df['split'] == "val"] 
 
     """
     Due to data imbalance we are going to reweigh our CrossEntropyLoss

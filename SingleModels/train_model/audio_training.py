@@ -23,7 +23,7 @@ def get_statistics(input , label , model , criterion , Metric , check="train" , 
     del input
 
     
-    output = model( audio_input_ids.to(device) , audio_context.to(device) , check)  
+    output = model(audio_input_ids.to(device) , audio_context.to(device) , check)  
         
     del audio_input_ids
     del audio_attention_mask
