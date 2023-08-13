@@ -512,8 +512,8 @@ class Data:
             
             return video
         else:
-            video_context = torch.Tensor(self.VIDEOS[f"{check[0]}_{path.split('/')[-1][:-4]}_{timings[0]}"][()]  ) # H5PY, how to remove data after loading it into memory
-            video_target = torch.Tensor(self.VIDEOS[f"{check[1]}_{path.split('/')[-1][:-4]}_{timings[1]}"][()]  ) # H5PY, how to remove data after loading it into memory
+            video_context = torch.Tensor(self.VIDEOS[f"{check}_{path[0].split('/')[-1][:-4]}_{timings[0]}"][()]  ) # H5PY, how to remove data after loading it into memory
+            video_target = torch.Tensor(self.VIDEOS[f"{check}_{path[1].split('/')[-1][:-4]}_{timings[1]}"][()]  ) # H5PY, how to remove data after loading it into memory
             video_context = transform(video_context)
             video_target = transform(video_target)
             
@@ -532,8 +532,8 @@ class Data:
             # print(f"path is {path}\nshape of ret is {ret.shape}\n" , flush = True)
             return  speech_array
         else:
-            speech_array_context = torch.Tensor(self.AUDIOS[f"{check[0]}_{path.split('/')[-1][:-4]}_{timings[0]}"][()])
-            speech_array_target = torch.Tensor(self.AUDIOS[f"{check[1]}_{path.split('/')[-1][:-4]}_{timings[1]}"][()])
+            speech_array_context = torch.Tensor(self.AUDIOS[f"{check}_{path[0].split('/')[-1][:-4]}_{timings[0]}"][()])
+            speech_array_target = torch.Tensor(self.AUDIOS[f"{check}_{path[1].split('/')[-1][:-4]}_{timings[1]}"][()])
         
             if check == "train":
                 speech_array_context += singular_func_(speech_array_context,SNR=10)
