@@ -22,41 +22,53 @@ class TextAudioVideoDataset(Dataset):
 
     def __init__(self, df , dataset  , batch_size , max_len , feature_col1 , feature_col2 , feature_col3  , label_col , timings = None , accum = False  , check = "test"):
         
-            
+        self.audio_path = df[feature_col1].values
+        self.video_path = df[feature_col2].values
+        
+        if timings != None:
+            self.timings = df[timings].values.tolist()
+        else:
+            self.timings = [None]*len(self.audio_path)
             
         if "meld" in str(dataset).lower():
             max_len=int(70*2.5)
             tokenizer = AutoTokenizer.from_pretrained('j-hartmann/emotion-english-distilroberta-base')
             self.Data = Data(video="../../data/videos_context.hdf5" , audio="../../data/audio.hdf5")
+            self.texts = [tokenizer(text, 
+                               padding='max_length', max_length = max_len, truncation=True,
+                                return_tensors="pt") for text in df[feature_col3]]
         elif "iemo" in str(dataset).lower():
             max_len=int(70*2.5)
             tokenizer = AutoTokenizer.from_pretrained('j-hartmann/emotion-english-distilroberta-base')
             self.Data = Data(video="../../data/iemo_videos.hdf5" , audio="../../data/iemo_audio.hdf5")
+            self.texts = [tokenizer(text, 
+                               padding='max_length', max_length = max_len, truncation=True,
+                                return_tensors="pt") for text in df[feature_col3]]
         else:
             max_len = 300
             tokenizer = AutoTokenizer.from_pretrained('jkhan447/sarcasm-detection-RoBerta-base-CR')
             self.Data = Data(video="../../data/must_videos.hdf5" , audio="../../data/must_audio.hdf5")
+            self.texts = []
+            for i in range(0, len(df[feature_col2]), 2):
+                # concatenate the text
+                text = df[feature_col2].iloc[i] + ' ' + df[feature_col2].iloc[i+1]
+                # tokenize the concatenated text
+                tokens = tokenizer(text, padding='max_length', max_length=max_len, truncation=True, return_tensors="pt")
+                self.texts.append(tokens)
+            self.timings = df["timings"].values.reshape(-1, 2).tolist()
+            self.audio_path = df[feature_col1].values.reshape(-1, 2).tolist()
+            self.video_path = df[feature_col2].values.reshape(-1, 2).tolist()
+            df = df[df['context'] == False]
         self.check = check
+        self.labels = df[label_col].values.tolist()
+        
+        assert len(self.audio_path) == len(self.video_path) == len(self.texts) , "wrong lengths"
+        
 
         if accum:
             self.grad = (df['dialog'].value_counts()/batch_size).astype(int).sort_index().tolist()
             self.grad_sum = [sum(self.grad[:i+1]) for i,x in enumerate(self.grad)]
             self.ctr = 0
-
-        self.labels = df[label_col].values.tolist()
-        self.audio_path = df[feature_col1].values
-        self.video_path = df[feature_col2].values
-
-
-        self.texts = [tokenizer(text, 
-                               padding='max_length', max_length = max_len, truncation=True,
-                                return_tensors="pt") for text in df[feature_col3]]
-
-        if timings != None:
-            self.timings = df[timings].values.tolist()
-        else:
-            self.timings = [None]*len(self.labels)
-        
 
     def retGradAccum(self , i: int) -> int:
         RETgrad = self.grad[self.ctr]
@@ -96,10 +108,6 @@ class AudioVideoDataset(Dataset):
         else:
             self.timings = [None]*len(self.audio_path)
 
-        if accum:
-            self.grad = (df['dialog'].value_counts()/batch_size).astype(int).sort_index().tolist()
-            self.grad_sum = [sum(self.grad[:i+1]) for i,x in enumerate(self.grad)]
-            self.ctr = 0
             
         if "meld" in str(dataset).lower():
             self.Data = Data(video="../../data/videos_context.hdf5" , audio="../../data/audio.hdf5")
@@ -108,12 +116,15 @@ class AudioVideoDataset(Dataset):
         else:
             self.Data = Data(video="../../data/must_videos.hdf5" , audio="../../data/must_audio.hdf5")
             self.timings = df["timings"].values.reshape(-1, 2).tolist()
+            self.audio_path = df[feature_col1].values.reshape(-1, 2).tolist()
             self.video_path = df[feature_col2].values.reshape(-1, 2).tolist()
             df = df[df['context'] == False]
             
         self.check = check
         self.labels = df[label_col].values.tolist()
  
+        assert len(self.audio_path) == len(self.video_path)  , "wrong lengths"
+        
         if accum:
             self.grad = (df['dialog'].value_counts()/batch_size).astype(int).sort_index().tolist()
             self.grad_sum = [sum(self.grad[:i+1]) for i,x in enumerate(self.grad)]
@@ -190,6 +201,7 @@ class TextAudioDataset(Dataset):
         
 
         
+        assert len(self.audio_path) == len(self.texts) , "wrong lengths"
         if accum:
             self.grad = (df['dialog'].value_counts()/batch_size).astype(int).sort_index().tolist()
             self.grad_sum = [sum(self.grad[:i+1]) for i,x in enumerate(self.grad)]
@@ -264,6 +276,7 @@ class TextVideoDataset(Dataset):
         self.labels = df[label_col].values.tolist()
         self.check = check    
         
+        assert len(self.video_path) == len(self.texts) , "wrong lengths"
         if accum:
             self.grad = (df['dialog'].value_counts()/batch_size).astype(int).sort_index().tolist()
             self.grad_sum = [sum(self.grad[:i+1]) for i,x in enumerate(self.grad)]
@@ -307,10 +320,8 @@ class VisualDataset(Dataset):
         else:
             self.timings = [None]*len(self.video_path)
 
-        if accum:
-            self.grad = (df['dialog'].value_counts()/batch_size).astype(int).sort_index().tolist()
-            self.grad_sum = [sum(self.grad[:i+1]) for i,x in enumerate(self.grad)]
-            self.ctr = 0
+        assert len(self.audio_path) == len(self.video_path) == len(self.texts) , "wrong lengths"
+        
             
         if "meld" in str(dataset).lower():
             self.Data = Data(video="../../data/videos_context.hdf5" , audio=None)
@@ -324,11 +335,11 @@ class VisualDataset(Dataset):
             
         self.check = check
         self.labels = df[label_col].values.tolist()
-
         
-        
-        
-        
+        if accum:
+            self.grad = (df['dialog'].value_counts()/batch_size).astype(int).sort_index().tolist()
+            self.grad_sum = [sum(self.grad[:i+1]) for i,x in enumerate(self.grad)]
+            self.ctr = 0
     
     def retGradAccum(self , i: int) -> int:
         RETgrad = self.grad[self.ctr]
