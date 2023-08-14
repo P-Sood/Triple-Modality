@@ -25,14 +25,16 @@ def get_statistics(input , label , model , criterion , Metric , check="train" , 
     audio_features = input[1]
     audio_input_ids = audio_features["audio_features"]
     audio_attention_mask = audio_features["attention_mask"]
+    audio_context = audio_features["audio_context"]
     del audio_features
     
-    output = model(text_input_ids.to(device) , text_attention_mask.to(device) , audio_input_ids.to(device) , check)  
+    output = model(text_input_ids.to(device) , text_attention_mask.to(device) , audio_input_ids.to(device) , audio_context.to(device) , check)  
         
     del text_input_ids
     del text_attention_mask
     del audio_input_ids
     del audio_attention_mask
+    del audio_context
 
     label = label.type(torch.LongTensor).to(device)
     Metric.update_metrics(torch.argmax(output , dim = 1) , label.long())
@@ -54,16 +56,16 @@ def get_statistics_big_batch(input , label , model , criterion , Metric , check=
     audio_features = input[1]
     audio_input_ids = audio_features["audio_features"]
     audio_attention_mask = audio_features["attention_mask"]
+    audio_context = audio_features["audio_context"]
     del audio_features
-
     
-    
-    output = checkpoint(model , text_input_ids.to(device) , text_attention_mask.to(device) , audio_input_ids.to(device) , check , use_reentrant=False)  
-    
+    output = checkpoint(model, text_input_ids.to(device) , text_attention_mask.to(device) , audio_input_ids.to(device) , audio_context.to(device), check)  
+        
     del text_input_ids
     del text_attention_mask
     del audio_input_ids
     del audio_attention_mask
+    del audio_context
 
     label = label.type(torch.LongTensor).to(device)
     Metric.update_metrics(torch.argmax(output , dim = 1) , label.long())

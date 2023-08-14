@@ -25,16 +25,18 @@ def get_statistics(input , label , model , criterion , Metric , check="train" , 
     video_embeds = input[1]
     video_input_ids = video_embeds["visual_embeds"]
     video_attention_mask = video_embeds["attention_mask"]  
+    video_context = video_embeds["visual_context"]
     del video_embeds
     
     
     output = model(text_input_ids.to(device) , text_attention_mask.to(device) ,
-                            video_input_ids.to(device) , video_attention_mask.to(device) , check)  
+                            video_input_ids.to(device), video_context.to(device) , video_attention_mask.to(device) , check)  
         
     del text_input_ids
     del text_attention_mask
     del video_input_ids
     del video_attention_mask
+    del video_context
 
     label = label.type(torch.LongTensor).to(device)
     Metric.update_metrics(torch.argmax(output , dim = 1) , label.long())
@@ -58,15 +60,18 @@ def get_statistics_big_batch(input , label , model , criterion , Metric , check=
     video_embeds = input[1]
     video_input_ids = video_embeds["visual_embeds"]
     video_attention_mask = video_embeds["attention_mask"]  
+    video_context = video_embeds["visual_context"]
     del video_embeds
     
-    output = checkpoint(model , text_input_ids.to(device) , text_attention_mask.to(device) ,
-                            video_input_ids.to(device) , video_attention_mask.to(device) , check , use_reentrant=False)  
     
+    output = checkpoint(model, text_input_ids.to(device) , text_attention_mask.to(device) ,
+                            video_input_ids.to(device), video_context.to(device) , video_attention_mask.to(device) , check)  
+        
     del text_input_ids
     del text_attention_mask
     del video_input_ids
     del video_attention_mask
+    del video_context
 
     label = label.type(torch.LongTensor).to(device)
     Metric.update_metrics(torch.argmax(output , dim = 1) , label.long())

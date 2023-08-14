@@ -11,114 +11,40 @@ from transformers.models.wav2vec2.modeling_wav2vec2 import _compute_mask_indices
 import numpy as np
 from numpy.random import choice
 import random
-
-from torchvision.transforms import (
-    Compose,
-    Lambda,
-    RandomCrop,
-    RandomHorizontalFlip,
-    RandomVerticalFlip,
-    Resize,
-    PILToTensor,
-    ToPILImage,
-    Normalize,
-    RandomErasing,
-    # RandomShortSideScale,
-)
-from utils.global_functions import Crop
 from torch.nn.utils.rnn import pad_sequence
-from torch import nn
 
-import h5py
-try:
-    VIDEOS =  h5py.File('../../data/videos_context.hdf5','r', libver='latest' , swmr=True)
-    AUDIOS =  h5py.File('../../data/audio.hdf5','r', libver='latest' , swmr=True)
-except:
-    VIDEOS =  h5py.File('data/videos_context.hdf5','r', libver='latest' , swmr=True)
-    AUDIOS =  h5py.File('data/audio.hdf5','r', libver='latest' , swmr=True)
-
-def videoMAE_features(path , timings , speaker , check):
-
-    if check == "train":
-        transform = Compose(
-                        [
-                            # TODO: DATASET SPECIFIC                            
-                            RandomHorizontalFlip(p=0) if speaker == None else Crop((120,2,245,355)) if speaker else Crop((120,362,245,355)), # if not IEMOCAP then do nothing, else 
-                            # Hone in on either the left_speaker or right_speaker in the video
-                            # Lambda(lambda x: body_face(x , bbox)), # cropped bodies only
-                            RandomHorizontalFlip(p=0.5), # 
-                            RandomVerticalFlip(p=0.5), # 
-                        ]
-                    )
-    else:
-        transform = Compose(
-                        [
-                            # TODO: DATASET SPECIFIC    
-                            # Lambda(lambda x: body_face(x , bbox)), # cropped bodies only,                        
-                            RandomHorizontalFlip(p=0) if speaker == None else Crop((120,2,245,355)) if speaker else Crop((120,362,245,355)),
-                        ]
-                    )
-   
-    
-    video = torch.Tensor(   VIDEOS[f"{check}_{path.split('/')[-1][:-4]}"][()]  ) # H5PY, how to remove data after loading it into memory
-    video = transform(video)
-    
-    return video
-
-
-
-    
-def get_white_noise(signal:torch.Tensor,SNR) -> torch.Tensor :
-  # @author: sleek_eagle
-    shap = signal.shape
-    signal = torch.flatten(signal)
-    #RMS value of signal
-    RMS_s=torch.sqrt(torch.mean(signal**2))
-    #RMS values of noise
-    RMS_n=torch.sqrt(RMS_s**2/(pow(10,SNR/100)))
-    noise=torch.normal(0.0, RMS_n.item() , signal.shape)
-    return noise.reshape(shap)
-
-def ret0(signal , SNR) -> int:
-    return 0
-
-
-def speech_file_to_array_fn(path , check = "train"):
-    func_ = [ret0, get_white_noise]
-    singular_func_ = random.choices(population=func_, weights=[.5 , .5], k=1)[0]
-    
-    speech_array = torch.Tensor(AUDIOS[f"{check}_{path.split('/')[-1][:-4]}"][()])
-    if check == "train":
-        speech_array += singular_func_(speech_array,SNR=10)
-    return  speech_array
-
-
-# TODO: DATASET SPECIFIC
-PROC = AutoProcessor.from_pretrained("audeering/wav2vec2-large-robust-12-ft-emotion-msp-dim")
-
-def collate_batch(batch , check): # batch is a pseudo pandas array of two columns
+def collate_batch(batch , must): # batch is a pseudo pandas array of two columns
     """
     Here we are going to take some raw-input and pre-process them into what we need
     So we can see all the steps in the ML as they go along
     """
 
     video_list = []
-    input_list = []
+    speech_context = []
     speech_list = []
     label_list = []
     
+    if not must:
+        video_context = [torch.empty((1,1,1,1)) ,  torch.empty((1,1,1,1))]
+    else:
+        video_context = []
+    speech_list_context_input_values = torch.empty((1))
     speech_list_mask = None
     vid_mask = None
 
 
     for (input , label) in batch:
         audio_path = input[0]
-        speech_list.append(speech_file_to_array_fn(audio_path , check))
-        
         vid_features = input[1]#[6:] for debug
-
-        # TODO: DATASET SPECIFIC
-        video_list.append(videoMAE_features(vid_features['vid_path'] , vid_features['timings'] , vid_features['speaker'] , check))
+        if not must:
+            speech_list.append(audio_path)
+            video_list.append(vid_features)
+        else:
+            speech_list.append(audio_path[0])
+            speech_context.append(audio_path[1])
+            video_list.append(vid_features[0])
+            video_context.append(vid_features[1])
+        
         label_list.append(label)
     batch_size = len(label_list)
     
@@ -135,31 +61,25 @@ def collate_batch(batch , check): # batch is a pseudo pandas array of two column
         idx_to_change = choice(idx, size=num_to_change, replace=False)
         vid_mask.view(-1)[idx_to_change] = 1
     
-
-    numpy_speech_list = [item.numpy() for item in speech_list] 
-    # speech_list_input_values = torch.Tensor(np.array(PROC( numpy_speech_list , sampling_rate = 16000 , padding = True)['input_values']))
-
-
-    """ Audio works as intended as per test_audio_mask.ipynb"""
-    speech_list_mask = 0#torch.Tensor(np.array(PROC( numpy_speech_list, sampling_rate = 16000 , padding = True)['attention_mask']))
-    del numpy_speech_list
-    
     speech_list_input_values = pad_sequence(speech_list , batch_first = True, padding_value=0)
     del speech_list
-    # speech_list_input_values = (speech_list_input_values1 + speech_list_input_values2)/2
-
-    # Batch_size , 16 , 224 , 224 
+    
+    if must:
+        speech_list_context_input_values = pad_sequence(speech_context , batch_first = True, padding_value=0)
+        del speech_context
     
     
     
     audio_features = {'audio_features':speech_list_input_values , 
             'attention_mask':speech_list_mask, 
+            'audio_context':speech_list_context_input_values, 
         }
 
     visual_embeds = {'visual_embeds':torch.stack(video_list).permute(0,2,1,3,4) , 
             'attention_mask':vid_mask , 
+            'visual_context':torch.stack(video_context).permute(0,2,1,3,4) , 
         }
-    return [ audio_features , visual_embeds] , torch.Tensor(np.array(label_list))
+    return [audio_features , visual_embeds] , torch.Tensor(np.array(label_list))
 
 
 class AudioVideoClassifier(nn.Module):
@@ -173,6 +93,10 @@ class AudioVideoClassifier(nn.Module):
         self.dropout = args['dropout']
         self.learn_PosEmbeddings = args['learn_PosEmbeddings']
         self.num_layers = args['num_layers']
+        self.dataset = args['dataset']
+        
+        self.must = True if "must" in str(self.dataset).lower() else False
+        self.p = .6
 
         self.test_ctr = 1
         self.train_ctr = 1
@@ -183,38 +107,44 @@ class AudioVideoClassifier(nn.Module):
         self.videomae = VideoMAEModel.from_pretrained("MCG-NJU/videomae-base-finetuned-kinetics")
         
         self.vid_norm = nn.LayerNorm(768)
-        self.aud_norm = nn.LayerNorm(768)
+        self.aud_norm = nn.LayerNorm(1024)
 
-
+        
+        
         self.dropout = nn.Dropout(self.dropout)
         self.linear1 = nn.Linear(768*2, self.output_dim)
         
 
     
-    def forward(self, audio_features , video_embeds , visual_mask  , check = "train"):        
-        #Transformer Time
-        
-        
+    def forward(self, audio_features , context_audio , video_embeds , video_context , visual_mask  , check = "train"):        
         aud_outputs = self.wav2vec2(audio_features)[0]
-        
         del audio_features
-        
-        # aud_output = torch.rand((1 , 64 , 1024))
-        aud_outputs = torch.mean(self.wav_2_768_2(aud_outputs), dim=1)
-        
-
-        vid_outputs = self.videomae(video_embeds , visual_mask)[0] # Now it has 2 dimensions 
-        
-        del video_embeds
-        del visual_mask
-        
-        vid_outputs = torch.mean(vid_outputs, dim=1) # Now it has 2 dimensions 
-
-        
+        aud_outputs = torch.mean(aud_outputs, dim=1)
         aud_outputs = self.aud_norm(aud_outputs)
+        if self.must:
+            
+            aud_context = self.wav2vec2(context_audio)[0]
+            del context_audio
+            aud_context = torch.mean(aud_context, dim=1)
+            aud_context = self.aud_norm(aud_context)
+            aud_outputs = (aud_outputs*self.p + aud_context*(1-self.p))/2
+            del aud_context
+            
+        aud_outputs = self.wav_2_768_2(aud_outputs)
+        vid_outputs = self.videomae(video_embeds , visual_mask)[0] # Now it has 2 dimensions 
+        del video_embeds
+            
+        vid_outputs = torch.mean(vid_outputs, dim=1) # Now it has 2 dimensions 
         vid_outputs = self.vid_norm(vid_outputs) 
-
-        # All of these ouputs are 4 x [batch_size , 768]
+        
+        if self.must:
+            vid_context = self.videomae(video_context , visual_mask)[0]
+            del video_context
+            vid_context = torch.mean(vid_context, dim=1) # Now it has 2 dimensions 
+            vid_context = self.vid_norm(vid_context) 
+            vid_outputs = (vid_outputs*self.p + vid_context*(1-self.p))/2
+            
+        del visual_mask
 
         #Concatenate Outputs
         tav = torch.cat([ aud_outputs , vid_outputs],dim=1)

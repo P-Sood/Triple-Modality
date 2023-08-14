@@ -21,18 +21,22 @@ def get_statistics(input , label , model , criterion , Metric , check="train" , 
     audio_features = input[0]
     audio_input_ids = audio_features["audio_features"]
     audio_attention_mask = audio_features["attention_mask"]
+    audio_context = audio_features["audio_context"]
     del audio_features
 
     video_embeds = input[1]
     video_input_ids = video_embeds["visual_embeds"]
     video_attention_mask = video_embeds["attention_mask"]  
+    video_context = video_embeds["visual_context"]
     del video_embeds
     
     
-    output = model( audio_input_ids.to(device) ,
-                            video_input_ids.to(device) , video_attention_mask.to(device) , check)  
+    output = model( audio_input_ids.to(device) , audio_context.to(device) ,
+                            video_input_ids.to(device) , video_context.to(device) , video_attention_mask.to(device) , check)  
         
     del audio_input_ids
+    del video_context
+    del audio_context
     del audio_attention_mask
     del video_input_ids
     del video_attention_mask
@@ -54,18 +58,22 @@ def get_statistics_big_batch(input , label , model , criterion , Metric , check=
     audio_features = input[0]
     audio_input_ids = audio_features["audio_features"]
     audio_attention_mask = audio_features["attention_mask"]
+    audio_context = audio_features["audio_context"]
     del audio_features
 
     video_embeds = input[1]
     video_input_ids = video_embeds["visual_embeds"]
     video_attention_mask = video_embeds["attention_mask"]  
+    video_context = video_embeds["video_context"]
     del video_embeds
     
-    output = checkpoint(model , audio_input_ids.to(device) ,
-                            video_input_ids.to(device) , video_attention_mask.to(device) , check , use_reentrant=False)  
     
-
+    output = checkpoint(model ,  audio_input_ids.to(device) , audio_context.to(device) ,
+                            video_input_ids.to(device) , video_context.to(device) , video_attention_mask.to(device) , check)  
+        
     del audio_input_ids
+    del video_context
+    del audio_context
     del audio_attention_mask
     del video_input_ids
     del video_attention_mask

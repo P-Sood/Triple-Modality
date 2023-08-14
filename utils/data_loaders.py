@@ -88,25 +88,32 @@ class AudioVideoDataset(Dataset):
     def __init__(self, df , dataset , batch_size , feature_col1 , feature_col2  , label_col , timings = None , accum = False , check = "test"):
         
 
-        self.labels = df[label_col].values.tolist()
-
-        self.audio_path = df[feature_col1].values
         self.video_path = df[feature_col2].values
+        self.audio_path = df[feature_col1].values
         
-        
+        if timings != None:
+            self.timings = df[timings].values.tolist()
+        else:
+            self.timings = [None]*len(self.audio_path)
+
+        if accum:
+            self.grad = (df['dialog'].value_counts()/batch_size).astype(int).sort_index().tolist()
+            self.grad_sum = [sum(self.grad[:i+1]) for i,x in enumerate(self.grad)]
+            self.ctr = 0
+            
         if "meld" in str(dataset).lower():
             self.Data = Data(video="../../data/videos_context.hdf5" , audio="../../data/audio.hdf5")
         elif "iemo" in str(dataset).lower():
             self.Data = Data(video="../../data/iemo_videos.hdf5" , audio="../../data/iemo_audio.hdf5")
         else:
             self.Data = Data(video="../../data/must_videos.hdf5" , audio="../../data/must_audio.hdf5")
+            self.timings = df["timings"].values.reshape(-1, 2).tolist()
+            self.video_path = df[feature_col2].values.reshape(-1, 2).tolist()
+            df = df[df['context'] == False]
+            
         self.check = check
-
-        if timings != None:
-            self.timings = df[timings].values.tolist()
-        else:
-            self.timings = [None]*len(self.labels)
-        
+        self.labels = df[label_col].values.tolist()
+ 
         if accum:
             self.grad = (df['dialog'].value_counts()/batch_size).astype(int).sort_index().tolist()
             self.grad_sum = [sum(self.grad[:i+1]) for i,x in enumerate(self.grad)]

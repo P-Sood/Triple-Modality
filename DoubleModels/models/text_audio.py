@@ -10,41 +10,8 @@ import numpy as np
 import random
 from torch.nn.utils.rnn import pad_sequence
 
-import h5py
-try:
-    AUDIOS =  h5py.File('../../data/audio.hdf5','r', libver='latest' , swmr=True)
-except:
-    AUDIOS =  h5py.File('data/audio.hdf5','r', libver='latest' , swmr=True)
 
-def get_white_noise(signal:torch.Tensor,SNR) -> torch.Tensor :
-  # @author: sleek_eagle
-    shap = signal.shape
-    signal = torch.flatten(signal)
-    #RMS value of signal
-    RMS_s=torch.sqrt(torch.mean(signal**2))
-    #RMS values of noise
-    RMS_n=torch.sqrt(RMS_s**2/(pow(10,SNR/100)))
-    noise=torch.normal(0.0, RMS_n.item() , signal.shape)
-    return noise.reshape(shap)
-
-def ret0(signal , SNR) -> int:
-    return 0
-
-
-def speech_file_to_array_fn(path , check = "train"):
-    func_ = [ret0, get_white_noise]
-    singular_func_ = random.choices(population=func_, weights=[.5 , .5], k=1)[0]
-    
-    speech_array = torch.Tensor(AUDIOS[f"{check}_{path.split('/')[-1][:-4]}"][()])
-    if check == "train":
-        speech_array += singular_func_(speech_array,SNR=10)
-    return  speech_array
-
-
-# TODO: DATASET SPECIFIC
-PROC = AutoProcessor.from_pretrained("audeering/wav2vec2-large-robust-12-ft-emotion-msp-dim")
-
-def collate_batch(batch , check): # batch is a pseudo pandas array of two columns
+def collate_batch(batch , must): # batch is a pseudo pandas array of two columns
     """
     Here we are going to take some raw-input and pre-process them into what we need
     So we can see all the steps in the ML as they go along
@@ -54,18 +21,22 @@ def collate_batch(batch , check): # batch is a pseudo pandas array of two column
     input_list = []
     speech_list = []
     label_list = []
-
-    
     text_list_mask = None
     speech_list_mask = None
 
+    speech_context = []
+    speech_list_context_input_values = torch.empty((1))
 
     for (input , label) in batch:
         text = input[0]
         input_list.append(text['input_ids'].tolist()[0])
         text_mask.append(text['attention_mask'].tolist()[0])
         audio_path = input[1]
-        speech_list.append(speech_file_to_array_fn(audio_path , check))
+        if not must:
+            speech_list.append(audio_path)
+        else:
+            speech_list.append(audio_path[0])
+            speech_context.append(audio_path[1])
         
         label_list.append(label)
     
@@ -73,21 +44,12 @@ def collate_batch(batch , check): # batch is a pseudo pandas array of two column
     
     del text_mask    
 
-    numpy_speech_list = [item.numpy() for item in speech_list] 
-    # speech_list_input_values = torch.Tensor(np.array(PROC( numpy_speech_list , sampling_rate = 16000 , padding = True)['input_values']))
-
-
-    """ Audio works as intended as per test_audio_mask.ipynb"""
-    speech_list_mask = 0#torch.Tensor(np.array(PROC( numpy_speech_list, sampling_rate = 16000 , padding = True)['attention_mask']))
-    del numpy_speech_list
-    
     speech_list_input_values = pad_sequence(speech_list , batch_first = True, padding_value=0)
     del speech_list
-    # speech_list_input_values = (speech_list_input_values1 + speech_list_input_values2)/2
-
-    # Batch_size , 16 , 224 , 224 
     
-    
+    if must:
+        speech_list_context_input_values = pad_sequence(speech_context , batch_first = True, padding_value=0)
+        del speech_context
     
     text = {'input_ids':torch.Tensor(np.array(input_list)).type(torch.LongTensor) , 
             'attention_mask':text_list_mask,
@@ -95,6 +57,7 @@ def collate_batch(batch , check): # batch is a pseudo pandas array of two column
 
     audio_features = {'audio_features':speech_list_input_values , 
             'attention_mask':speech_list_mask, 
+            'audio_context':speech_list_context_input_values, 
         }
 
     return [text , audio_features ] , torch.Tensor(np.array(label_list))
@@ -108,11 +71,19 @@ class BertAudioClassifier(nn.Module):
         self.dropout = args['dropout']
         self.learn_PosEmbeddings = args['learn_PosEmbeddings']
         self.num_layers = args['num_layers']
+        self.dataset = args['dataset']
+        
+        self.must = True if "must" in str(self.dataset).lower() else False
+        self.p = .6
+        
+        if self.must:
+            self.bert = AutoModel.from_pretrained('jkhan447/sarcasm-detection-RoBerta-base-CR')
+        else:
+            self.bert = AutoModel.from_pretrained('j-hartmann/emotion-english-distilroberta-base')
 
         self.test_ctr = 1
         self.train_ctr = 1
 
-        self.bert = AutoModel.from_pretrained('j-hartmann/emotion-english-distilroberta-base')
         self.wav2vec2 = AutoModel.from_pretrained("ehcalabres/wav2vec2-lg-xlsr-en-speech-emotion-recognition")
         self.wav_2_768_2 = nn.Linear(1024 , 768)
         self.wav_2_768_2.weight = torch.nn.init.xavier_normal_(self.wav_2_768_2.weight)
@@ -123,23 +94,28 @@ class BertAudioClassifier(nn.Module):
         self.dropout = nn.Dropout(self.dropout)
         self.linear1 = nn.Linear(768*2, self.output_dim)
 
-    def forward(self, input_ids , text_attention_mask , audio_features , check):
+    def forward(self, input_ids , text_attention_mask , audio_features , context_audio , check):
         _, text_outputs = self.bert(input_ids= input_ids, attention_mask=text_attention_mask,return_dict=False)
-        
         del _
         del input_ids
         del text_attention_mask
-        
-        
-        aud_outputs = self.wav2vec2(audio_features)[0]
-        
-        del audio_features
-        
-        # aud_output = torch.rand((1 , 64 , 1024))
-        aud_outputs = torch.mean(self.wav_2_768_2(aud_outputs), dim=1)
-        
         text_outputs = self.bert_norm(text_outputs) # 
+        
+    
+        aud_outputs = self.wav2vec2(audio_features)[0]
+        del audio_features
+        aud_outputs = torch.mean(aud_outputs, dim=1)
         aud_outputs = self.aud_norm(aud_outputs)
+        if self.must:
+            aud_context = self.wav2vec2(context_audio)[0]
+            del context_audio
+            aud_context = torch.mean(aud_context, dim=1)
+            aud_context = self.aud_norm(aud_context)
+            aud_outputs = (aud_outputs*self.p + aud_context*(1-self.p))/2
+            del aud_context
+            
+        aud_outputs = self.wav_2_768_2(aud_outputs)
+        
         
         ta = torch.cat([text_outputs, aud_outputs],dim=1)
         
