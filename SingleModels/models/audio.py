@@ -76,14 +76,17 @@ class Wav2Vec2ForSpeechClassification(nn.Module):
    
     def forward(self, audio_features , context_audio , check):
         aud_outputs = self.wav2vec2(audio_features)[0]
+        del audio_features
         aud_outputs = torch.mean(aud_outputs, dim=1)
         aud_outputs = self.aud_norm(aud_outputs)
         if self.must:
             
             aud_context = self.wav2vec2(context_audio)[0]
+            del context_audio
             aud_context = torch.mean(aud_context, dim=1)
             aud_context = self.aud_norm(aud_context)
             aud_outputs = (aud_outputs*self.p + aud_context*(1-self.p))/2
+            del aud_context
             
         
         if check == "train":

@@ -10,8 +10,15 @@ class BertClassifier(nn.Module):
 		super(BertClassifier, self).__init__()
 		self.dropout = args['dropout']
 		self.output_dim = args['output_dim']
+		self.dataset = args['dataset']
 		
-		self.bert = AutoModel.from_pretrained('jkhan447/sarcasm-detection-RoBerta-base-CR')
+		
+		self.must = True if "must" in str(self.dataset).lower() else False
+        
+		if self.must:
+			self.bert = AutoModel.from_pretrained('jkhan447/sarcasm-detection-RoBerta-base-CR')
+		else:
+			self.bert = AutoModel.from_pretrained('j-hartmann/emotion-english-distilroberta-base')
 
 		self.bert_norm = nn.LayerNorm(768)
 		self.dropout = nn.Dropout(self.dropout)

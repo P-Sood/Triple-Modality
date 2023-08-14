@@ -88,6 +88,7 @@ class VisualClassification(nn.Module):
         
         
         vid_outputs = self.videomae(video_embeds , visual_mask)[0] # Now it has 2 dimensions 
+        del video_embeds
             
         vid_outputs = torch.mean(vid_outputs, dim=1) # Now it has 2 dimensions 
         vid_outputs = self.vid_norm(vid_outputs) 
@@ -99,7 +100,6 @@ class VisualClassification(nn.Module):
             vid_context = self.vid_norm(vid_context) 
             vid_outputs = (vid_outputs*self.p + vid_context*(1-self.p))/2
             
-        del video_embeds
         del visual_mask
         
         if check == "train":

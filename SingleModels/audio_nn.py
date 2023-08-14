@@ -36,7 +36,7 @@ def prepare_dataloader(df , dataset , batch_size, label_task , epoch_switch , pi
     dataset on each GPU
     say we have 32 data points, if batch size = 8 then it will make 4 dataloaders of size 8 each 
     """
-    num_workers = 8
+    num_workers = 4
     must = True if "must" in str(dataset).lower() else False
     if accum:
         batch_size = 1
