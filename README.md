@@ -1,25 +1,11 @@
 # The Three Musketeers: Audio, Text, and Video
 
-# Data
+## Data
+We use MELD, IEMOCAP, Mustard, and SexTok as datasets for this project.
 
-## Instructions for use
+## General
+This project aims to detect emotions from multiple sources of information, including text, audio, and facial expressions. While previous studies have primarily focused on text or images, my research explores how combining multiple modalities can improve the accuracy and robustness of emotion recognition.
 
-# TODO Fill in instructions
+I have developed a new method for selecting the most relevant features from audio and video data, as well as a new approach for training a neural network that can fuse information from all three modalities. My initial tests on English datasets have shown that using text and audio together yields better results than using them separately. However, adding video data does not significantly improve performance, suggesting that it may contain more noise or irrelevant information than audio or text data.
 
-first 
-
-module load git-lfs
-source /home/prsood/projects/def-whkchun/prsood/sarcasm_venv/bin/activate
-wandb sweep --project LSTM_text -e ddi --name hyper_param_tuning_lstm ../hyper_parameter_config/lstm.yaml
-### Training
-
-text_nn.py -lr 0.001 -e 3 -b 16 -w 0.000001 -s 32 -d "data/emotion_pd" -c 100 -p 10 -m LSTM -t 5 -y 7 -hl 300
-
-text_nn.py -lr 0.001 -e 3 -b 16 -w 0.000001 -s 32 -d "data/emotion_pd" -c 100 -p 10 -m Bert -t 5 -y 7 -hl 300
-
-audio_nn_wav2vec.py -d /Users/pranavsood/Documents/DDI/Gitlab/multi-modal-emotion/data/emotion_pd_raw.pkl -m Wav2Vec2 -y 7 -b 8  -o 1024
-
-Added in backend code to get detectron2 to work
-https://github.com/facebookresearch/unbiased-teacher/issues/44
-
-## Inference
+Moving forward, I plan to continue exploring ways to improve the performance of the video modality and to investigate the optimal method for combining all three models. Stay tuned for more updates on this exciting project!
