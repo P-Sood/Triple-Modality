@@ -86,10 +86,11 @@ class BertAudioClassifier(nn.Module):
 
         self.wav2vec2 = AutoModel.from_pretrained("ehcalabres/wav2vec2-lg-xlsr-en-speech-emotion-recognition")
         self.wav_2_768_2 = nn.Linear(1024 , 768)
+        self.aud_norm = nn.LayerNorm(1024)
+        
         self.wav_2_768_2.weight = torch.nn.init.xavier_normal_(self.wav_2_768_2.weight)
         
         self.bert_norm = nn.LayerNorm(768)
-        self.aud_norm = nn.LayerNorm(768)
 
         self.dropout = nn.Dropout(self.dropout)
         self.linear1 = nn.Linear(768*2, self.output_dim)

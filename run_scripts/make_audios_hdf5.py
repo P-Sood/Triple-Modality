@@ -53,7 +53,8 @@ def speech_file_to_array_fn(path , timings , speaker , target_sampling_rate = 16
 def write2File(writefile , path , timings , speaker, check):
     filename = f"{check}_{path.split('/')[-1][:-4]}_{timings}"
     # generate some data for this piece of data
-    data = speech_file_to_array_fn(path[3:]  , timings , speaker)
+    data = speech_file_to_array_fn(path  , timings , speaker)
+    # ERRORS HERE BECAUSE OF PATHING
     writefile.create_dataset(filename, data=data)
     gc.collect()
 
@@ -61,15 +62,15 @@ def write2File(writefile , path , timings , speaker, check):
     
 def fun(df , f , i): 
     sub_df = df.iloc[i*1000:(i+1)*1000]
-    sub_df.progress_apply(lambda x: write2File(f , x['audio_path'] , x['timings'] , None , x['split']  ) , axis = 1 )
+    sub_df.progress_apply(lambda x: write2File(f , x['audio_path'] , None , None , x['split']  ) , axis = 1 )
     
 def main():
-    df = pd.read_pickle("/home/jupyter/multi-modal-emotion/data/must.pkl")
-    f = h5py.File('../data/must_audio.hdf5','a', libver='latest' , swmr=True)
+    df = pd.read_pickle("/home/jupyter/multi-modal-emotion/data/tiktok.pkl")
+    f = h5py.File('../data/tiktok_audio.hdf5','a', libver='latest' , swmr=True)
     f.swmr_mode = True
     tqdm.pandas()
-    df.progress_apply(lambda x: write2File(f , x['audio_path'] , x['timings'] , None , x['split']  ) , axis = 1 )
-    read_file = h5py.File('../data/must_audio.hdf5','r', libver='latest' , swmr=True)
+    df.progress_apply(lambda x: write2File(f , x['audio_path'] , None , None , x['split']  ) , axis = 1 )
+    read_file = h5py.File('../data/tiktok_audio.hdf5','r', libver='latest' , swmr=True)
     print(len(list(read_file.keys())))
 if __name__ == "__main__":
     main()

@@ -78,7 +78,7 @@ def get_statistics_big_batch(input , label , model , criterion , Metric , check=
     
     
     output = checkpoint(model , text_input_ids.to(device) , text_attention_mask.to(device), audio_input_ids.to(device) , audio_context.to(device) ,
-                            video_input_ids.to(device) , video_context.to(device) , video_attention_mask.to(device) , check)  
+                            video_input_ids.to(device) , video_context.to(device) , video_attention_mask.to(device) , check , use_reentrant=False)  
         
     del audio_input_ids
     del video_context

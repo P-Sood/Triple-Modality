@@ -108,24 +108,30 @@ class TAVForMAE(nn.Module):
         if self.must:
             self.bert = AutoModel.from_pretrained('jkhan447/sarcasm-detection-RoBerta-base-CR')
         else:
-            self.bert = AutoModel.from_pretrained('j-hartmann/emotion-english-distilroberta-base')
+            self.bert = AutoModel.from_pretrained('bert-base-multilingual-cased')
+            # self.bert = AutoModel.from_pretrained('j-hartmann/emotion-english-distilroberta-base')
 
+        self.conv = torch.nn.Conv1d(3 , 3 , 2)
 
         self.test_ctr = 1
         self.train_ctr = 1
 
-        self.wav2vec2 = AutoModel.from_pretrained("ehcalabres/wav2vec2-lg-xlsr-en-speech-emotion-recognition")
+        # self.wav2vec2 = AutoModel.from_pretrained("ehcalabres/wav2vec2-lg-xlsr-en-speech-emotion-recognition")
+        self.wav2vec2 = AutoModel.from_pretrained("justin1983/wav2vec2-xlsr-multilingual-56-finetuned-amd")
         self.wav_2_768_2 = nn.Linear(1024 , 768)
         self.wav_2_768_2.weight = torch.nn.init.xavier_normal_(self.wav_2_768_2.weight)
-        self.videomae = VideoMAEModel.from_pretrained("MCG-NJU/videomae-base-finetuned-kinetics")
+        self.aud_norm = nn.LayerNorm(1024)
+        
+        self.videomae = VideoMAEModel.from_pretrained("MCG-NJU/videomae-base")
         
         self.bert_norm = nn.LayerNorm(768)
         self.vid_norm = nn.LayerNorm(768)
-        self.aud_norm = nn.LayerNorm(768)
+        
+        self.tan = nn.Tanh()
 
 
         self.dropout = nn.Dropout(self.dropout)
-        self.linear1 = nn.Linear(768*3, self.output_dim)
+        self.linear1 = nn.Linear((768-1)*3, self.output_dim)
         
 
     
@@ -168,7 +174,11 @@ class TAVForMAE(nn.Module):
         del visual_mask
 
         #Concatenate Outputs
-        tav = torch.cat([text_outputs, aud_outputs , vid_outputs],dim=1)
+        tav = torch.stack([text_outputs, aud_outputs , vid_outputs] , dim=1)
+        tav = self.conv(tav)
+        tav = self.tan(tav).flatten(1)
+        
+        # tav = torch.cat([text_outputs, aud_outputs , vid_outputs],dim=1)
         
         del text_outputs
         del aud_outputs 

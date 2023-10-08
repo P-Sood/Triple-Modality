@@ -59,7 +59,7 @@ def get_statistics_big_batch(input , label , model , criterion , Metric , check=
     audio_context = audio_features["audio_context"]
     del audio_features
     
-    output = checkpoint(model, text_input_ids.to(device) , text_attention_mask.to(device) , audio_input_ids.to(device) , audio_context.to(device), check)  
+    output = checkpoint(model, text_input_ids.to(device) , text_attention_mask.to(device) , audio_input_ids.to(device) , audio_context.to(device), check , use_reentrant=False)  
         
     del text_input_ids
     del text_attention_mask

@@ -60,7 +60,7 @@ def videoMAE_features(path  , timings  , check , speaker):
     std = [0.229, 0.224, 0.225] 
     resize_to = {'shortest_edge': 224}
     resize_to = resize_to['shortest_edge']
-    num_frames_to_sample = 16 # SET by MODEL CANT CHANGE
+    num_frames_to_sample = 8 # SET by MODEL CANT CHANGE
     
     # print(f"We have path {path}\ntimings are {timings}\nspeaker is {speaker}\ncheck is {check}\nsingular_func_ is {singular_func_.__name__ if singular_func_ is not None else None}" , flush= True)
 
@@ -100,43 +100,48 @@ def videoMAE_features(path  , timings  , check , speaker):
                 ),
             ]
         )
-    video = EncodedVideo.from_path(path)
-    
-    video_data = video.get_clip(start_sec=beg, end_sec=end)
+   
+    video = EncodedVideo.from_path(path , decode_audio = False)
+    video_data = video.get_clip(start_sec=186, end_sec=end)
+    del video
     video_data = transform(video_data)
+    del transform
     return video_data['video'].numpy()
 
 
-def write2File(writefile , path , timings, check , speaker):
-    
-    filename = f"{check}_{path.split('/')[-1][:-4]}_{timings}"
+def write2File(writefile : h5py , path , timings, check , speaker):
+    print(f"{path}" , flush=True)
+    # filename = f"{check}_{path.split('/')[-1][:-4]}_{timings}"
+    filename = f"{check}_{path.split('/')[-1][:-4]}_2"
     # print(filename , flush = True)
     # generate some data for this piece of data
-    data = videoMAE_features(path[3:]  , timings  , check , speaker)
-    try:
-        writefile.create_dataset(filename, data=data)
-    except ValueError:
-        pass
+    data = videoMAE_features(path  , timings  , check , speaker)
+    writefile.create_dataset(filename, data=data)
+    del data
+    h5py.File.flush(writefile)
     gc.collect()
     
     
 def fun(df , f , i): 
-    sub_df = df.iloc[i*1000:(i+1)*1000]
-    sub_df.progress_apply(lambda x: write2File(f , x['video_path'] , x['timings'] , x['split'] , x['speaker']  ) , axis = 1 )
+    sub_df = df.iloc[i*1:(i+1)*1]
+    sub_df.apply(lambda x: write2File(f , x['video_path'] , None , x['split'] , None  ) , axis = 1 )
     
     
 def main():
-    df = pd.read_pickle("/home/jupyter/multi-modal-emotion/data/iemo.pkl")
-    f = h5py.File('../data/iemo_videos.hdf5','a', libver='latest' , swmr=True)
+    # 405 IS MESSED UP ../data/tiktok_videos/train/educative/sadboy_circus_7177431016494222638.mp4
+    a = 405
+    df = pd.read_pickle("/home/jupyter/multi-modal-emotion/data/tiktok.pkl")[a:a+1]
+    print(df['video_path'])
+    f = h5py.File('../data/tiktok_videos.hdf5','a', libver='latest' , swmr=True)
     f.swmr_mode = True
-    tqdm.pandas()
-    for i in tqdm(range(0,8)): # change first arg in range, to the next applicable one in case it crashes
+    # tqdm.pandas()
+    for i in tqdm(range(0,1)): # change first arg in range, to the next applicable one in case it crashes
         fun(df , f, i)
         gc.collect()
 
-    # df.progress_apply(lambda x: write2File(f , x['video_path'] , x['timings'] , x['split']  ) , axis = 1 )
+    # df.apply(lambda x: write2File(f , x['video_path'] , None , x['split'] , None  ) , axis = 1 )
     
-    read_file = h5py.File('../data/iemo_videos.hdf5','r', libver='latest' , swmr=True)
+    read_file = h5py.File('../data/tiktok_videos.hdf5','r', libver='latest' , swmr=True)
     print(list(read_file.keys()))
     print(len(list(read_file.keys()))) 
     

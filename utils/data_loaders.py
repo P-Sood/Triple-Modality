@@ -20,7 +20,7 @@ class TextAudioVideoDataset(Dataset):
     feature_col3 : text
     """
 
-    def __init__(self, df , dataset  , batch_size , max_len , feature_col1 , feature_col2 , feature_col3  , label_col , timings = None , accum = False  , check = "test"):
+    def __init__(self, df , dataset  , batch_size , feature_col1 , feature_col2 , feature_col3  , label_col , timings = None , accum = False  , check = "test"):
         
         self.audio_path = df[feature_col1].values
         self.video_path = df[feature_col2].values
@@ -41,6 +41,13 @@ class TextAudioVideoDataset(Dataset):
             max_len=int(70*2.5)
             tokenizer = AutoTokenizer.from_pretrained('j-hartmann/emotion-english-distilroberta-base')
             self.Data = Data(video="../../data/iemo_videos.hdf5" , audio="../../data/iemo_audio.hdf5")
+            self.texts = [tokenizer(text, 
+                               padding='max_length', max_length = max_len, truncation=True,
+                                return_tensors="pt") for text in df[feature_col3]]
+        elif "tiktok" in str(dataset).lower():
+            max_len = 300
+            tokenizer = AutoTokenizer.from_pretrained('bert-base-multilingual-cased')
+            self.Data = Data(video="../../data/tiktok_videos.hdf5" , audio="../../data/tiktok_audio.hdf5")
             self.texts = [tokenizer(text, 
                                padding='max_length', max_length = max_len, truncation=True,
                                 return_tensors="pt") for text in df[feature_col3]]
@@ -156,7 +163,7 @@ class TextAudioDataset(Dataset):
     feature_col2 : text
     """
 
-    def __init__(self, df , dataset , batch_size , max_len , feature_col1 , feature_col2  , label_col , timings = None , accum = False , check = "test"):
+    def __init__(self, df , dataset , batch_size , feature_col1 , feature_col2  , label_col , timings = None , accum = False , check = "test"):
 
         self.audio_path = df[feature_col1].values
         try:
@@ -233,7 +240,7 @@ class TextVideoDataset(Dataset):
     feature_col2 : text
     """
 
-    def __init__(self, df , dataset  , batch_size, max_len , feature_col1 , feature_col2  , label_col , timings = None  , accum = False , check = "test"):
+    def __init__(self, df , dataset  , batch_size, feature_col1 , feature_col2  , label_col , timings = None  , accum = False , check = "test"):
         
         self.video_path = df[feature_col1].values
         
@@ -261,7 +268,7 @@ class TextVideoDataset(Dataset):
             tokenizer = AutoTokenizer.from_pretrained('jkhan447/sarcasm-detection-RoBerta-base-CR')
             self.Data = Data(video="../../data/must_videos.hdf5" , audio=None)
             self.texts = []
-            #TODO: ERROR HERE?
+            
             for i in range(0, len(df[feature_col2]), 2):
                 # concatenate the text
                 text = df[feature_col2].iloc[i] + ' ' + df[feature_col2].iloc[i+1]
@@ -511,8 +518,7 @@ class Data:
 
         if check == "train":
             transform = Compose(
-                            [
-                                # TODO: DATASET SPECIFIC                            
+                            [                           
                                 RandomHorizontalFlip(p=0.5), # 
                                 RandomVerticalFlip(p=0.5), # 
                             ]
@@ -543,7 +549,7 @@ class Data:
         singular_func_ = random.choices(population=func_, weights=[.5 , .5], k=1)[0]
         
         if not self.must:
-            speech_array = torch.Tensor(self.AUDIOS[f"{check}_{path.split('/')[-1][:-4]}_{timings}"][()])
+            speech_array = torch.Tensor(self.AUDIOS[f"{check}_{path.split('/')[-1][:-4]}"][()])
         
             if check == "train":
                 speech_array += singular_func_(speech_array,SNR=10)

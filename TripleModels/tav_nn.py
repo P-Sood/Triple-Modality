@@ -46,7 +46,7 @@ def prepare_dataloader(df , dataset , batch_size, label_task , epoch_switch , pi
         class_counts = torch.Tensor(list(dict(sorted((dict((labels)).items()))).values())).to(int)
 
         samples_weight = torch.tensor([1/class_counts[t] for t in dataset.labels])
-        print(samples_weight, "\n\n" , len(samples_weight))
+        print(len(samples_weight))
         
         if accum:
             sampler = MySampler(list(samples_weight), len(samples_weight) , replacement=True , epoch=epoch_switch -1  , epoch_switch = epoch_switch)
@@ -159,6 +159,10 @@ def main():
     elif param_dict['label_task'] == "sarcasm":
         number_index = "sarcasm"
         label_index = "sarcasm_label"
+        df = df[df['context'] == False]
+    elif param_dict['label_task'] == "sex":
+        number_index = "content"
+        label_index = "content_label"
         df = df[df['context'] == False]
     else:
         number_index = "emotion"

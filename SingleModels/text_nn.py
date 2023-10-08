@@ -35,6 +35,7 @@ def prepare_dataloader(df , dataset , batch_size, label_task  , epoch_switch , p
 
     if check == "train":
         samples_weight = torch.tensor([1/class_counts[t] for t in dataset.labels])
+        print(len(samples_weight))
         if accum:
             sampler = MySampler(list(samples_weight), len(samples_weight) , replacement=True , epoch=epoch_switch -1  , epoch_switch = epoch_switch)
         else:
