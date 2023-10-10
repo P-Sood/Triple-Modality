@@ -120,6 +120,8 @@ class AudioVideoDataset(Dataset):
             self.Data = Data(video="../../data/videos_context.hdf5" , audio="../../data/audio.hdf5")
         elif "iemo" in str(dataset).lower():
             self.Data = Data(video="../../data/iemo_videos.hdf5" , audio="../../data/iemo_audio.hdf5")
+        elif "tiktok" in str(dataset).lower():
+            self.Data = Data(video="../../data/tiktok_videos.hdf5" , audio="../../data/tiktok_audio.hdf5")
         else:
             self.Data = Data(video="../../data/must_videos.hdf5" , audio="../../data/must_audio.hdf5")
             self.timings = df["timings"].values.reshape(-1, 2).tolist()
@@ -185,6 +187,13 @@ class TextAudioDataset(Dataset):
             self.texts = [tokenizer(text, 
                                padding='max_length', max_length = max_len, truncation=True,
                                 return_tensors="pt") for text in df[feature_col2]]
+        elif "tiktok" in str(dataset).lower():
+            max_len = 300
+            tokenizer = AutoTokenizer.from_pretrained('bert-base-multilingual-cased')
+            self.Data = Data(video=None , audio="../../data/tiktok_audio.hdf5")
+            self.texts = [tokenizer(text, 
+                               padding='max_length', max_length = max_len, truncation=True,
+                                return_tensors="pt") for text in df[feature_col2]]
         else:
             max_len = 300
             tokenizer = AutoTokenizer.from_pretrained('jkhan447/sarcasm-detection-RoBerta-base-CR')
@@ -203,10 +212,6 @@ class TextAudioDataset(Dataset):
             
         self.check = check
         self.labels = df[label_col].values.tolist()
-        
-
-        
-
         
         assert len(self.audio_path) == len(self.texts) , "wrong lengths"
         if accum:
@@ -260,6 +265,13 @@ class TextVideoDataset(Dataset):
             max_len=int(70*2.5)
             tokenizer = AutoTokenizer.from_pretrained('j-hartmann/emotion-english-distilroberta-base')
             self.Data = Data(video="../../data/iemo_videos.hdf5" , audio=None)
+            self.texts = [tokenizer(text, 
+                               padding='max_length', max_length = max_len, truncation=True,
+                                return_tensors="pt") for text in df[feature_col2]]
+        elif "tiktok" in str(dataset).lower():
+            max_len = 300
+            tokenizer = AutoTokenizer.from_pretrained('bert-base-multilingual-cased')
+            self.Data = Data(video="../../data/tiktok_videos.hdf5" , audio=None)
             self.texts = [tokenizer(text, 
                                padding='max_length', max_length = max_len, truncation=True,
                                 return_tensors="pt") for text in df[feature_col2]]
@@ -334,6 +346,8 @@ class VisualDataset(Dataset):
             self.Data = Data(video="../../data/videos_context.hdf5" , audio=None)
         elif "iemo" in str(dataset).lower():
             self.Data = Data(video="../../data/iemo_videos.hdf5" , audio=None)
+        elif "tiktok" in str(dataset).lower():
+            self.Data = Data(video="../../data/tiktok_videos.hdf5" , audio=None)
         else:
             self.Data = Data(video="../../data/must_videos.hdf5" , audio=None)
             self.timings = df["timings"].values.reshape(-1, 2).tolist()
@@ -403,6 +417,8 @@ class Wav2VecAudioDataset(Dataset):
             self.Data = Data(video=None , audio="../../data/audio.hdf5")
         elif "iemo" in str(dataset).lower():
             self.Data = Data(video=None , audio="../../data/iemo_audio.hdf5")
+        elif "tiktok" in str(dataset).lower():
+            self.Data = Data(video=None , audio="../../data/tiktok_audio.hdf5")
         else:
             self.Data = Data(video=None , audio="../../data/must_audio.hdf5")
             self.timings = df["timings"].values.reshape(-1, 2).tolist()
@@ -439,9 +455,22 @@ class BertDataset(Dataset):
     """
 
     def __init__(self, df , dataset, batch_size , feature_col , label_col , accum = False):
-        if "meld" in str(dataset).lower() or "iemo" in str(dataset).lower():
+                
+        if "meld" in str(dataset).lower():
             max_len=int(70*2.5)
             tokenizer = AutoTokenizer.from_pretrained('j-hartmann/emotion-english-distilroberta-base')
+            self.texts = [tokenizer(text, 
+                               padding='max_length', max_length = max_len, truncation=True,
+                                return_tensors="pt") for text in df[feature_col]]
+        elif "iemo" in str(dataset).lower():
+            max_len=int(70*2.5)
+            tokenizer = AutoTokenizer.from_pretrained('j-hartmann/emotion-english-distilroberta-base')
+            self.texts = [tokenizer(text, 
+                               padding='max_length', max_length = max_len, truncation=True,
+                                return_tensors="pt") for text in df[feature_col]]
+        elif "tiktok" in str(dataset).lower():
+            max_len = 300
+            tokenizer = AutoTokenizer.from_pretrained('bert-base-multilingual-cased')
             self.texts = [tokenizer(text, 
                                padding='max_length', max_length = max_len, truncation=True,
                                 return_tensors="pt") for text in df[feature_col]]
@@ -449,14 +478,14 @@ class BertDataset(Dataset):
             max_len = 300
             tokenizer = AutoTokenizer.from_pretrained('jkhan447/sarcasm-detection-RoBerta-base-CR')
             self.texts = []
-            #TODO: ERROR HERE?
             for i in range(0, len(df[feature_col]), 2):
                 # concatenate the text
                 text = df[feature_col].iloc[i] + ' ' + df[feature_col].iloc[i+1]
                 # tokenize the concatenated text
                 tokens = tokenizer(text, padding='max_length', max_length=max_len, truncation=True, return_tensors="pt")
                 self.texts.append(tokens)
-                df = df[df['context'] == False]
+            self.timings = df["timings"].values.reshape(-1, 2).tolist()
+            df = df[df['context'] == False]
         
         
         self.labels = df[label_col].values.tolist()
