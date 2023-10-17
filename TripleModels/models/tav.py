@@ -1,3 +1,4 @@
+from copy import deepcopy
 from glob import glob
 from transformers import logging
 logging.set_verbosity_error()
@@ -111,27 +112,34 @@ class TAVForMAE(nn.Module):
             self.bert = AutoModel.from_pretrained('bert-base-multilingual-cased')
             # self.bert = AutoModel.from_pretrained('j-hartmann/emotion-english-distilroberta-base')
 
-        self.conv = torch.nn.Conv1d(3 , 3 , 2)
-
         self.test_ctr = 1
         self.train_ctr = 1
 
         # self.wav2vec2 = AutoModel.from_pretrained("ehcalabres/wav2vec2-lg-xlsr-en-speech-emotion-recognition")
         self.wav2vec2 = AutoModel.from_pretrained("justin1983/wav2vec2-xlsr-multilingual-56-finetuned-amd")
+        
+        self.videomae = VideoMAEModel.from_pretrained("MCG-NJU/videomae-base")
+        
+        for model in [self.bert , self.wav2vec2 , self.videomae]:
+            for param in model.base_model.parameters():
+                param.requires_grad = False
+        
+        #Everything before this line is unlearnable, everything after is what we are focused on
         self.wav_2_768_2 = nn.Linear(1024 , 768)
         self.wav_2_768_2.weight = torch.nn.init.xavier_normal_(self.wav_2_768_2.weight)
         self.aud_norm = nn.LayerNorm(1024)
         
-        self.videomae = VideoMAEModel.from_pretrained("MCG-NJU/videomae-base")
-        
         self.bert_norm = nn.LayerNorm(768)
         self.vid_norm = nn.LayerNorm(768)
         
-        self.tan = nn.Tanh()
+        self.aud_text_layers = nn.ModuleList([nn.MultiheadAttention(embed_dim=768, num_heads=8) for _ in range(self.num_layers)])
+        self.vid_text_layers = nn.ModuleList([nn.MultiheadAttention(embed_dim=768, num_heads=8) for _ in range(self.num_layers)])
 
 
         self.dropout = nn.Dropout(self.dropout)
-        self.linear1 = nn.Linear((768-1)*3, self.output_dim)
+        self.linear1 = nn.Linear(768*4, 768*2)
+        self.relu = nn.ReLU()
+        self.linear2 = nn.Linear(768*2, self.output_dim)
         
 
     
@@ -142,7 +150,7 @@ class TAVForMAE(nn.Module):
         del _
         del input_ids
         del text_attention_mask
-        text_outputs = self.bert_norm(text_outputs) # 
+        text_outputs = self.bert_norm(text_outputs) 
         
         aud_outputs = self.wav2vec2(audio_features)[0]
         del audio_features
@@ -173,12 +181,16 @@ class TAVForMAE(nn.Module):
             
         del visual_mask
 
-        #Concatenate Outputs
-        tav = torch.stack([text_outputs, aud_outputs , vid_outputs] , dim=1)
-        tav = self.conv(tav)
-        tav = self.tan(tav).flatten(1)
+        #Now we have to concat all the outputs
+        Ffusion1 = text_outputs
+        Ffusion2 = deepcopy(text_outputs)
+        for i in range(self.num_layers):
+          aud_text_layer = self.aud_text_layers[i]
+          vid_text_layer = self.vid_text_layers[i]
+          Ffusion1, _ = aud_text_layer(Ffusion1, aud_outputs, aud_outputs)
+          Ffusion2, _ = vid_text_layer(Ffusion2, vid_outputs, vid_outputs)
         
-        # tav = torch.cat([text_outputs, aud_outputs , vid_outputs],dim=1)
+        tav = torch.cat([Ffusion1, Ffusion2, aud_outputs , vid_outputs],dim=1)
         
         del text_outputs
         del aud_outputs 
@@ -188,5 +200,10 @@ class TAVForMAE(nn.Module):
         if check == "train":
             tav = self.dropout(tav)
         tav = self.linear1(tav)
+        tav = self.relu(tav)
+        if check == "train":
+            tav = self.dropout(tav)
+        tav = self.linear2(tav)
+        
 
         return tav # returns [batch_size,output_dim]
