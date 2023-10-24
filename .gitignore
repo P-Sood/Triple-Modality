@@ -1,4 +1,6 @@
 emotion_venv
+*.swo
+*.swp
 *maps*
 wandb/*
 src/wandb/*
