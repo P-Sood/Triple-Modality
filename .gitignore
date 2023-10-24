@@ -10,6 +10,7 @@ _*.pkl
 *.vector_cache/*
 utils/.vector_cache*
 data/*
+data_raw/*
 *.csv
 *.pkl
 *.icloud
