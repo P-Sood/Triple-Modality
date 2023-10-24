@@ -202,8 +202,10 @@ def one_epoch(epoch , train_dataloader , val_dataloader , model , criterion , op
     log_val2 = iters2 // 5
     wandb.log({"log_val_multinomial" : log_val1 , "log_val_iterative" : log_val2})
 
+    regular = False
+    
     path = '/'.join(os.getcwd().split('/')[:-3]) + "/TAV_Train"
-    if epoch % epoch_switch == 0:
+    if epoch % epoch_switch == 0 or regular is True:
         model , optimizer , criterion , prev_val_loss , prev_f1 = not_grad_accum(epoch , train_dataloader[0] , val_dataloader , model , criterion , optimizer , scheduler, clip , patience , Metric , prev_val_loss , prev_f1 , total_loss_train , iters1 , log_val1 , path)
     else:
         model , optimizer , criterion , prev_val_loss , prev_f1 = grad_accum(epoch , train_dataloader[1] , val_dataloader , model , criterion , optimizer , scheduler, clip , patience , Metric , prev_val_loss , prev_f1 , total_loss_train , iters2 , log_val2 , path)

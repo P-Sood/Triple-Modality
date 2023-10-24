@@ -28,6 +28,7 @@ SingleModels/run_slurm/wandb/*
 *core.*
 /home/prsood/projects/def-whkchun/prsood/multi-modal-emotion/IEMOCAP/*
 trimodal/*
+!req.txt
 *.mp4
 *.wav
 *.pkl
