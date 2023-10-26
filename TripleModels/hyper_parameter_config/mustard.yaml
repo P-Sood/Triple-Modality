@@ -47,6 +47,8 @@ parameters:
     values: ["300"]
   label_task:
     values: ['sarcasm']
+  sota:
+    values: [True, False]
   model:
     values: ['MAE_encoder']
   loss:

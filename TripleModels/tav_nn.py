@@ -252,10 +252,9 @@ def main():
         number_index = "sarcasm"
         label_index = "sarcasm_label"
         df = df[df["context"] == False]
-    elif param_dict["label_task"] == "sex":
+    elif param_dict["label_task"] == "tiktok":
         number_index = "content"
         label_index = "content_label"
-        df = df[df["context"] == False]
     else:
         number_index = "emotion"
         label_index = "emotion_label"
@@ -290,6 +289,7 @@ def main():
         "num_layers": config.num_layers,
         "learn_PosEmbeddings": config.learn_PosEmbeddings,
         "dataset": config.dataset,
+        "sota": config.sota,
     }
     param_dict["weights"] = weights
     param_dict["label2id"] = label2id
