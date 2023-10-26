@@ -160,6 +160,12 @@ class TAVForMAE(nn.Module):
                 for _ in range(self.num_layers)
             ]
         )
+        self.fusion_layers = nn.ModuleList(
+            [
+                nn.Linear(768*2, 768)
+                for _ in range(self.num_layers)
+            ]
+        )
 
         self.dropout = nn.Dropout(self.dropout)
         self.linear1 = nn.Linear(768 * 4, 768 * 2)
@@ -221,10 +227,15 @@ class TAVForMAE(nn.Module):
         Ffusion1 = text_outputs
         Ffusion2 = text_outputs
         for i in range(self.num_layers):
+            # Ffusion1 = text_outputs
+            # Ffusion2 = text_outputs
             aud_text_layer = self.aud_text_layers[i]
             vid_text_layer = self.vid_text_layers[i]
             Ffusion1, _ = aud_text_layer(Ffusion1, aud_outputs, aud_outputs)
             Ffusion2, _ = vid_text_layer(Ffusion2, vid_outputs, vid_outputs)
+            # Ffusion1, _ = aud_text_layer(Ffusion1, Ffusion1, aud_outputs)
+            # Ffusion2, _ = vid_text_layer(Ffusion2, Ffusion2, vid_outputs)
+            # text_outputs = fusion_layers(torch.cat([Ffusion1, Ffusion2], dim=1))
 
         tav = torch.cat([Ffusion1, Ffusion2, aud_outputs, vid_outputs], dim=1)
 

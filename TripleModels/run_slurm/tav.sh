@@ -11,8 +11,7 @@
 
 #SBATCH --cpus-per-task=6 # maximum CPU cores per GPU request: 6 on Cedar, 16 on Graham.
 
-#SBATCH --output=test.txt
-
-conda activate trimodal
-
-wandb agent ddi/MeldTriple/69lity9y
+# #SBATCH --output=../outputs/mustard_test_prev_SOTA.txt
+#SBATCH --output=../outputs/mustard_test.txt
+wandb agent ddi/MustardTriple/jy63jxc1  # OURS
+# wandb agent ddi/MustardTriple/nznlgus3  # Prev. SOTA paper
