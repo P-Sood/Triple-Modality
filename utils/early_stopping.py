@@ -5,9 +5,9 @@ from copy import deepcopy
 from typing import Callable
 
 
-
 class EarlyStopping:
     """Early stopping module."""
+
     def __init__(
         self,
         path_prefix: str,
@@ -37,6 +37,7 @@ class EarlyStopping:
         self.hyperopt = hyperopt
         self.verbose = verbose
         self.model = model
+
     def __call__(self, model: Callable, score: float) -> bool:
         """
         Perform check to see if training can be stoppped.
@@ -57,6 +58,7 @@ class EarlyStopping:
         if self.verbose:
             tqdm.write("Early stopping: Worse epoch")
         return False
+
     def new_best(self, score: float) -> bool:
         """
         Identiy if the current score is better than previous scores.
@@ -67,6 +69,7 @@ class EarlyStopping:
             return score <= self.best_score
         else:
             return score >= self.best_score
+
     @property
     def best_state(self):
         """Load/save the best model state prior to early stopping being activated."""
@@ -83,6 +86,7 @@ class EarlyStopping:
             )
             raise e
         return self.model
+
     @best_state.setter
     def best_state(self, model: Callable) -> None:
         """
@@ -90,5 +94,4 @@ class EarlyStopping:
         :model (base.ModelType): Model being trained.
         """
         self.best_state_dict = deepcopy({"model_state_dict": model.state_dict()})
-        torch.save({'model_state_dict': model.state_dict()}, self.path_prefix)
-
+        torch.save({"model_state_dict": model.state_dict()}, self.path_prefix)

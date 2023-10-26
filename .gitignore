@@ -1,4 +1,6 @@
 emotion_venv
+*.swo
+*.swp
 *maps*
 wandb/*
 src/wandb/*
@@ -10,6 +12,7 @@ _*.pkl
 *.vector_cache/*
 utils/.vector_cache*
 data/*
+data_raw/*
 *.csv
 *.pkl
 *.icloud

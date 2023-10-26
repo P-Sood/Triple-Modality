@@ -4,7 +4,7 @@ command:
   - python3
   - ${program}
   - "--dataset"
-  - "../../data/must.pkl"
+  - "../../data/must"
 method: bayes
 
 metric:
