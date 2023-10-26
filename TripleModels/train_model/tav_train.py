@@ -369,8 +369,10 @@ def one_epoch(
     log_val2 = iters2 // 5
     wandb.log({"log_val_multinomial": log_val1, "log_val_iterative": log_val2})
 
+    regular = False
+
     path = "/".join(os.getcwd().split("/")[:-3]) + "/TAV_Train"
-    if epoch % epoch_switch == 0:
+    if epoch % epoch_switch == 0 or regular is True:
         model, optimizer, criterion, prev_val_loss, prev_f1 = not_grad_accum(
             epoch,
             train_dataloader[0],

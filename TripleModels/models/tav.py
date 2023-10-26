@@ -219,7 +219,7 @@ class TAVForMAE(nn.Module):
 
         # Now we have to concat all the outputs
         Ffusion1 = text_outputs
-        Ffusion2 = deepcopy(text_outputs)
+        Ffusion2 = text_outputs
         for i in range(self.num_layers):
             aud_text_layer = self.aud_text_layers[i]
             vid_text_layer = self.vid_text_layers[i]
