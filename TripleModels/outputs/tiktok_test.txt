@@ -1,0 +1,224 @@
+wandb: Starting wandb agent 🕵️
+2023-10-26 11:34:11,717 - wandb.wandb_agent - INFO - Running runs: []
+2023-10-26 11:34:12,219 - wandb.wandb_agent - INFO - Agent received command: run
+2023-10-26 11:34:12,219 - wandb.wandb_agent - INFO - Agent starting run with config:
+	T_max: 3
+	batch_size: 4
+	beta: 1
+	clip: 1
+	dropout: 0.3
+	early_div: True
+	epoch: 6
+	epoch_switch: 3
+	hidden_layers: 300
+	label_task: tiktok
+	learn_PosEmbeddings: True
+	learning_rate: 7.921595327203444e-05
+	loss: NewCrossEntropy
+	mask: False
+	model: MAE_encoder
+	num_layers: 6
+	patience: 10
+	seed: 32
+	weight_decay: 0.0006925308516495246
+2023-10-26 11:34:12,226 - wandb.wandb_agent - INFO - About to run command: /usr/bin/env python3 ../tav_nn.py --dataset ../../data/tiktok
+wandb: Currently logged in as: zeerak (ddi). Use `wandb login --relogin` to force relogin
+wandb: WARNING Ignored wandb.init() arg entity when running a sweep.
+2023-10-26 11:34:17,237 - wandb.wandb_agent - INFO - Running runs: ['36wv34e6']
+wandb: Tracking run with wandb version 0.15.12
+wandb: Run data is saved locally in /l/users/zeerak.talat/Triple-Modality/TripleModels/run_slurm/wandb/run-20231026_113416-36wv34e6
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run denim-sweep-3
+wandb: ⭐️ View project at https://wandb.ai/ddi/TiktokTest
+wandb: 🧹 View sweep at https://wandb.ai/ddi/TiktokTest/sweeps/blosfvu3
+wandb: 🚀 View run at https://wandb.ai/ddi/TiktokTest/runs/36wv34e6
+ in main 
+ param_dict = {'epoch': 6, 'patience': 10, 'lr': 7.921595327203444e-05, 'clip': 1, 'batch_size': 4, 'weight_decay': 0.0006925308516495246, 'model': 'MAE_encoder', 'T_max': 3, 'seed': 32, 'label_task': 'tiktok', 'mask': False, 'loss': 'NewCrossEntropy', 'beta': 1, 'epoch_switch': 3, 'weights': tensor([0.2240, 0.3880, 0.3880]), 'label2id': {'educative': 2, 'others': 0, 'suggestive': 1}, 'id2label': {2: 'educative', 0: 'others', 1: 'suggestive'}} 
+ model_param = {'output_dim': 3, 'dropout': 0.3, 'early_div': True, 'num_layers': 6, 'learn_PosEmbeddings': True, 'dataset': '../../data/tiktok'} 
+ df ../../data/tiktok , with df = 1000 
+ 
+NewCrossEntropy
+Traceback (most recent call last):
+  File "/home/zeerak.talat/.conda/envs/trimodal/lib/python3.11/site-packages/pandas/core/indexes/base.py", line 3361, in get_loc
+    return self._engine.get_loc(casted_key)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "pandas/_libs/index.pyx", line 76, in pandas._libs.index.IndexEngine.get_loc
+  File "pandas/_libs/index.pyx", line 108, in pandas._libs.index.IndexEngine.get_loc
+  File "pandas/_libs/hashtable_class_helper.pxi", line 5198, in pandas._libs.hashtable.PyObjectHashTable.get_item
+  File "pandas/_libs/hashtable_class_helper.pxi", line 5206, in pandas._libs.hashtable.PyObjectHashTable.get_item
+KeyError: 'timings'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/l/users/zeerak.talat/Triple-Modality/TripleModels/run_slurm/../tav_nn.py", line 304, in <module>
+    main()
+  File "/l/users/zeerak.talat/Triple-Modality/TripleModels/run_slurm/../tav_nn.py", line 300, in main
+    runModel("cuda", df_train, df_val, df_test, param_dict, model_param)
+  File "/l/users/zeerak.talat/Triple-Modality/TripleModels/run_slurm/../tav_nn.py", line 168, in runModel
+    df_train_accum = prepare_dataloader(
+                     ^^^^^^^^^^^^^^^^^^^
+  File "/l/users/zeerak.talat/Triple-Modality/TripleModels/run_slurm/../tav_nn.py", line 55, in prepare_dataloader
+    dataset = TextAudioVideoDataset(
+              ^^^^^^^^^^^^^^^^^^^^^^
+  File "/l/users/zeerak.talat/Triple-Modality/utils/data_loaders.py", line 42, in __init__
+    self.timings = df[timings].values.tolist()
+                   ~~^^^^^^^^^
+  File "/home/zeerak.talat/.conda/envs/trimodal/lib/python3.11/site-packages/pandas/core/frame.py", line 3458, in __getitem__
+    indexer = self.columns.get_loc(key)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zeerak.talat/.conda/envs/trimodal/lib/python3.11/site-packages/pandas/core/indexes/base.py", line 3363, in get_loc
+    raise KeyError(key) from err
+KeyError: 'timings'
+2023-10-26 11:34:22,489 - wandb.wandb_agent - INFO - Cleaning up finished run: 36wv34e6
+wandb: Waiting for W&B process to finish... (failed 1). Press Control-C to abort syncing.
+wandb: 🚀 View run denim-sweep-3 at: https://wandb.ai/ddi/TiktokTest/runs/36wv34e6
+wandb: Synced 6 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20231026_113416-36wv34e6/logs
+2023-10-26 11:34:31,279 - wandb.wandb_agent - INFO - Agent received command: run
+2023-10-26 11:34:31,282 - wandb.wandb_agent - INFO - Agent starting run with config:
+	T_max: 3
+	batch_size: 4
+	beta: 1
+	clip: 1
+	dropout: 0.5
+	early_div: True
+	epoch: 6
+	epoch_switch: 3
+	hidden_layers: 300
+	label_task: tiktok
+	learn_PosEmbeddings: False
+	learning_rate: 6.101142517868845e-06
+	loss: NewCrossEntropy
+	mask: False
+	model: MAE_encoder
+	num_layers: 3
+	patience: 10
+	seed: 32
+	weight_decay: 0.0009445579569590184
+2023-10-26 11:34:31,286 - wandb.wandb_agent - INFO - About to run command: /usr/bin/env python3 ../tav_nn.py --dataset ../../data/tiktok
+wandb: Currently logged in as: zeerak (ddi). Use `wandb login --relogin` to force relogin
+wandb: WARNING Ignored wandb.init() arg entity when running a sweep.
+2023-10-26 11:34:36,298 - wandb.wandb_agent - INFO - Running runs: ['zd5d3p74']
+wandb: Tracking run with wandb version 0.15.12
+wandb: Run data is saved locally in /l/users/zeerak.talat/Triple-Modality/TripleModels/run_slurm/wandb/run-20231026_113435-zd5d3p74
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run lunar-sweep-4
+wandb: ⭐️ View project at https://wandb.ai/ddi/TiktokTest
+wandb: 🧹 View sweep at https://wandb.ai/ddi/TiktokTest/sweeps/blosfvu3
+wandb: 🚀 View run at https://wandb.ai/ddi/TiktokTest/runs/zd5d3p74
+ in main 
+ param_dict = {'epoch': 6, 'patience': 10, 'lr': 6.101142517868845e-06, 'clip': 1, 'batch_size': 4, 'weight_decay': 0.0009445579569590184, 'model': 'MAE_encoder', 'T_max': 3, 'seed': 32, 'label_task': 'tiktok', 'mask': False, 'loss': 'NewCrossEntropy', 'beta': 1, 'epoch_switch': 3, 'weights': tensor([0.2240, 0.3880, 0.3880]), 'label2id': {'educative': 2, 'others': 0, 'suggestive': 1}, 'id2label': {2: 'educative', 0: 'others', 1: 'suggestive'}} 
+ model_param = {'output_dim': 3, 'dropout': 0.5, 'early_div': True, 'num_layers': 3, 'learn_PosEmbeddings': False, 'dataset': '../../data/tiktok'} 
+ df ../../data/tiktok , with df = 1000 
+ 
+NewCrossEntropy
+Traceback (most recent call last):
+  File "/home/zeerak.talat/.conda/envs/trimodal/lib/python3.11/site-packages/pandas/core/indexes/base.py", line 3361, in get_loc
+    return self._engine.get_loc(casted_key)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "pandas/_libs/index.pyx", line 76, in pandas._libs.index.IndexEngine.get_loc
+  File "pandas/_libs/index.pyx", line 108, in pandas._libs.index.IndexEngine.get_loc
+  File "pandas/_libs/hashtable_class_helper.pxi", line 5198, in pandas._libs.hashtable.PyObjectHashTable.get_item
+  File "pandas/_libs/hashtable_class_helper.pxi", line 5206, in pandas._libs.hashtable.PyObjectHashTable.get_item
+KeyError: 'timings'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/l/users/zeerak.talat/Triple-Modality/TripleModels/run_slurm/../tav_nn.py", line 304, in <module>
+    main()
+  File "/l/users/zeerak.talat/Triple-Modality/TripleModels/run_slurm/../tav_nn.py", line 300, in main
+    runModel("cuda", df_train, df_val, df_test, param_dict, model_param)
+  File "/l/users/zeerak.talat/Triple-Modality/TripleModels/run_slurm/../tav_nn.py", line 168, in runModel
+    df_train_accum = prepare_dataloader(
+                     ^^^^^^^^^^^^^^^^^^^
+  File "/l/users/zeerak.talat/Triple-Modality/TripleModels/run_slurm/../tav_nn.py", line 55, in prepare_dataloader
+    dataset = TextAudioVideoDataset(
+              ^^^^^^^^^^^^^^^^^^^^^^
+  File "/l/users/zeerak.talat/Triple-Modality/utils/data_loaders.py", line 42, in __init__
+    self.timings = df[timings].values.tolist()
+                   ~~^^^^^^^^^
+  File "/home/zeerak.talat/.conda/envs/trimodal/lib/python3.11/site-packages/pandas/core/frame.py", line 3458, in __getitem__
+    indexer = self.columns.get_loc(key)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zeerak.talat/.conda/envs/trimodal/lib/python3.11/site-packages/pandas/core/indexes/base.py", line 3363, in get_loc
+    raise KeyError(key) from err
+KeyError: 'timings'
+wandb: Waiting for W&B process to finish... (failed 1). Press Control-C to abort syncing.
+wandb: - 0.027 MB of 0.027 MB uploaded (0.000 MB deduped)wandb: \ 0.027 MB of 0.027 MB uploaded (0.000 MB deduped)wandb: | 0.027 MB of 0.027 MB uploaded (0.000 MB deduped)wandb: / 0.027 MB of 0.027 MB uploaded (0.000 MB deduped)wandb: - 0.027 MB of 0.027 MB uploaded (0.000 MB deduped)wandb: \ 0.027 MB of 0.027 MB uploaded (0.000 MB deduped)wandb: 🚀 View run lunar-sweep-4 at: https://wandb.ai/ddi/TiktokTest/runs/zd5d3p74
+wandb: Synced 6 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20231026_113435-zd5d3p74/logs
+2023-10-26 11:34:52,029 - wandb.wandb_agent - INFO - Cleaning up finished run: zd5d3p74
+2023-10-26 11:34:52,766 - wandb.wandb_agent - INFO - Agent received command: run
+2023-10-26 11:34:52,766 - wandb.wandb_agent - INFO - Agent starting run with config:
+	T_max: 3
+	batch_size: 1
+	beta: 1
+	clip: 1
+	dropout: 0.3
+	early_div: True
+	epoch: 6
+	epoch_switch: 2
+	hidden_layers: 300
+	label_task: tiktok
+	learn_PosEmbeddings: False
+	learning_rate: 3.754464644462499e-05
+	loss: NewCrossEntropy
+	mask: False
+	model: MAE_encoder
+	num_layers: 7
+	patience: 10
+	seed: 64
+	weight_decay: 0.0001982976869851669
+2023-10-26 11:34:52,776 - wandb.wandb_agent - INFO - About to run command: /usr/bin/env python3 ../tav_nn.py --dataset ../../data/tiktok
+wandb: Currently logged in as: zeerak (ddi). Use `wandb login --relogin` to force relogin
+wandb: WARNING Ignored wandb.init() arg entity when running a sweep.
+2023-10-26 11:34:57,787 - wandb.wandb_agent - INFO - Running runs: ['7zjs70pj']
+wandb: Tracking run with wandb version 0.15.12
+wandb: Run data is saved locally in /l/users/zeerak.talat/Triple-Modality/TripleModels/run_slurm/wandb/run-20231026_113457-7zjs70pj
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run soft-sweep-5
+wandb: ⭐️ View project at https://wandb.ai/ddi/TiktokTest
+wandb: 🧹 View sweep at https://wandb.ai/ddi/TiktokTest/sweeps/blosfvu3
+wandb: 🚀 View run at https://wandb.ai/ddi/TiktokTest/runs/7zjs70pj
+ in main 
+ param_dict = {'epoch': 6, 'patience': 10, 'lr': 3.754464644462499e-05, 'clip': 1, 'batch_size': 1, 'weight_decay': 0.0001982976869851669, 'model': 'MAE_encoder', 'T_max': 3, 'seed': 64, 'label_task': 'tiktok', 'mask': False, 'loss': 'NewCrossEntropy', 'beta': 1, 'epoch_switch': 2, 'weights': tensor([0.2240, 0.3880, 0.3880]), 'label2id': {'educative': 2, 'others': 0, 'suggestive': 1}, 'id2label': {2: 'educative', 0: 'others', 1: 'suggestive'}} 
+ model_param = {'output_dim': 3, 'dropout': 0.3, 'early_div': True, 'num_layers': 7, 'learn_PosEmbeddings': False, 'dataset': '../../data/tiktok'} 
+ df ../../data/tiktok , with df = 1000 
+ 
+NewCrossEntropy
+Traceback (most recent call last):
+  File "/home/zeerak.talat/.conda/envs/trimodal/lib/python3.11/site-packages/pandas/core/indexes/base.py", line 3361, in get_loc
+    return self._engine.get_loc(casted_key)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "pandas/_libs/index.pyx", line 76, in pandas._libs.index.IndexEngine.get_loc
+  File "pandas/_libs/index.pyx", line 108, in pandas._libs.index.IndexEngine.get_loc
+  File "pandas/_libs/hashtable_class_helper.pxi", line 5198, in pandas._libs.hashtable.PyObjectHashTable.get_item
+  File "pandas/_libs/hashtable_class_helper.pxi", line 5206, in pandas._libs.hashtable.PyObjectHashTable.get_item
+KeyError: 'timings'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/l/users/zeerak.talat/Triple-Modality/TripleModels/run_slurm/../tav_nn.py", line 304, in <module>
+    main()
+  File "/l/users/zeerak.talat/Triple-Modality/TripleModels/run_slurm/../tav_nn.py", line 300, in main
+    runModel("cuda", df_train, df_val, df_test, param_dict, model_param)
+  File "/l/users/zeerak.talat/Triple-Modality/TripleModels/run_slurm/../tav_nn.py", line 168, in runModel
+    df_train_accum = prepare_dataloader(
+                     ^^^^^^^^^^^^^^^^^^^
+  File "/l/users/zeerak.talat/Triple-Modality/TripleModels/run_slurm/../tav_nn.py", line 55, in prepare_dataloader
+    dataset = TextAudioVideoDataset(
+              ^^^^^^^^^^^^^^^^^^^^^^
+  File "/l/users/zeerak.talat/Triple-Modality/utils/data_loaders.py", line 42, in __init__
+    self.timings = df[timings].values.tolist()
+                   ~~^^^^^^^^^
+  File "/home/zeerak.talat/.conda/envs/trimodal/lib/python3.11/site-packages/pandas/core/frame.py", line 3458, in __getitem__
+    indexer = self.columns.get_loc(key)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zeerak.talat/.conda/envs/trimodal/lib/python3.11/site-packages/pandas/core/indexes/base.py", line 3363, in get_loc
+    raise KeyError(key) from err
+KeyError: 'timings'
+wandb: Waiting for W&B process to finish... (failed 1). Press Control-C to abort syncing.
+slurmstepd-gpu-02: error: *** JOB 253978 ON gpu-02 CANCELLED AT 2023-10-26T11:35:01 ***
