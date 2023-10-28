@@ -331,7 +331,7 @@ def run_validation(
 def validate(val_dataloader, model, criterion, Metric, name="val"):
     total_loss_val = 0
     with torch.no_grad():
-        for val_input, val_label in val_dataloader:
+        for val_input, val_label in tqdm(val_dataloader, desc="Val"):
             val_batch_loss = get_statistics(
                 val_input, val_label, model, criterion, Metric, name, epoch=None
             )

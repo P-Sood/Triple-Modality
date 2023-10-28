@@ -13,5 +13,6 @@
 
 # #SBATCH --output=../outputs/mustard_test_prev_SOTA.txt
 #SBATCH --output=../outputs/mustard_test.txt
-wandb agent ddi/MustardTriple/jy63jxc1  # OURS
+# wandb agent ddi/MustardTest/y97hyzfr # OURS
+wandb agent ddi/MustardTriple/ru7hpeqt
 # wandb agent ddi/MustardTriple/nznlgus3  # Prev. SOTA paper

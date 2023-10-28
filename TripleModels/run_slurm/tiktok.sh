@@ -14,5 +14,5 @@
 # #SBATCH --output=../outputs/mustard_test_prev_SOTA.txt
 #SBATCH --output=../outputs/tiktok_test.txt
 
-wandb agent ddi/TiktokTest/blosfvu3 # OURS
+wandb agent ddi/TiktokTest/nreuhli2 # OURS
 # wandb agent ddi/MustardTriple/nznlgus3  # Prev. SOTA paper

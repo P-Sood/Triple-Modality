@@ -1,224 +1,353 @@
 wandb: Starting wandb agent 🕵️
-2023-10-26 11:34:11,717 - wandb.wandb_agent - INFO - Running runs: []
-2023-10-26 11:34:12,219 - wandb.wandb_agent - INFO - Agent received command: run
-2023-10-26 11:34:12,219 - wandb.wandb_agent - INFO - Agent starting run with config:
+2023-10-28 22:00:37,483 - wandb.wandb_agent - INFO - Running runs: []
+2023-10-28 22:00:38,166 - wandb.wandb_agent - INFO - Agent received command: run
+2023-10-28 22:00:38,167 - wandb.wandb_agent - INFO - Agent starting run with config:
 	T_max: 3
-	batch_size: 4
+	batch_size: 2
 	beta: 1
-	clip: 1
+	clip: 5
 	dropout: 0.3
 	early_div: True
 	epoch: 6
 	epoch_switch: 3
 	hidden_layers: 300
-	label_task: tiktok
-	learn_PosEmbeddings: True
-	learning_rate: 7.921595327203444e-05
+	label_task: content
+	learn_PosEmbeddings: False
+	learning_rate: 2.91295532813236e-05
 	loss: NewCrossEntropy
 	mask: False
 	model: MAE_encoder
 	num_layers: 6
 	patience: 10
-	seed: 32
-	weight_decay: 0.0006925308516495246
-2023-10-26 11:34:12,226 - wandb.wandb_agent - INFO - About to run command: /usr/bin/env python3 ../tav_nn.py --dataset ../../data/tiktok
+	seed: 96
+	sota: False
+	weight_decay: 0.0003673399954165347
+2023-10-28 22:00:38,174 - wandb.wandb_agent - INFO - About to run command: /usr/bin/env python3 ../tav_nn.py --dataset ../../data/tiktok
+2023-10-28 22:00:43,183 - wandb.wandb_agent - INFO - Running runs: ['6dafdp29']
 wandb: Currently logged in as: zeerak (ddi). Use `wandb login --relogin` to force relogin
 wandb: WARNING Ignored wandb.init() arg entity when running a sweep.
-2023-10-26 11:34:17,237 - wandb.wandb_agent - INFO - Running runs: ['36wv34e6']
 wandb: Tracking run with wandb version 0.15.12
-wandb: Run data is saved locally in /l/users/zeerak.talat/Triple-Modality/TripleModels/run_slurm/wandb/run-20231026_113416-36wv34e6
+wandb: Run data is saved locally in /l/users/zeerak.talat/Triple-Modality/TripleModels/run_slurm/wandb/run-20231028_220043-6dafdp29
 wandb: Run `wandb offline` to turn off syncing.
-wandb: Syncing run denim-sweep-3
+wandb: Syncing run pleasant-sweep-15
 wandb: ⭐️ View project at https://wandb.ai/ddi/TiktokTest
-wandb: 🧹 View sweep at https://wandb.ai/ddi/TiktokTest/sweeps/blosfvu3
-wandb: 🚀 View run at https://wandb.ai/ddi/TiktokTest/runs/36wv34e6
+wandb: 🧹 View sweep at https://wandb.ai/ddi/TiktokTest/sweeps/nreuhli2
+wandb: 🚀 View run at https://wandb.ai/ddi/TiktokTest/runs/6dafdp29
  in main 
- param_dict = {'epoch': 6, 'patience': 10, 'lr': 7.921595327203444e-05, 'clip': 1, 'batch_size': 4, 'weight_decay': 0.0006925308516495246, 'model': 'MAE_encoder', 'T_max': 3, 'seed': 32, 'label_task': 'tiktok', 'mask': False, 'loss': 'NewCrossEntropy', 'beta': 1, 'epoch_switch': 3, 'weights': tensor([0.2240, 0.3880, 0.3880]), 'label2id': {'educative': 2, 'others': 0, 'suggestive': 1}, 'id2label': {2: 'educative', 0: 'others', 1: 'suggestive'}} 
- model_param = {'output_dim': 3, 'dropout': 0.3, 'early_div': True, 'num_layers': 6, 'learn_PosEmbeddings': True, 'dataset': '../../data/tiktok'} 
+ param_dict = {'epoch': 6, 'patience': 10, 'lr': 2.91295532813236e-05, 'clip': 5, 'batch_size': 2, 'weight_decay': 0.0003673399954165347, 'model': 'MAE_encoder', 'T_max': 3, 'seed': 96, 'label_task': 'content', 'mask': False, 'loss': 'NewCrossEntropy', 'beta': 1, 'epoch_switch': 3, 'weights': tensor([0.2240, 0.3880, 0.3880]), 'label2id': {'educative': 2, 'others': 0, 'suggestive': 1}, 'id2label': {2: 'educative', 0: 'others', 1: 'suggestive'}} 
+ model_param = {'output_dim': 3, 'dropout': 0.3, 'early_div': True, 'num_layers': 6, 'learn_PosEmbeddings': False, 'dataset': '../../data/tiktok', 'sota': False} 
  df ../../data/tiktok , with df = 1000 
  
 NewCrossEntropy
-Traceback (most recent call last):
-  File "/home/zeerak.talat/.conda/envs/trimodal/lib/python3.11/site-packages/pandas/core/indexes/base.py", line 3361, in get_loc
-    return self._engine.get_loc(casted_key)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "pandas/_libs/index.pyx", line 76, in pandas._libs.index.IndexEngine.get_loc
-  File "pandas/_libs/index.pyx", line 108, in pandas._libs.index.IndexEngine.get_loc
-  File "pandas/_libs/hashtable_class_helper.pxi", line 5198, in pandas._libs.hashtable.PyObjectHashTable.get_item
-  File "pandas/_libs/hashtable_class_helper.pxi", line 5206, in pandas._libs.hashtable.PyObjectHashTable.get_item
-KeyError: 'timings'
+Downloading (…)okenizer_config.json:   0%|          | 0.00/29.0 [00:00<?, ?B/s]Downloading (…)okenizer_config.json: 100%|██████████| 29.0/29.0 [00:00<00:00, 86.6kB/s]
+Downloading (…)lve/main/config.json:   0%|          | 0.00/625 [00:00<?, ?B/s]Downloading (…)lve/main/config.json: 100%|██████████| 625/625 [00:00<00:00, 2.12MB/s]
+Downloading (…)solve/main/vocab.txt:   0%|          | 0.00/996k [00:00<?, ?B/s]Downloading (…)solve/main/vocab.txt: 100%|██████████| 996k/996k [00:00<00:00, 5.09MB/s]Downloading (…)solve/main/vocab.txt: 100%|██████████| 996k/996k [00:00<00:00, 5.07MB/s]
+Downloading (…)/main/tokenizer.json:   0%|          | 0.00/1.96M [00:00<?, ?B/s]Downloading (…)/main/tokenizer.json: 100%|██████████| 1.96M/1.96M [00:00<00:00, 3.85MB/s]Downloading (…)/main/tokenizer.json: 100%|██████████| 1.96M/1.96M [00:00<00:00, 3.84MB/s]
+700
+700
+Using 6 layers 
+Using sota = False
+Downloading model.safetensors:   0%|          | 0.00/714M [00:00<?, ?B/s]Downloading model.safetensors:   4%|▍         | 31.5M/714M [00:00<00:02, 258MB/s]Downloading model.safetensors:  10%|█         | 73.4M/714M [00:00<00:02, 316MB/s]Downloading model.safetensors:  16%|█▌        | 115M/714M [00:00<00:02, 270MB/s] Downloading model.safetensors:  22%|██▏       | 157M/714M [00:00<00:01, 303MB/s]Downloading model.safetensors:  28%|██▊       | 199M/714M [00:00<00:01, 324MB/s]Downloading model.safetensors:  34%|███▍      | 241M/714M [00:00<00:01, 335MB/s]Downloading model.safetensors:  40%|███▉      | 283M/714M [00:00<00:01, 345MB/s]Downloading model.safetensors:  46%|████▌     | 325M/714M [00:01<00:01, 341MB/s]Downloading model.safetensors:  51%|█████▏    | 367M/714M [00:01<00:00, 348MB/s]Downloading model.safetensors:  57%|█████▋    | 409M/714M [00:01<00:00, 354MB/s]Downloading model.safetensors:  63%|██████▎   | 451M/714M [00:01<00:00, 356MB/s]Downloading model.safetensors:  69%|██████▉   | 493M/714M [00:01<00:00, 350MB/s]Downloading model.safetensors:  75%|███████▍  | 535M/714M [00:01<00:00, 354MB/s]Downloading model.safetensors:  81%|████████  | 577M/714M [00:01<00:00, 350MB/s]Downloading model.safetensors:  87%|████████▋ | 619M/714M [00:01<00:00, 355MB/s]Downloading model.safetensors:  92%|█████████▏| 661M/714M [00:01<00:00, 353MB/s]Downloading model.safetensors:  98%|█████████▊| 703M/714M [00:02<00:00, 353MB/s]Downloading model.safetensors: 100%|██████████| 714M/714M [00:02<00:00, 339MB/s]
+Downloading (…)lve/main/config.json:   0%|          | 0.00/2.50k [00:00<?, ?B/s]Downloading (…)lve/main/config.json: 100%|██████████| 2.50k/2.50k [00:00<00:00, 8.27MB/s]
+Downloading pytorch_model.bin:   0%|          | 0.00/1.26G [00:00<?, ?B/s]Downloading pytorch_model.bin:   3%|▎         | 41.9M/1.26G [00:00<00:03, 382MB/s]Downloading pytorch_model.bin:   7%|▋         | 83.9M/1.26G [00:00<00:03, 391MB/s]Downloading pytorch_model.bin:  10%|▉         | 126M/1.26G [00:00<00:02, 389MB/s] Downloading pytorch_model.bin:  13%|█▎        | 168M/1.26G [00:00<00:02, 383MB/s]Downloading pytorch_model.bin:  17%|█▋        | 210M/1.26G [00:00<00:02, 377MB/s]Downloading pytorch_model.bin:  20%|█▉        | 252M/1.26G [00:00<00:02, 378MB/s]Downloading pytorch_model.bin:  23%|██▎       | 294M/1.26G [00:00<00:02, 372MB/s]Downloading pytorch_model.bin:  27%|██▋       | 336M/1.26G [00:00<00:02, 373MB/s]Downloading pytorch_model.bin:  30%|██▉       | 377M/1.26G [00:01<00:02, 374MB/s]Downloading pytorch_model.bin:  33%|███▎      | 419M/1.26G [00:01<00:02, 371MB/s]Downloading pytorch_model.bin:  37%|███▋      | 461M/1.26G [00:01<00:02, 370MB/s]Downloading pytorch_model.bin:  40%|███▉      | 503M/1.26G [00:01<00:02, 376MB/s]Downloading pytorch_model.bin:  43%|████▎     | 545M/1.26G [00:01<00:01, 382MB/s]Downloading pytorch_model.bin:  46%|████▋     | 587M/1.26G [00:01<00:01, 384MB/s]Downloading pytorch_model.bin:  50%|████▉     | 629M/1.26G [00:01<00:01, 388MB/s]Downloading pytorch_model.bin:  53%|█████▎    | 671M/1.26G [00:01<00:01, 394MB/s]Downloading pytorch_model.bin:  56%|█████▋    | 713M/1.26G [00:01<00:01, 393MB/s]Downloading pytorch_model.bin:  60%|█████▉    | 755M/1.26G [00:01<00:01, 392MB/s]Downloading pytorch_model.bin:  63%|██████▎   | 797M/1.26G [00:02<00:01, 397MB/s]Downloading pytorch_model.bin:  66%|██████▋   | 839M/1.26G [00:02<00:01, 394MB/s]Downloading pytorch_model.bin:  70%|██████▉   | 881M/1.26G [00:02<00:00, 396MB/s]Downloading pytorch_model.bin:  73%|███████▎  | 923M/1.26G [00:02<00:00, 395MB/s]Downloading pytorch_model.bin:  76%|███████▋  | 965M/1.26G [00:02<00:00, 392MB/s]Downloading pytorch_model.bin:  80%|███████▉  | 1.01G/1.26G [00:02<00:00, 393MB/s]Downloading pytorch_model.bin:  83%|████████▎ | 1.05G/1.26G [00:02<00:00, 396MB/s]Downloading pytorch_model.bin:  86%|████████▋ | 1.09G/1.26G [00:02<00:00, 398MB/s]Downloading pytorch_model.bin:  90%|████████▉ | 1.13G/1.26G [00:02<00:00, 397MB/s]Downloading pytorch_model.bin:  93%|█████████▎| 1.17G/1.26G [00:03<00:00, 394MB/s]Downloading pytorch_model.bin:  96%|█████████▋| 1.22G/1.26G [00:03<00:00, 382MB/s]Downloading pytorch_model.bin: 100%|█████████▉| 1.26G/1.26G [00:03<00:00, 385MB/s]Downloading pytorch_model.bin: 100%|██████████| 1.26G/1.26G [00:03<00:00, 386MB/s]
+epochs:   0%|          | 0/6 [00:00<?, ?it/s]we are in multinomial dataloader
 
-The above exception was the direct cause of the following exception:
+steps:   0%|          | 0/6 [00:00<?, ?it/s][A
 
+iter:   0%|          | 0/70 [00:00<?, ?it/s][A[AWe are in normal unweighted CEL
+
+
+iter:   1%|▏         | 1/70 [00:09<10:44,  9.34s/it][A[A
+
+iter:   3%|▎         | 2/70 [00:12<06:22,  5.62s/it][A[A
+
+iter:   4%|▍         | 3/70 [00:12<03:38,  3.26s/it][A[A
+
+iter:   6%|▌         | 4/70 [00:12<02:14,  2.04s/it][A[A
+
+iter:   7%|▋         | 5/70 [00:17<03:12,  2.96s/it][A[A
+
+iter:   9%|▊         | 6/70 [00:18<02:34,  2.42s/it][A[A
+
+iter:  10%|█         | 7/70 [00:20<02:04,  1.98s/it][A[A
+
+iter:  11%|█▏        | 8/70 [00:20<01:34,  1.53s/it][A[A
+
+iter:  13%|█▎        | 9/70 [00:20<01:07,  1.11s/it][A[A
+
+iter:  14%|█▍        | 10/70 [00:20<00:49,  1.22it/s][A[Aiter:  14%|█▍        | 10/70 [00:22<02:17,  2.28s/it]
+steps:   0%|          | 0/6 [00:22<?, ?it/s]
+epochs:   0%|          | 0/6 [00:25<?, ?it/s]
 Traceback (most recent call last):
-  File "/l/users/zeerak.talat/Triple-Modality/TripleModels/run_slurm/../tav_nn.py", line 304, in <module>
+  File "/l/users/zeerak.talat/Triple-Modality/TripleModels/run_slurm/../tav_nn.py", line 305, in <module>
     main()
-  File "/l/users/zeerak.talat/Triple-Modality/TripleModels/run_slurm/../tav_nn.py", line 300, in main
+  File "/l/users/zeerak.talat/Triple-Modality/TripleModels/run_slurm/../tav_nn.py", line 301, in main
     runModel("cuda", df_train, df_val, df_test, param_dict, model_param)
-  File "/l/users/zeerak.talat/Triple-Modality/TripleModels/run_slurm/../tav_nn.py", line 168, in runModel
-    df_train_accum = prepare_dataloader(
-                     ^^^^^^^^^^^^^^^^^^^
-  File "/l/users/zeerak.talat/Triple-Modality/TripleModels/run_slurm/../tav_nn.py", line 55, in prepare_dataloader
-    dataset = TextAudioVideoDataset(
-              ^^^^^^^^^^^^^^^^^^^^^^
-  File "/l/users/zeerak.talat/Triple-Modality/utils/data_loaders.py", line 42, in __init__
-    self.timings = df[timings].values.tolist()
-                   ~~^^^^^^^^^
-  File "/home/zeerak.talat/.conda/envs/trimodal/lib/python3.11/site-packages/pandas/core/frame.py", line 3458, in __getitem__
-    indexer = self.columns.get_loc(key)
-              ^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/zeerak.talat/.conda/envs/trimodal/lib/python3.11/site-packages/pandas/core/indexes/base.py", line 3363, in get_loc
-    raise KeyError(key) from err
-KeyError: 'timings'
-2023-10-26 11:34:22,489 - wandb.wandb_agent - INFO - Cleaning up finished run: 36wv34e6
+  File "/l/users/zeerak.talat/Triple-Modality/TripleModels/run_slurm/../tav_nn.py", line 198, in runModel
+    model = train_tav_network(
+            ^^^^^^^^^^^^^^^^^^
+  File "/l/users/zeerak.talat/Triple-Modality/TripleModels/train_model/tav_train.py", line 451, in train_tav_network
+    model, optimizer, criterion, scheduler, prev_val_loss, prev_f1 = one_epoch(
+                                                                     ^^^^^^^^^^
+  File "/l/users/zeerak.talat/Triple-Modality/TripleModels/train_model/tav_train.py", line 376, in one_epoch
+    model, optimizer, criterion, prev_val_loss, prev_f1 = not_grad_accum(
+                                                          ^^^^^^^^^^^^^^^
+  File "/l/users/zeerak.talat/Triple-Modality/TripleModels/train_model/tav_train.py", line 246, in not_grad_accum
+    train_batch_loss = fn(
+                       ^^^
+  File "/l/users/zeerak.talat/Triple-Modality/TripleModels/train_model/tav_train.py", line 41, in get_statistics
+    output = model(
+             ^^^^^^
+  File "/home/zeerak.talat/.conda/envs/trimodal/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1518, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zeerak.talat/.conda/envs/trimodal/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1568, in _call_impl
+    result = forward_call(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/l/users/zeerak.talat/Triple-Modality/TripleModels/models/tav.py", line 208, in forward
+    aud_outputs = self.wav2vec2(audio_features)[0]
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zeerak.talat/.conda/envs/trimodal/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1518, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zeerak.talat/.conda/envs/trimodal/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1527, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zeerak.talat/.conda/envs/trimodal/lib/python3.11/site-packages/transformers/models/wav2vec2/modeling_wav2vec2.py", line 1579, in forward
+    encoder_outputs = self.encoder(
+                      ^^^^^^^^^^^^^
+  File "/home/zeerak.talat/.conda/envs/trimodal/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1518, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zeerak.talat/.conda/envs/trimodal/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1527, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zeerak.talat/.conda/envs/trimodal/lib/python3.11/site-packages/transformers/models/wav2vec2/modeling_wav2vec2.py", line 908, in forward
+    layer_outputs = layer(
+                    ^^^^^^
+  File "/home/zeerak.talat/.conda/envs/trimodal/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1518, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zeerak.talat/.conda/envs/trimodal/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1527, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zeerak.talat/.conda/envs/trimodal/lib/python3.11/site-packages/transformers/models/wav2vec2/modeling_wav2vec2.py", line 737, in forward
+    hidden_states, attn_weights, _ = self.attention(
+                                     ^^^^^^^^^^^^^^^
+  File "/home/zeerak.talat/.conda/envs/trimodal/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1518, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zeerak.talat/.conda/envs/trimodal/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1527, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zeerak.talat/.conda/envs/trimodal/lib/python3.11/site-packages/transformers/models/wav2vec2/modeling_wav2vec2.py", line 593, in forward
+    attn_weights = torch.bmm(query_states, key_states.transpose(1, 2))
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+torch.cuda.OutOfMemoryError: CUDA out of memory. Tried to allocate 41.40 GiB. GPU 0 has a total capacty of 39.59 GiB of which 10.63 GiB is free. Process 2113803 has 5.21 GiB memory in use. Process 2114183 has 5.21 GiB memory in use. Process 2114527 has 5.21 GiB memory in use. Process 2115035 has 5.21 GiB memory in use. Including non-PyTorch memory, this process has 8.09 GiB memory in use. Of the allocated memory 3.71 GiB is allocated by PyTorch, and 3.87 GiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting max_split_size_mb to avoid fragmentation.  See documentation for Memory Management and PYTORCH_CUDA_ALLOC_CONF
+Exception in thread Thread-5 (_pin_memory_loop):
+Traceback (most recent call last):
+  File "/home/zeerak.talat/.conda/envs/trimodal/lib/python3.11/threading.py", line 1038, in _bootstrap_inner
+    self.run()
+  File "/home/zeerak.talat/.conda/envs/trimodal/lib/python3.11/threading.py", line 975, in run
+    self._target(*self._args, **self._kwargs)
+  File "/home/zeerak.talat/.conda/envs/trimodal/lib/python3.11/site-packages/torch/utils/data/_utils/pin_memory.py", line 54, in _pin_memory_loop
+    do_one_step()
+  File "/home/zeerak.talat/.conda/envs/trimodal/lib/python3.11/site-packages/torch/utils/data/_utils/pin_memory.py", line 31, in do_one_step
+    r = in_queue.get(timeout=MP_STATUS_CHECK_INTERVAL)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zeerak.talat/.conda/envs/trimodal/lib/python3.11/multiprocessing/queues.py", line 122, in get
+    return _ForkingPickler.loads(res)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zeerak.talat/.conda/envs/trimodal/lib/python3.11/site-packages/torch/multiprocessing/reductions.py", line 355, in rebuild_storage_fd
+    fd = df.detach()
+         ^^^^^^^^^^^
+  File "/home/zeerak.talat/.conda/envs/trimodal/lib/python3.11/multiprocessing/resource_sharer.py", line 57, in detach
+    with _resource_sharer.get_connection(self._id) as conn:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zeerak.talat/.conda/envs/trimodal/lib/python3.11/multiprocessing/resource_sharer.py", line 86, in get_connection
+    c = Client(address, authkey=process.current_process().authkey)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zeerak.talat/.conda/envs/trimodal/lib/python3.11/multiprocessing/connection.py", line 507, in Client
+    answer_challenge(c, authkey)
+  File "/home/zeerak.talat/.conda/envs/trimodal/lib/python3.11/multiprocessing/connection.py", line 751, in answer_challenge
+    message = connection.recv_bytes(256)         # reject large message
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zeerak.talat/.conda/envs/trimodal/lib/python3.11/multiprocessing/connection.py", line 215, in recv_bytes
+    buf = self._recv_bytes(maxlength)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zeerak.talat/.conda/envs/trimodal/lib/python3.11/multiprocessing/connection.py", line 413, in _recv_bytes
+    buf = self._recv(4)
+          ^^^^^^^^^^^^^
+  File "/home/zeerak.talat/.conda/envs/trimodal/lib/python3.11/multiprocessing/connection.py", line 382, in _recv
+    raise EOFError
+EOFError
+2023-10-28 22:01:40,861 - wandb.wandb_agent - INFO - Cleaning up finished run: 6dafdp29
 wandb: Waiting for W&B process to finish... (failed 1). Press Control-C to abort syncing.
-wandb: 🚀 View run denim-sweep-3 at: https://wandb.ai/ddi/TiktokTest/runs/36wv34e6
+wandb: 
+wandb: Run history:
+wandb:               epoch ▁
+wandb:       learning_rate ▁
+wandb:   log_val_iterative ▁
+wandb: log_val_multinomial ▁
+wandb: 
+wandb: Run summary:
+wandb:               epoch 0
+wandb:       learning_rate 3e-05
+wandb:   log_val_iterative 140
+wandb: log_val_multinomial 70
+wandb: 
+wandb: 🚀 View run pleasant-sweep-15 at: https://wandb.ai/ddi/TiktokTest/runs/6dafdp29
 wandb: Synced 6 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
-wandb: Find logs at: ./wandb/run-20231026_113416-36wv34e6/logs
-2023-10-26 11:34:31,279 - wandb.wandb_agent - INFO - Agent received command: run
-2023-10-26 11:34:31,282 - wandb.wandb_agent - INFO - Agent starting run with config:
+wandb: Find logs at: ./wandb/run-20231028_220043-6dafdp29/logs
+2023-10-28 22:01:46,946 - wandb.wandb_agent - INFO - Agent received command: run
+2023-10-28 22:01:46,947 - wandb.wandb_agent - INFO - Agent starting run with config:
 	T_max: 3
 	batch_size: 4
 	beta: 1
 	clip: 1
-	dropout: 0.5
+	dropout: 0.4
 	early_div: True
 	epoch: 6
 	epoch_switch: 3
 	hidden_layers: 300
-	label_task: tiktok
+	label_task: content
 	learn_PosEmbeddings: False
-	learning_rate: 6.101142517868845e-06
+	learning_rate: 6.460897981524584e-05
 	loss: NewCrossEntropy
 	mask: False
 	model: MAE_encoder
-	num_layers: 3
+	num_layers: 6
 	patience: 10
-	seed: 32
-	weight_decay: 0.0009445579569590184
-2023-10-26 11:34:31,286 - wandb.wandb_agent - INFO - About to run command: /usr/bin/env python3 ../tav_nn.py --dataset ../../data/tiktok
+	seed: 96
+	sota: True
+	weight_decay: 0.0004109848510998538
+2023-10-28 22:01:46,956 - wandb.wandb_agent - INFO - About to run command: /usr/bin/env python3 ../tav_nn.py --dataset ../../data/tiktok
+2023-10-28 22:01:51,962 - wandb.wandb_agent - INFO - Running runs: ['pq93hikw']
 wandb: Currently logged in as: zeerak (ddi). Use `wandb login --relogin` to force relogin
 wandb: WARNING Ignored wandb.init() arg entity when running a sweep.
-2023-10-26 11:34:36,298 - wandb.wandb_agent - INFO - Running runs: ['zd5d3p74']
 wandb: Tracking run with wandb version 0.15.12
-wandb: Run data is saved locally in /l/users/zeerak.talat/Triple-Modality/TripleModels/run_slurm/wandb/run-20231026_113435-zd5d3p74
+wandb: Run data is saved locally in /l/users/zeerak.talat/Triple-Modality/TripleModels/run_slurm/wandb/run-20231028_220153-pq93hikw
 wandb: Run `wandb offline` to turn off syncing.
-wandb: Syncing run lunar-sweep-4
+wandb: Syncing run expert-sweep-16
 wandb: ⭐️ View project at https://wandb.ai/ddi/TiktokTest
-wandb: 🧹 View sweep at https://wandb.ai/ddi/TiktokTest/sweeps/blosfvu3
-wandb: 🚀 View run at https://wandb.ai/ddi/TiktokTest/runs/zd5d3p74
+wandb: 🧹 View sweep at https://wandb.ai/ddi/TiktokTest/sweeps/nreuhli2
+wandb: 🚀 View run at https://wandb.ai/ddi/TiktokTest/runs/pq93hikw
  in main 
- param_dict = {'epoch': 6, 'patience': 10, 'lr': 6.101142517868845e-06, 'clip': 1, 'batch_size': 4, 'weight_decay': 0.0009445579569590184, 'model': 'MAE_encoder', 'T_max': 3, 'seed': 32, 'label_task': 'tiktok', 'mask': False, 'loss': 'NewCrossEntropy', 'beta': 1, 'epoch_switch': 3, 'weights': tensor([0.2240, 0.3880, 0.3880]), 'label2id': {'educative': 2, 'others': 0, 'suggestive': 1}, 'id2label': {2: 'educative', 0: 'others', 1: 'suggestive'}} 
- model_param = {'output_dim': 3, 'dropout': 0.5, 'early_div': True, 'num_layers': 3, 'learn_PosEmbeddings': False, 'dataset': '../../data/tiktok'} 
+ param_dict = {'epoch': 6, 'patience': 10, 'lr': 6.460897981524584e-05, 'clip': 1, 'batch_size': 4, 'weight_decay': 0.0004109848510998538, 'model': 'MAE_encoder', 'T_max': 3, 'seed': 96, 'label_task': 'content', 'mask': False, 'loss': 'NewCrossEntropy', 'beta': 1, 'epoch_switch': 3, 'weights': tensor([0.2240, 0.3880, 0.3880]), 'label2id': {'educative': 2, 'others': 0, 'suggestive': 1}, 'id2label': {2: 'educative', 0: 'others', 1: 'suggestive'}} 
+ model_param = {'output_dim': 3, 'dropout': 0.4, 'early_div': True, 'num_layers': 6, 'learn_PosEmbeddings': False, 'dataset': '../../data/tiktok', 'sota': True} 
  df ../../data/tiktok , with df = 1000 
  
 NewCrossEntropy
-Traceback (most recent call last):
-  File "/home/zeerak.talat/.conda/envs/trimodal/lib/python3.11/site-packages/pandas/core/indexes/base.py", line 3361, in get_loc
-    return self._engine.get_loc(casted_key)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "pandas/_libs/index.pyx", line 76, in pandas._libs.index.IndexEngine.get_loc
-  File "pandas/_libs/index.pyx", line 108, in pandas._libs.index.IndexEngine.get_loc
-  File "pandas/_libs/hashtable_class_helper.pxi", line 5198, in pandas._libs.hashtable.PyObjectHashTable.get_item
-  File "pandas/_libs/hashtable_class_helper.pxi", line 5206, in pandas._libs.hashtable.PyObjectHashTable.get_item
-KeyError: 'timings'
+700
+700
+Using 6 layers 
+Using sota = True
+epochs:   0%|          | 0/6 [00:00<?, ?it/s]we are in multinomial dataloader
 
-The above exception was the direct cause of the following exception:
+steps:   0%|          | 0/6 [00:00<?, ?it/s][A
 
+iter:   0%|          | 0/35 [00:00<?, ?it/s][A[AWe are in normal unweighted CEL
+
+
+iter:   3%|▎         | 1/35 [00:05<03:13,  5.69s/it][A[Aiter:   3%|▎         | 1/35 [00:06<03:24,  6.02s/it]
+steps:   0%|          | 0/6 [00:06<?, ?it/s]
+epochs:   0%|          | 0/6 [00:07<?, ?it/s]
 Traceback (most recent call last):
-  File "/l/users/zeerak.talat/Triple-Modality/TripleModels/run_slurm/../tav_nn.py", line 304, in <module>
+  File "/l/users/zeerak.talat/Triple-Modality/TripleModels/run_slurm/../tav_nn.py", line 305, in <module>
     main()
-  File "/l/users/zeerak.talat/Triple-Modality/TripleModels/run_slurm/../tav_nn.py", line 300, in main
+  File "/l/users/zeerak.talat/Triple-Modality/TripleModels/run_slurm/../tav_nn.py", line 301, in main
     runModel("cuda", df_train, df_val, df_test, param_dict, model_param)
-  File "/l/users/zeerak.talat/Triple-Modality/TripleModels/run_slurm/../tav_nn.py", line 168, in runModel
-    df_train_accum = prepare_dataloader(
-                     ^^^^^^^^^^^^^^^^^^^
-  File "/l/users/zeerak.talat/Triple-Modality/TripleModels/run_slurm/../tav_nn.py", line 55, in prepare_dataloader
-    dataset = TextAudioVideoDataset(
-              ^^^^^^^^^^^^^^^^^^^^^^
-  File "/l/users/zeerak.talat/Triple-Modality/utils/data_loaders.py", line 42, in __init__
-    self.timings = df[timings].values.tolist()
-                   ~~^^^^^^^^^
-  File "/home/zeerak.talat/.conda/envs/trimodal/lib/python3.11/site-packages/pandas/core/frame.py", line 3458, in __getitem__
-    indexer = self.columns.get_loc(key)
-              ^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/zeerak.talat/.conda/envs/trimodal/lib/python3.11/site-packages/pandas/core/indexes/base.py", line 3363, in get_loc
-    raise KeyError(key) from err
-KeyError: 'timings'
+  File "/l/users/zeerak.talat/Triple-Modality/TripleModels/run_slurm/../tav_nn.py", line 198, in runModel
+    model = train_tav_network(
+            ^^^^^^^^^^^^^^^^^^
+  File "/l/users/zeerak.talat/Triple-Modality/TripleModels/train_model/tav_train.py", line 451, in train_tav_network
+    model, optimizer, criterion, scheduler, prev_val_loss, prev_f1 = one_epoch(
+                                                                     ^^^^^^^^^^
+  File "/l/users/zeerak.talat/Triple-Modality/TripleModels/train_model/tav_train.py", line 376, in one_epoch
+    model, optimizer, criterion, prev_val_loss, prev_f1 = not_grad_accum(
+                                                          ^^^^^^^^^^^^^^^
+  File "/l/users/zeerak.talat/Triple-Modality/TripleModels/train_model/tav_train.py", line 246, in not_grad_accum
+    train_batch_loss = fn(
+                       ^^^
+  File "/l/users/zeerak.talat/Triple-Modality/TripleModels/train_model/tav_train.py", line 95, in get_statistics_big_batch
+    output = checkpoint(
+             ^^^^^^^^^^^
+  File "/home/zeerak.talat/.conda/envs/trimodal/lib/python3.11/site-packages/torch/_compile.py", line 24, in inner
+    return torch._dynamo.disable(fn, recursive)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zeerak.talat/.conda/envs/trimodal/lib/python3.11/site-packages/torch/_dynamo/eval_frame.py", line 328, in _fn
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/home/zeerak.talat/.conda/envs/trimodal/lib/python3.11/site-packages/torch/_dynamo/external_utils.py", line 17, in inner
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/home/zeerak.talat/.conda/envs/trimodal/lib/python3.11/site-packages/torch/utils/checkpoint.py", line 458, in checkpoint
+    ret = function(*args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zeerak.talat/.conda/envs/trimodal/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1518, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zeerak.talat/.conda/envs/trimodal/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1568, in _call_impl
+    result = forward_call(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/l/users/zeerak.talat/Triple-Modality/TripleModels/models/tav.py", line 208, in forward
+    aud_outputs = self.wav2vec2(audio_features)[0]
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zeerak.talat/.conda/envs/trimodal/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1518, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zeerak.talat/.conda/envs/trimodal/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1527, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zeerak.talat/.conda/envs/trimodal/lib/python3.11/site-packages/transformers/models/wav2vec2/modeling_wav2vec2.py", line 1565, in forward
+    extract_features = self.feature_extractor(input_values)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zeerak.talat/.conda/envs/trimodal/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1518, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zeerak.talat/.conda/envs/trimodal/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1527, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zeerak.talat/.conda/envs/trimodal/lib/python3.11/site-packages/transformers/models/wav2vec2/modeling_wav2vec2.py", line 466, in forward
+    hidden_states = conv_layer(hidden_states)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zeerak.talat/.conda/envs/trimodal/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1518, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zeerak.talat/.conda/envs/trimodal/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1527, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zeerak.talat/.conda/envs/trimodal/lib/python3.11/site-packages/transformers/models/wav2vec2/modeling_wav2vec2.py", line 337, in forward
+    hidden_states = self.layer_norm(hidden_states)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zeerak.talat/.conda/envs/trimodal/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1518, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zeerak.talat/.conda/envs/trimodal/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1527, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zeerak.talat/.conda/envs/trimodal/lib/python3.11/site-packages/torch/nn/modules/normalization.py", line 196, in forward
+    return F.layer_norm(
+           ^^^^^^^^^^^^^
+  File "/home/zeerak.talat/.conda/envs/trimodal/lib/python3.11/site-packages/torch/nn/functional.py", line 2543, in layer_norm
+    return torch.layer_norm(input, normalized_shape, weight, bias, eps, torch.backends.cudnn.enabled)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+torch.cuda.OutOfMemoryError: CUDA out of memory. Tried to allocate 6.39 GiB. GPU 0 has a total capacty of 39.59 GiB of which 1.51 GiB is free. Process 2113803 has 5.21 GiB memory in use. Process 2114183 has 5.21 GiB memory in use. Process 2114527 has 5.21 GiB memory in use. Process 2115035 has 5.21 GiB memory in use. Including non-PyTorch memory, this process has 17.21 GiB memory in use. Of the allocated memory 15.49 GiB is allocated by PyTorch, and 1.20 GiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting max_split_size_mb to avoid fragmentation.  See documentation for Memory Management and PYTORCH_CUDA_ALLOC_CONF
 wandb: Waiting for W&B process to finish... (failed 1). Press Control-C to abort syncing.
-wandb: - 0.027 MB of 0.027 MB uploaded (0.000 MB deduped)wandb: \ 0.027 MB of 0.027 MB uploaded (0.000 MB deduped)wandb: | 0.027 MB of 0.027 MB uploaded (0.000 MB deduped)wandb: / 0.027 MB of 0.027 MB uploaded (0.000 MB deduped)wandb: - 0.027 MB of 0.027 MB uploaded (0.000 MB deduped)wandb: \ 0.027 MB of 0.027 MB uploaded (0.000 MB deduped)wandb: 🚀 View run lunar-sweep-4 at: https://wandb.ai/ddi/TiktokTest/runs/zd5d3p74
+wandb: 
+wandb: Run history:
+wandb:               epoch ▁
+wandb:       learning_rate ▁
+wandb:   log_val_iterative ▁
+wandb: log_val_multinomial ▁
+wandb: 
+wandb: Run summary:
+wandb:               epoch 0
+wandb:       learning_rate 6e-05
+wandb:   log_val_iterative 140
+wandb: log_val_multinomial 35
+wandb: 
+wandb: 🚀 View run expert-sweep-16 at: https://wandb.ai/ddi/TiktokTest/runs/pq93hikw
 wandb: Synced 6 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
-wandb: Find logs at: ./wandb/run-20231026_113435-zd5d3p74/logs
-2023-10-26 11:34:52,029 - wandb.wandb_agent - INFO - Cleaning up finished run: zd5d3p74
-2023-10-26 11:34:52,766 - wandb.wandb_agent - INFO - Agent received command: run
-2023-10-26 11:34:52,766 - wandb.wandb_agent - INFO - Agent starting run with config:
-	T_max: 3
-	batch_size: 1
-	beta: 1
-	clip: 1
-	dropout: 0.3
-	early_div: True
-	epoch: 6
-	epoch_switch: 2
-	hidden_layers: 300
-	label_task: tiktok
-	learn_PosEmbeddings: False
-	learning_rate: 3.754464644462499e-05
-	loss: NewCrossEntropy
-	mask: False
-	model: MAE_encoder
-	num_layers: 7
-	patience: 10
-	seed: 64
-	weight_decay: 0.0001982976869851669
-2023-10-26 11:34:52,776 - wandb.wandb_agent - INFO - About to run command: /usr/bin/env python3 ../tav_nn.py --dataset ../../data/tiktok
-wandb: Currently logged in as: zeerak (ddi). Use `wandb login --relogin` to force relogin
-wandb: WARNING Ignored wandb.init() arg entity when running a sweep.
-2023-10-26 11:34:57,787 - wandb.wandb_agent - INFO - Running runs: ['7zjs70pj']
-wandb: Tracking run with wandb version 0.15.12
-wandb: Run data is saved locally in /l/users/zeerak.talat/Triple-Modality/TripleModels/run_slurm/wandb/run-20231026_113457-7zjs70pj
-wandb: Run `wandb offline` to turn off syncing.
-wandb: Syncing run soft-sweep-5
-wandb: ⭐️ View project at https://wandb.ai/ddi/TiktokTest
-wandb: 🧹 View sweep at https://wandb.ai/ddi/TiktokTest/sweeps/blosfvu3
-wandb: 🚀 View run at https://wandb.ai/ddi/TiktokTest/runs/7zjs70pj
- in main 
- param_dict = {'epoch': 6, 'patience': 10, 'lr': 3.754464644462499e-05, 'clip': 1, 'batch_size': 1, 'weight_decay': 0.0001982976869851669, 'model': 'MAE_encoder', 'T_max': 3, 'seed': 64, 'label_task': 'tiktok', 'mask': False, 'loss': 'NewCrossEntropy', 'beta': 1, 'epoch_switch': 2, 'weights': tensor([0.2240, 0.3880, 0.3880]), 'label2id': {'educative': 2, 'others': 0, 'suggestive': 1}, 'id2label': {2: 'educative', 0: 'others', 1: 'suggestive'}} 
- model_param = {'output_dim': 3, 'dropout': 0.3, 'early_div': True, 'num_layers': 7, 'learn_PosEmbeddings': False, 'dataset': '../../data/tiktok'} 
- df ../../data/tiktok , with df = 1000 
- 
-NewCrossEntropy
-Traceback (most recent call last):
-  File "/home/zeerak.talat/.conda/envs/trimodal/lib/python3.11/site-packages/pandas/core/indexes/base.py", line 3361, in get_loc
-    return self._engine.get_loc(casted_key)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "pandas/_libs/index.pyx", line 76, in pandas._libs.index.IndexEngine.get_loc
-  File "pandas/_libs/index.pyx", line 108, in pandas._libs.index.IndexEngine.get_loc
-  File "pandas/_libs/hashtable_class_helper.pxi", line 5198, in pandas._libs.hashtable.PyObjectHashTable.get_item
-  File "pandas/_libs/hashtable_class_helper.pxi", line 5206, in pandas._libs.hashtable.PyObjectHashTable.get_item
-KeyError: 'timings'
-
-The above exception was the direct cause of the following exception:
-
-Traceback (most recent call last):
-  File "/l/users/zeerak.talat/Triple-Modality/TripleModels/run_slurm/../tav_nn.py", line 304, in <module>
-    main()
-  File "/l/users/zeerak.talat/Triple-Modality/TripleModels/run_slurm/../tav_nn.py", line 300, in main
-    runModel("cuda", df_train, df_val, df_test, param_dict, model_param)
-  File "/l/users/zeerak.talat/Triple-Modality/TripleModels/run_slurm/../tav_nn.py", line 168, in runModel
-    df_train_accum = prepare_dataloader(
-                     ^^^^^^^^^^^^^^^^^^^
-  File "/l/users/zeerak.talat/Triple-Modality/TripleModels/run_slurm/../tav_nn.py", line 55, in prepare_dataloader
-    dataset = TextAudioVideoDataset(
-              ^^^^^^^^^^^^^^^^^^^^^^
-  File "/l/users/zeerak.talat/Triple-Modality/utils/data_loaders.py", line 42, in __init__
-    self.timings = df[timings].values.tolist()
-                   ~~^^^^^^^^^
-  File "/home/zeerak.talat/.conda/envs/trimodal/lib/python3.11/site-packages/pandas/core/frame.py", line 3458, in __getitem__
-    indexer = self.columns.get_loc(key)
-              ^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/zeerak.talat/.conda/envs/trimodal/lib/python3.11/site-packages/pandas/core/indexes/base.py", line 3363, in get_loc
-    raise KeyError(key) from err
-KeyError: 'timings'
-wandb: Waiting for W&B process to finish... (failed 1). Press Control-C to abort syncing.
-slurmstepd-gpu-02: error: *** JOB 253978 ON gpu-02 CANCELLED AT 2023-10-26T11:35:01 ***
+wandb: Find logs at: ./wandb/run-20231028_220153-pq93hikw/logs
+slurmstepd-gpu-11: error: *** JOB 255417 ON gpu-11 CANCELLED AT 2023-10-28T22:02:28 ***

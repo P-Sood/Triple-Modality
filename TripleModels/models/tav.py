@@ -236,7 +236,12 @@ class TAVForMAE(nn.Module):
         del visual_mask
 
         # Now we have to concat all the outputs
-        
+        t = torch.cuda.get_device_properties(0).total_memory
+        r = torch.cuda.memory_reserved(0)
+        a = torch.cuda.memory_allocated(0)
+        f = r-a  # free inside reserved
+        print(f"Free mem: {f}", flush=True)
+       
         if self.sota:
             for i in range(self.num_layers):
                 Ffusion1 = text_outputs
