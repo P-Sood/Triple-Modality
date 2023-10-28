@@ -46,7 +46,7 @@ parameters:
   hidden_layers:
     values: ["300"]
   label_task:
-    values: ['tiktok']
+    values: ['content']
   model:
     values: ['MAE_encoder']
   loss:
