@@ -38,8 +38,12 @@ class TextAudioVideoDataset(Dataset):
         self.audio_path = df[feature_col1].values
         self.video_path = df[feature_col2].values
 
+        
         if timings != None:
-            self.timings = df[timings].values.tolist()
+            try:
+                self.timings = df[timings].values.tolist()
+            except: 
+                self.timings = [None] * len(self.audio_path)
         else:
             self.timings = [None] * len(self.audio_path)
 
@@ -856,7 +860,7 @@ class Data:
             video_context = transform(video_context)
             video_target = transform(video_target)
 
-            return video_context, video_target
+            return video_target, video_context
 
     def speech_file_to_array_fn(self, path, timings, check="train"):
         func_ = [self.ret0, self.get_white_noise]
@@ -864,7 +868,7 @@ class Data:
 
         if not self.must:
             speech_array = torch.Tensor(
-                self.AUDIOS[f"{check}_{path.split('/')[-1][:-4]}"][()]
+                self.AUDIOS[f"{check}_{path.split('/')[-1][:-4]}_{timings}"][()]
             )
 
             if check == "train":
@@ -883,4 +887,4 @@ class Data:
                 speech_array_context += singular_func_(speech_array_context, SNR=10)
                 speech_array_target += singular_func_(speech_array_target, SNR=10)
             # print(f"path is {path}\nshape of ret is {ret.shape}\n" , flush = True)
-            return speech_array_context, speech_array_target
+            return speech_array_target, speech_array_context
