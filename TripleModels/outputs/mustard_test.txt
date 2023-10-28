@@ -1603,3 +1603,239 @@ wandb: 🚀 View run at https://wandb.ai/ddi/MustardTriple/runs/1ill6wnb
  df ../../data/must , with df = 1202 
  
 NewCrossEntropy
+2023-10-26 11:41:33,152 - wandb.wandb_agent - INFO - Cleaning up finished run: 1ill6wnb
+2023-10-26 11:41:34,138 - wandb.wandb_agent - INFO - Agent received command: run
+2023-10-26 11:41:34,138 - wandb.wandb_agent - INFO - Agent starting run with config:
+	T_max: 2
+	batch_size: 2
+	beta: 1
+	clip: 5
+	dropout: 0.5
+	early_div: True
+	epoch: 6
+	epoch_switch: 2
+	hidden_layers: 300
+	label_task: sarcasm
+	learn_PosEmbeddings: False
+	learning_rate: 6.124058787707862e-05
+	loss: NewCrossEntropy
+	mask: False
+	model: MAE_encoder
+	num_layers: 7
+	patience: 10
+	seed: 64
+	weight_decay: 0.0009587896024900184
+2023-10-26 11:41:34,144 - wandb.wandb_agent - INFO - About to run command: /usr/bin/env python3 ../tav_nn.py --dataset ../../data/must
+wandb: Currently logged in as: zeerak (ddi). Use `wandb login --relogin` to force relogin
+wandb: WARNING Ignored wandb.init() arg entity when running a sweep.
+2023-10-26 11:41:39,152 - wandb.wandb_agent - INFO - Running runs: ['zkxnjrm4']
+wandb: Tracking run with wandb version 0.15.12
+wandb: Run data is saved locally in /l/users/zeerak.talat/Triple-Modality/TripleModels/run_slurm/wandb/run-20231026_114138-zkxnjrm4
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run dulcet-sweep-36
+wandb: ⭐️ View project at https://wandb.ai/ddi/MustardTriple
+wandb: 🧹 View sweep at https://wandb.ai/ddi/MustardTriple/sweeps/jy63jxc1
+wandb: 🚀 View run at https://wandb.ai/ddi/MustardTriple/runs/zkxnjrm4
+ in main 
+ param_dict = {'epoch': 6, 'patience': 10, 'lr': 6.124058787707862e-05, 'clip': 5, 'batch_size': 2, 'weight_decay': 0.0009587896024900184, 'model': 'MAE_encoder', 'T_max': 2, 'seed': 64, 'label_task': 'sarcasm', 'mask': False, 'loss': 'NewCrossEntropy', 'beta': 1, 'epoch_switch': 2, 'weights': tensor([0.5000, 0.5000]), 'label2id': {'Sarcasm': 1, 'NonSarcasm': 0}, 'id2label': {1: 'Sarcasm', 0: 'NonSarcasm'}} 
+ model_param = {'output_dim': 2, 'dropout': 0.5, 'early_div': True, 'num_layers': 7, 'learn_PosEmbeddings': False, 'dataset': '../../data/must'} 
+ df ../../data/must , with df = 1202 
+ 
+NewCrossEntropy
+2023-10-26 11:42:00,140 - wandb.wandb_agent - INFO - Cleaning up finished run: zkxnjrm4
+2023-10-26 11:42:01,001 - wandb.wandb_agent - INFO - Agent received command: run
+2023-10-26 11:42:01,001 - wandb.wandb_agent - INFO - Agent starting run with config:
+	T_max: 3
+	batch_size: 4
+	beta: 1
+	clip: 1
+	dropout: 0.4
+	early_div: True
+	epoch: 6
+	epoch_switch: 3
+	hidden_layers: 300
+	label_task: sarcasm
+	learn_PosEmbeddings: True
+	learning_rate: 3.38122037326524e-05
+	loss: NewCrossEntropy
+	mask: False
+	model: MAE_encoder
+	num_layers: 3
+	patience: 10
+	seed: 32
+	weight_decay: 0.0005838745998965676
+2023-10-26 11:42:01,006 - wandb.wandb_agent - INFO - About to run command: /usr/bin/env python3 ../tav_nn.py --dataset ../../data/must
+wandb: Currently logged in as: zeerak (ddi). Use `wandb login --relogin` to force relogin
+wandb: WARNING Ignored wandb.init() arg entity when running a sweep.
+2023-10-26 11:42:06,018 - wandb.wandb_agent - INFO - Running runs: ['fgzodexw']
+wandb: Tracking run with wandb version 0.15.12
+wandb: Run data is saved locally in /l/users/zeerak.talat/Triple-Modality/TripleModels/run_slurm/wandb/run-20231026_114205-fgzodexw
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run vivid-sweep-37
+wandb: ⭐️ View project at https://wandb.ai/ddi/MustardTriple
+wandb: 🧹 View sweep at https://wandb.ai/ddi/MustardTriple/sweeps/jy63jxc1
+wandb: 🚀 View run at https://wandb.ai/ddi/MustardTriple/runs/fgzodexw
+ in main 
+ param_dict = {'epoch': 6, 'patience': 10, 'lr': 3.38122037326524e-05, 'clip': 1, 'batch_size': 4, 'weight_decay': 0.0005838745998965676, 'model': 'MAE_encoder', 'T_max': 3, 'seed': 32, 'label_task': 'sarcasm', 'mask': False, 'loss': 'NewCrossEntropy', 'beta': 1, 'epoch_switch': 3, 'weights': tensor([0.5000, 0.5000]), 'label2id': {'Sarcasm': 1, 'NonSarcasm': 0}, 'id2label': {1: 'Sarcasm', 0: 'NonSarcasm'}} 
+ model_param = {'output_dim': 2, 'dropout': 0.4, 'early_div': True, 'num_layers': 3, 'learn_PosEmbeddings': True, 'dataset': '../../data/must'} 
+ df ../../data/must , with df = 1202 
+ 
+NewCrossEntropy
+2023-10-26 11:42:21,770 - wandb.wandb_agent - INFO - Cleaning up finished run: fgzodexw
+2023-10-26 11:42:22,755 - wandb.wandb_agent - INFO - Agent received command: run
+2023-10-26 11:42:22,756 - wandb.wandb_agent - INFO - Agent starting run with config:
+	T_max: 3
+	batch_size: 1
+	beta: 1
+	clip: 1
+	dropout: 0.3
+	early_div: True
+	epoch: 6
+	epoch_switch: 2
+	hidden_layers: 300
+	label_task: sarcasm
+	learn_PosEmbeddings: True
+	learning_rate: 2.3774019838364068e-05
+	loss: NewCrossEntropy
+	mask: False
+	model: MAE_encoder
+	num_layers: 3
+	patience: 10
+	seed: 32
+	weight_decay: 0.000157199139194905
+2023-10-26 11:42:22,761 - wandb.wandb_agent - INFO - About to run command: /usr/bin/env python3 ../tav_nn.py --dataset ../../data/must
+wandb: Currently logged in as: zeerak (ddi). Use `wandb login --relogin` to force relogin
+wandb: WARNING Ignored wandb.init() arg entity when running a sweep.
+2023-10-26 11:42:27,772 - wandb.wandb_agent - INFO - Running runs: ['tdpk9o9l']
+wandb: Tracking run with wandb version 0.15.12
+wandb: Run data is saved locally in /l/users/zeerak.talat/Triple-Modality/TripleModels/run_slurm/wandb/run-20231026_114227-tdpk9o9l
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run eternal-sweep-38
+wandb: ⭐️ View project at https://wandb.ai/ddi/MustardTriple
+wandb: 🧹 View sweep at https://wandb.ai/ddi/MustardTriple/sweeps/jy63jxc1
+wandb: 🚀 View run at https://wandb.ai/ddi/MustardTriple/runs/tdpk9o9l
+ in main 
+ param_dict = {'epoch': 6, 'patience': 10, 'lr': 2.3774019838364068e-05, 'clip': 1, 'batch_size': 1, 'weight_decay': 0.000157199139194905, 'model': 'MAE_encoder', 'T_max': 3, 'seed': 32, 'label_task': 'sarcasm', 'mask': False, 'loss': 'NewCrossEntropy', 'beta': 1, 'epoch_switch': 2, 'weights': tensor([0.5000, 0.5000]), 'label2id': {'Sarcasm': 1, 'NonSarcasm': 0}, 'id2label': {1: 'Sarcasm', 0: 'NonSarcasm'}} 
+ model_param = {'output_dim': 2, 'dropout': 0.3, 'early_div': True, 'num_layers': 3, 'learn_PosEmbeddings': True, 'dataset': '../../data/must'} 
+ df ../../data/must , with df = 1202 
+ 
+NewCrossEntropy
+2023-10-26 11:42:43,500 - wandb.wandb_agent - INFO - Cleaning up finished run: tdpk9o9l
+2023-10-26 11:42:44,333 - wandb.wandb_agent - INFO - Agent received command: run
+2023-10-26 11:42:44,335 - wandb.wandb_agent - INFO - Agent starting run with config:
+	T_max: 3
+	batch_size: 4
+	beta: 1
+	clip: 5
+	dropout: 0.5
+	early_div: True
+	epoch: 6
+	epoch_switch: 2
+	hidden_layers: 300
+	label_task: sarcasm
+	learn_PosEmbeddings: False
+	learning_rate: 6.790854774552651e-05
+	loss: NewCrossEntropy
+	mask: False
+	model: MAE_encoder
+	num_layers: 5
+	patience: 10
+	seed: 32
+	weight_decay: 0.0003473066608915357
+2023-10-26 11:42:44,341 - wandb.wandb_agent - INFO - About to run command: /usr/bin/env python3 ../tav_nn.py --dataset ../../data/must
+wandb: Currently logged in as: zeerak (ddi). Use `wandb login --relogin` to force relogin
+wandb: WARNING Ignored wandb.init() arg entity when running a sweep.
+2023-10-26 11:42:49,352 - wandb.wandb_agent - INFO - Running runs: ['bq7v1n49']
+wandb: Tracking run with wandb version 0.15.12
+wandb: Run data is saved locally in /l/users/zeerak.talat/Triple-Modality/TripleModels/run_slurm/wandb/run-20231026_114249-bq7v1n49
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run daily-sweep-39
+wandb: ⭐️ View project at https://wandb.ai/ddi/MustardTriple
+wandb: 🧹 View sweep at https://wandb.ai/ddi/MustardTriple/sweeps/jy63jxc1
+wandb: 🚀 View run at https://wandb.ai/ddi/MustardTriple/runs/bq7v1n49
+ in main 
+ param_dict = {'epoch': 6, 'patience': 10, 'lr': 6.790854774552651e-05, 'clip': 5, 'batch_size': 4, 'weight_decay': 0.0003473066608915357, 'model': 'MAE_encoder', 'T_max': 3, 'seed': 32, 'label_task': 'sarcasm', 'mask': False, 'loss': 'NewCrossEntropy', 'beta': 1, 'epoch_switch': 2, 'weights': tensor([0.5000, 0.5000]), 'label2id': {'Sarcasm': 1, 'NonSarcasm': 0}, 'id2label': {1: 'Sarcasm', 0: 'NonSarcasm'}} 
+ model_param = {'output_dim': 2, 'dropout': 0.5, 'early_div': True, 'num_layers': 5, 'learn_PosEmbeddings': False, 'dataset': '../../data/must'} 
+ df ../../data/must , with df = 1202 
+ 
+NewCrossEntropy
+2023-10-26 11:43:05,072 - wandb.wandb_agent - INFO - Cleaning up finished run: bq7v1n49
+2023-10-26 11:43:05,836 - wandb.wandb_agent - INFO - Agent received command: run
+2023-10-26 11:43:05,837 - wandb.wandb_agent - INFO - Agent starting run with config:
+	T_max: 2
+	batch_size: 4
+	beta: 1
+	clip: 1
+	dropout: 0.5
+	early_div: True
+	epoch: 6
+	epoch_switch: 3
+	hidden_layers: 300
+	label_task: sarcasm
+	learn_PosEmbeddings: False
+	learning_rate: 9.906163355691776e-05
+	loss: NewCrossEntropy
+	mask: False
+	model: MAE_encoder
+	num_layers: 3
+	patience: 10
+	seed: 96
+	weight_decay: 0.0005566459532823727
+2023-10-26 11:43:05,844 - wandb.wandb_agent - INFO - About to run command: /usr/bin/env python3 ../tav_nn.py --dataset ../../data/must
+wandb: Currently logged in as: zeerak (ddi). Use `wandb login --relogin` to force relogin
+wandb: WARNING Ignored wandb.init() arg entity when running a sweep.
+2023-10-26 11:43:10,852 - wandb.wandb_agent - INFO - Running runs: ['woq4gqb3']
+wandb: Tracking run with wandb version 0.15.12
+wandb: Run data is saved locally in /l/users/zeerak.talat/Triple-Modality/TripleModels/run_slurm/wandb/run-20231026_114310-woq4gqb3
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run stellar-sweep-40
+wandb: ⭐️ View project at https://wandb.ai/ddi/MustardTriple
+wandb: 🧹 View sweep at https://wandb.ai/ddi/MustardTriple/sweeps/jy63jxc1
+wandb: 🚀 View run at https://wandb.ai/ddi/MustardTriple/runs/woq4gqb3
+ in main 
+ param_dict = {'epoch': 6, 'patience': 10, 'lr': 9.906163355691776e-05, 'clip': 1, 'batch_size': 4, 'weight_decay': 0.0005566459532823727, 'model': 'MAE_encoder', 'T_max': 2, 'seed': 96, 'label_task': 'sarcasm', 'mask': False, 'loss': 'NewCrossEntropy', 'beta': 1, 'epoch_switch': 3, 'weights': tensor([0.5000, 0.5000]), 'label2id': {'Sarcasm': 1, 'NonSarcasm': 0}, 'id2label': {1: 'Sarcasm', 0: 'NonSarcasm'}} 
+ model_param = {'output_dim': 2, 'dropout': 0.5, 'early_div': True, 'num_layers': 3, 'learn_PosEmbeddings': False, 'dataset': '../../data/must'} 
+ df ../../data/must , with df = 1202 
+ 
+NewCrossEntropy
+2023-10-26 11:43:26,588 - wandb.wandb_agent - INFO - Cleaning up finished run: woq4gqb3
+2023-10-26 11:43:27,388 - wandb.wandb_agent - INFO - Agent received command: run
+2023-10-26 11:43:27,403 - wandb.wandb_agent - INFO - Agent starting run with config:
+	T_max: 3
+	batch_size: 2
+	beta: 1
+	clip: 1
+	dropout: 0.4
+	early_div: True
+	epoch: 6
+	epoch_switch: 2
+	hidden_layers: 300
+	label_task: sarcasm
+	learn_PosEmbeddings: True
+	learning_rate: 5.599578670016141e-05
+	loss: NewCrossEntropy
+	mask: False
+	model: MAE_encoder
+	num_layers: 5
+	patience: 10
+	seed: 32
+	weight_decay: 0.00011307721671701382
+2023-10-26 11:43:27,408 - wandb.wandb_agent - INFO - About to run command: /usr/bin/env python3 ../tav_nn.py --dataset ../../data/must
+2023-10-26 11:43:32,420 - wandb.wandb_agent - INFO - Running runs: ['n3ly7t0c']
+wandb: Currently logged in as: zeerak (ddi). Use `wandb login --relogin` to force relogin
+wandb: WARNING Ignored wandb.init() arg entity when running a sweep.
+wandb: - Waiting for wandb.init()...wandb: \ Waiting for wandb.init()...wandb: Tracking run with wandb version 0.15.12
+wandb: Run data is saved locally in /l/users/zeerak.talat/Triple-Modality/TripleModels/run_slurm/wandb/run-20231026_114332-n3ly7t0c
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run worldly-sweep-41
+wandb: ⭐️ View project at https://wandb.ai/ddi/MustardTriple
+wandb: 🧹 View sweep at https://wandb.ai/ddi/MustardTriple/sweeps/jy63jxc1
+wandb: 🚀 View run at https://wandb.ai/ddi/MustardTriple/runs/n3ly7t0c
+ in main 
+ param_dict = {'epoch': 6, 'patience': 10, 'lr': 5.599578670016141e-05, 'clip': 1, 'batch_size': 2, 'weight_decay': 0.00011307721671701382, 'model': 'MAE_encoder', 'T_max': 3, 'seed': 32, 'label_task': 'sarcasm', 'mask': False, 'loss': 'NewCrossEntropy', 'beta': 1, 'epoch_switch': 2, 'weights': tensor([0.5000, 0.5000]), 'label2id': {'Sarcasm': 1, 'NonSarcasm': 0}, 'id2label': {1: 'Sarcasm', 0: 'NonSarcasm'}} 
+ model_param = {'output_dim': 2, 'dropout': 0.4, 'early_div': True, 'num_layers': 5, 'learn_PosEmbeddings': True, 'dataset': '../../data/must'} 
+ df ../../data/must , with df = 1202 
+ 
+NewCrossEntropy
+slurmstepd-gpu-04: error: *** JOB 253955 ON gpu-04 CANCELLED AT 2023-10-26T11:43:51 ***
+slurmstepd-gpu-04: error: Detected 48 oom-kill event(s) in StepId=253955.batch. Some of your processes may have been killed by the cgroup out-of-memory handler.
