@@ -114,25 +114,33 @@ class TAVForMAE(nn.Module):
         self.learn_PosEmbeddings = args["learn_PosEmbeddings"]
         self.num_layers = args["num_layers"]
         self.dataset = args["dataset"]
+        self.sota = args["sota"]
+        
+        print(f"Using {self.num_layers} layers \nUsing sota = {self.sota}" , flush=True)
 
         self.must = True if "must" in str(self.dataset).lower() else False
+        self.tiktok = True if "tiktok" in str(self.dataset).lower() else False
         self.p = 0.6
 
         if self.must:
-            self.bert = AutoModel.from_pretrained(
-                "jkhan447/sarcasm-detection-RoBerta-base-CR"
-            )
-        else:
+            self.bert = AutoModel.from_pretrained("jkhan447/sarcasm-detection-RoBerta-base-CR")
+        elif self.tiktok:
             self.bert = AutoModel.from_pretrained("bert-base-multilingual-cased")
-            # self.bert = AutoModel.from_pretrained('j-hartmann/emotion-english-distilroberta-base')
+        else:
+            self.bert = AutoModel.from_pretrained('j-hartmann/emotion-english-distilroberta-base')
 
         self.test_ctr = 1
         self.train_ctr = 1
+        
+        if self.must:
+            self.wav2vec2 = AutoModel.from_pretrained("ehcalabres/wav2vec2-lg-xlsr-en-speech-emotion-recognition")
+        elif self.tiktok:
+            self.wav2vec2 = AutoModel.from_pretrained("justin1983/wav2vec2-xlsr-multilingual-56-finetuned-amd")
+        else:
+            self.wav2vec2 = AutoModel.from_pretrained("ehcalabres/wav2vec2-lg-xlsr-en-speech-emotion-recognition")
 
-        # self.wav2vec2 = AutoModel.from_pretrained("ehcalabres/wav2vec2-lg-xlsr-en-speech-emotion-recognition")
-        self.wav2vec2 = AutoModel.from_pretrained(
-            "justin1983/wav2vec2-xlsr-multilingual-56-finetuned-amd"
-        )
+
+
 
         self.videomae = VideoMAEModel.from_pretrained("MCG-NJU/videomae-base")
 
@@ -168,9 +176,13 @@ class TAVForMAE(nn.Module):
         )
 
         self.dropout = nn.Dropout(self.dropout)
-        self.linear1 = nn.Linear(768 * 4, 768 * 2)
-        self.relu = nn.ReLU()
+        if self.sota:
+            self.linear1 = nn.Linear(768 * 3, 768 * 2)
+        else:
+            self.linear1 = nn.Linear(768 * 4, 768 * 2)
+            
         self.linear2 = nn.Linear(768 * 2, self.output_dim)
+        self.relu = nn.ReLU()
 
     def forward(
         self,
@@ -224,20 +236,27 @@ class TAVForMAE(nn.Module):
         del visual_mask
 
         # Now we have to concat all the outputs
-        Ffusion1 = text_outputs
-        Ffusion2 = text_outputs
-        for i in range(self.num_layers):
-            # Ffusion1 = text_outputs
-            # Ffusion2 = text_outputs
-            aud_text_layer = self.aud_text_layers[i]
-            vid_text_layer = self.vid_text_layers[i]
-            Ffusion1, _ = aud_text_layer(Ffusion1, aud_outputs, aud_outputs)
-            Ffusion2, _ = vid_text_layer(Ffusion2, vid_outputs, vid_outputs)
-            # Ffusion1, _ = aud_text_layer(Ffusion1, Ffusion1, aud_outputs)
-            # Ffusion2, _ = vid_text_layer(Ffusion2, Ffusion2, vid_outputs)
-            # text_outputs = fusion_layers(torch.cat([Ffusion1, Ffusion2], dim=1))
-
-        tav = torch.cat([Ffusion1, Ffusion2, aud_outputs, vid_outputs], dim=1)
+        
+        if self.sota:
+            for i in range(self.num_layers):
+                Ffusion1 = text_outputs
+                Ffusion2 = text_outputs
+                aud_text_layer = self.aud_text_layers[i]
+                vid_text_layer = self.vid_text_layers[i]
+                fusion_layer = self.fusion_layers[i]
+                Ffusion1, _ = aud_text_layer(Ffusion1, Ffusion1, aud_outputs)
+                Ffusion2, _ = vid_text_layer(Ffusion2, Ffusion2, vid_outputs)
+                text_outputs = fusion_layer(torch.cat([Ffusion1, Ffusion2], dim=1))
+            tav = torch.cat([text_outputs, aud_outputs, vid_outputs], dim=1)
+        else:
+            Ffusion1 = text_outputs
+            Ffusion2 = text_outputs
+            for i in range(self.num_layers):
+                aud_text_layer = self.aud_text_layers[i]
+                vid_text_layer = self.vid_text_layers[i]
+                Ffusion1, _ = aud_text_layer(Ffusion1, aud_outputs, aud_outputs)
+                Ffusion2, _ = vid_text_layer(Ffusion2, vid_outputs, vid_outputs)
+            tav = torch.cat([Ffusion1, Ffusion2, aud_outputs, vid_outputs], dim=1)
 
         del text_outputs
         del aud_outputs

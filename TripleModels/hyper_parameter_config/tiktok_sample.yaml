@@ -4,7 +4,7 @@ command:
   - python3
   - ${program}
   - "--dataset"
-  - "../../data/must"
+  - "../../data/tiktok_sample"
 method: bayes
 
 metric:
@@ -46,7 +46,7 @@ parameters:
   hidden_layers:
     values: ["300"]
   label_task:
-    values: ['sarcasm']
+    values: ['tiktok']
   sota:
     values: [True, False]
   model:

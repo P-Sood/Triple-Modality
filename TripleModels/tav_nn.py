@@ -289,6 +289,7 @@ def main():
         "num_layers": config.num_layers,
         "learn_PosEmbeddings": config.learn_PosEmbeddings,
         "dataset": config.dataset,
+        "sota": config.sota,
     }
     param_dict["weights"] = weights
     param_dict["label2id"] = label2id
