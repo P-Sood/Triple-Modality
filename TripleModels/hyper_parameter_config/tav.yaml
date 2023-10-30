@@ -53,3 +53,5 @@ parameters:
     values: ['NewCrossEntropy']
   beta:
     values: [1]
+  sota:
+    values: [True, False]

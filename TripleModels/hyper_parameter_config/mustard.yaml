@@ -18,7 +18,7 @@ parameters:
     max: 1e-4
     min: 1e-6
   batch_size:
-    values: [1 , 2 , 4]
+    values: [1 , 2] # , 4]
   weight_decay:
     distribution: uniform
     max: 1e-3
@@ -34,7 +34,7 @@ parameters:
   learn_PosEmbeddings:
     values: [True,False]
   num_layers:
-    values: [3,4,5,6,7,8]
+    values: [3,4,5,6] #,7,8]
   patience:
     values: [10]
   clip:

@@ -4,7 +4,7 @@ command:
   - python3
   - ${program}
   - "--dataset"
-  - "../../data/tiktok_sample"
+  - "../../data/tiktok"
 method: bayes
 
 metric:
@@ -46,12 +46,12 @@ parameters:
   hidden_layers:
     values: ["300"]
   label_task:
-    values: ['tiktok']
-  sota:
-    values: [True, False]
+    values: ['content']
   model:
     values: ['MAE_encoder']
   loss:
     values: ['NewCrossEntropy']
   beta:
     values: [1]
+  sota:
+    values: [True, False]

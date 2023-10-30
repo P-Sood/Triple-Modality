@@ -28,9 +28,7 @@ from tqdm import tqdm
 import gc
 
 
-def speech_file_to_array_fn(
-    path, timings, speaker, target_sampling_rate=16000, check="train"
-):
+def speech_file_to_array_fn(path, timings, speaker, target_sampling_rate=16000):
     speech_array, sampling_rate = torchaudio.load(path)
     if speaker is None and timings is not None:  # MELD
         start = timings[0]
@@ -68,7 +66,7 @@ def fun(df, f, i):
 
 
 def main():
-    df = pd.read_pickle("/home/jupyter/multi-modal-emotion/data/tiktok.pkl")
+    df = pd.read_pickle("../data/tiktok_sample.pkl")
     f = h5py.File("../data/tiktok_audio.hdf5", "a", libver="latest", swmr=True)
     f.swmr_mode = True
     tqdm.pandas()
