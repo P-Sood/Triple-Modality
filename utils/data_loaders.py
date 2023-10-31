@@ -810,9 +810,15 @@ class Data:
 
         if video is not None:
             self.must = True if "must" in video else False
+            self.iemo = True if "iemo" in video else False
+            self.tiktok = True if "tiktok" in video else False
 
         elif audio is not None:
             self.must = True if "must" in audio else False
+            self.iemo = True if "iemo" in audio else False
+            self.tiktok = True if "tiktok" in audio else False
+        
+        self.meld = True if self.tiktok and self.must and self.iemo else False
 
     def get_white_noise(self, signal: torch.Tensor, SNR) -> torch.Tensor:
         # @author: sleek_eagle
@@ -844,13 +850,21 @@ class Data:
             )
 
         if not self.must:
-            video = torch.Tensor(
-                self.VIDEOS[f"{check}_{path.split('/')[-1][:-4]}_{timings}"][()]
-            )  # H5PY, how to remove data after loading it into memory
-            video = transform(video)
+            if self.meld: # MELD
+                video = torch.Tensor(
+                    self.VIDEOS[f"{check}_{path.split('/')[-1][:-4]}"][()]
+                )  # H5PY, how to remove data after loading it into memory
+                video = transform(video)
+                return path , video, timings
+            else: #IEMO OR TIKTOK
+                video = torch.Tensor(
+                    self.VIDEOS[f"{check}_{path.split('/')[-1][:-4]}_{timings}"][()]
+                )  # H5PY, how to remove data after loading it into memory
+                video = transform(video)
 
-            return video
+                return path , video, timings
         else:
+            #TODO: Check which path is to which place. Make sure context and targets are right pathing
             video_context = torch.Tensor(
                 self.VIDEOS[f"{check}_{path[0].split('/')[-1][:-4]}_{timings[0]}"][()]
             )  # H5PY, how to remove data after loading it into memory
@@ -860,21 +874,22 @@ class Data:
             video_context = transform(video_context)
             video_target = transform(video_target)
 
-            return video_target, video_context
+            return path , video_target, video_context, timings
 
     def speech_file_to_array_fn(self, path, timings, check="train"):
         func_ = [self.ret0, self.get_white_noise]
         singular_func_ = random.choices(population=func_, weights=[0.5, 0.5], k=1)[0]
 
         if not self.must:
-            speech_array = torch.Tensor(
-                self.AUDIOS[f"{check}_{path.split('/')[-1][:-4]}_{timings}"][()]
-            )
+            if self.meld: # MELD
+                speech_array = torch.Tensor(self.AUDIOS[f"{check}_{path.split('/')[-1][:-4]}"][()])
+            else: # IEMO OR TIKTOK
+                speech_array = torch.Tensor(self.AUDIOS[f"{check}_{path.split('/')[-1][:-4]}_{timings}"][()])
 
             if check == "train":
                 speech_array += singular_func_(speech_array, SNR=10)
             # print(f"path is {path}\nshape of ret is {ret.shape}\n" , flush = True)
-            return speech_array
+            return path , speech_array , timings
         else:
             speech_array_context = torch.Tensor(
                 self.AUDIOS[f"{check}_{path[0].split('/')[-1][:-4]}_{timings[0]}"][()]
@@ -887,4 +902,4 @@ class Data:
                 speech_array_context += singular_func_(speech_array_context, SNR=10)
                 speech_array_target += singular_func_(speech_array_target, SNR=10)
             # print(f"path is {path}\nshape of ret is {ret.shape}\n" , flush = True)
-            return speech_array_target, speech_array_context
+            return path , speech_array_target, speech_array_context , timings

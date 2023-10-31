@@ -12,7 +12,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 from train_model.tav_train import train_tav_network, evaluate_tav
-from models.tav import TAVForMAE, collate_batch
+from models.tav import TAVForMAE_HDF5, collate_batch
 import wandb
 from utils.data_loaders import TextAudioVideoDataset
 import pandas as pd
@@ -38,7 +38,7 @@ def prepare_dataloader(
     label_task,
     epoch_switch,
     pin_memory=True,
-    num_workers=2,
+    num_workers=0,
     check="train",
     accum=False,
 ):
@@ -47,7 +47,7 @@ def prepare_dataloader(
     dataset on each GPU
     say we have 32 data points, if batch size = 8 then it will make 4 dataloaders of size 8 each
     """
-    num_workers = 32 // batch_size
+    num_workers = 0
     must = True if "must" in str(dataset).lower() else False
     if accum:
         batch_size = 1
@@ -110,8 +110,8 @@ def prepare_dataloader(
             pin_memory=pin_memory,
             num_workers=num_workers,
             drop_last=False,
-            shuffle=False,
-            sampler=sampler,
+            shuffle=True,
+            # sampler=sampler,
             collate_fn=BatchCollation(must),
         )
     else:
@@ -121,7 +121,7 @@ def prepare_dataloader(
             pin_memory=pin_memory,
             num_workers=num_workers,
             drop_last=False,
-            shuffle=False,
+            shuffle=True,
             collate_fn=BatchCollation(must),
         )
 
@@ -184,7 +184,7 @@ def runModel(accelerator, df_train, df_val, df_test, param_dict, model_param):
         df_test, dataset, batch_size, label_task, epoch_switch, check="test"
     )
 
-    model = TAVForMAE(model_param).to(device)
+    model = TAVForMAE_HDF5(model_param).to(device)
 
     # PREFormer = PreFormer().to(f"cpu")
 

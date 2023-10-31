@@ -17,6 +17,7 @@ from torch.nn.utils.rnn import pad_sequence
 from torch import nn
 
 
+
 def collate_batch(batch, must):  # batch is a pseudo pandas array of two columns
     """
     Here we are going to take some raw-input and pre-process them into what we need
@@ -29,6 +30,9 @@ def collate_batch(batch, must):  # batch is a pseudo pandas array of two columns
     label_list = []
     input_list = []
     text_mask = []
+    path_audio = []
+    path_video = []
+    target_timings = []
 
     if not must:
         video_context = [torch.empty((1, 1, 1, 1)), torch.empty((1, 1, 1, 1))]
@@ -45,13 +49,21 @@ def collate_batch(batch, must):  # batch is a pseudo pandas array of two columns
         audio_path = input[1]
         vid_features = input[2]  # [6:] for debug
         if not must:
-            speech_list.append(audio_path)
-            video_list.append(vid_features)
+            path_audio.append(audio_path[0])
+            path_video.append(vid_features[0])
+            target_timings.append(vid_features[2])
+            
+            speech_list.append(audio_path[1])
+            video_list.append(vid_features[1])
         else:
-            speech_list.append(audio_path[0])
-            speech_context.append(audio_path[1])
-            video_list.append(vid_features[0])
-            video_context.append(vid_features[1])
+            path_audio.append(audio_path[0])
+            path_video.append(vid_features[0])
+            target_timings.append(vid_features[3])
+            
+            speech_list.append(audio_path[1])
+            speech_context.append(audio_path[2])
+            video_list.append(vid_features[1])
+            video_context.append(vid_features[2])
 
         label_list.append(label)
     batch_size = len(label_list)
@@ -86,15 +98,18 @@ def collate_batch(batch, must):  # batch is a pseudo pandas array of two columns
     text = {
         "input_ids": torch.Tensor(np.array(input_list)).type(torch.LongTensor),
         "attention_mask": torch.Tensor(np.array(text_mask)),
+        "timings": target_timings,
     }
 
     audio_features = {
+        "audio_path" : path_audio,
         "audio_features": speech_list_input_values,
         "attention_mask": speech_list_mask,
         "audio_context": speech_list_context_input_values,
     }
 
     visual_embeds = {
+        "video_path" : path_video,
         "visual_embeds": torch.stack(video_list).permute(0, 2, 1, 3, 4),
         "attention_mask": vid_mask,
         "visual_context": torch.stack(video_context).permute(0, 2, 1, 3, 4),
@@ -276,4 +291,117 @@ class TAVForMAE(nn.Module):
             tav = self.dropout(tav)
         tav = self.linear2(tav)
 
+        return tav  # returns [batch_size,output_dim]
+
+import h5py
+import pdb
+class TAVForMAE_HDF5(nn.Module):
+    """
+    Model for Bert and VideoMAE classifier
+    """
+
+    def __init__(self, args):
+        super(TAVForMAE_HDF5, self).__init__()
+        self.output_dim = args["output_dim"]
+        self.dropout = args["dropout"]
+        self.learn_PosEmbeddings = args["learn_PosEmbeddings"]
+        self.num_layers = args["num_layers"]
+        self.dataset = args["dataset"]
+        self.sota = args["sota"]
+        
+        if "meld" in str(self.dataset).lower():
+            self.f = h5py.File("../../data/meld_features.hdf5", "a", libver="latest", swmr=True)
+        elif "iemo" in str(self.dataset).lower():
+            self.f = h5py.File("../../data/iemo_features.hdf5", "a", libver="latest", swmr=True)
+        elif "tiktok" in str(self.dataset).lower():
+            self.f = h5py.File("../../data/tiktok_features.hdf5", "a", libver="latest", swmr=True)
+        else:
+            self.f = h5py.File("../../data/mustard_features.hdf5", "a", libver="latest", swmr=True)
+        self.f.swmr_mode = True
+        print(f"Using {self.num_layers} layers \nUsing sota = {self.sota}" , flush=True)
+
+        self.must = True if "must" in str(self.dataset).lower() else False
+        self.tiktok = True if "tiktok" in str(self.dataset).lower() else False
+        self.p = 0.6
+
+        if self.must:
+            self.bert = AutoModel.from_pretrained("jkhan447/sarcasm-detection-RoBerta-base-CR")
+        elif self.tiktok:
+            self.bert = AutoModel.from_pretrained("bert-base-multilingual-cased")
+        else:
+            self.bert = AutoModel.from_pretrained('j-hartmann/emotion-english-distilroberta-base')
+
+        self.test_ctr = 1
+        self.train_ctr = 1
+        
+        if self.must:
+            self.wav2vec2 = AutoModel.from_pretrained("ehcalabres/wav2vec2-lg-xlsr-en-speech-emotion-recognition")
+        elif self.tiktok:
+            self.wav2vec2 = AutoModel.from_pretrained("justin1983/wav2vec2-xlsr-multilingual-56-finetuned-amd")
+        else:
+            self.wav2vec2 = AutoModel.from_pretrained("ehcalabres/wav2vec2-lg-xlsr-en-speech-emotion-recognition")
+
+
+
+
+        self.videomae = VideoMAEModel.from_pretrained("MCG-NJU/videomae-base")
+
+        for model in [self.bert, self.wav2vec2, self.videomae]:
+            for param in model.base_model.parameters():
+                param.requires_grad = False
+
+        self.linear1 = nn.Linear(768, self.output_dim)
+    def forward(
+        self,
+        input_ids,
+        text_attention_mask,
+        audio_features,
+        context_audio,
+        audio_path,
+        video_embeds,
+        video_context,
+        video_path,
+        visual_mask,
+        timings,
+        check="train",
+    ):
+        # print("video_path", video_path , flush=True)
+        # Transformer Time
+        _, text_outputs = self.bert(
+            input_ids=input_ids, attention_mask=text_attention_mask, return_dict=False
+        )
+        
+        if self.must:
+            self.f.create_dataset(f"{check}/{video_path[0].split('/')[-1][:-4]}_{timings[0]}/text", data=text_outputs)
+        else:
+            self.f.create_dataset(f"{check}/{video_path[0].split('/')[-1][:-4]}_{timings[0]}/text", data=text_outputs)
+        del _
+        del input_ids
+        del text_attention_mask
+
+        aud_outputs = self.wav2vec2(audio_features)[0]
+        del audio_features
+        
+        if self.must:
+            aud_context = self.wav2vec2(context_audio)[0]
+            self.f.create_dataset(f"{check}/{video_path[0][1].split('/')[-1][:-4]}_{timings[0][1]}/audio_context", data=aud_context)
+            self.f.create_dataset(f"{check}/{video_path[0][0].split('/')[-1][:-4]}_{timings[0][0]}/audio", data=aud_outputs)
+            del aud_context
+        else:
+            self.f.create_dataset(f"{check}/{video_path[0].split('/')[-1][:-4]}_{timings[0]}/audio", data=aud_outputs)
+            
+
+        vid_outputs = self.videomae(video_embeds, visual_mask)[0]  
+        del video_embeds
+
+        if self.must:
+            vid_context = self.videomae(video_context, visual_mask)[0]
+            del video_context
+            self.f.create_dataset(f"{check}/{video_path[0][1].split('/')[-1][:-4]}_{timings[0][1]}/video_context", data=vid_context)
+            self.f.create_dataset(f"{check}/{video_path[0][0].split('/')[-1][:-4]}_{timings[0][0]}/video", data=vid_outputs)
+        else:
+            self.f.create_dataset(f"{check}/{video_path[0].split('/')[-1][:-4]}_{timings[0]}/video", data=vid_outputs)
+            
+        tav = self.linear1(text_outputs)
+        
         return tav  # returns [batch_size,output_dim]

@@ -411,6 +411,9 @@ def arg_parse(description):
         "--epoch", "-e", help="Set the number of epochs", default=3, type=int
     )
     parser.add_argument(
+        "--sota", "-so", help="Should we use SOTA or not", default=False, type=bool
+    )
+    parser.add_argument(
         "--batch_size", "-b", help="Set the batch_size", default=1, type=int
     )
     parser.add_argument(

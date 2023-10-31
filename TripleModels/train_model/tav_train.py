@@ -17,22 +17,24 @@ import torch
 import os
 from torch.utils.checkpoint import checkpoint
 
-
 def get_statistics(input, label, model, criterion, Metric, check="train", epoch=None):
     batch_loss = None
     device = "cuda"
     text = input[0]
     text_input_ids = text["input_ids"]
     text_attention_mask = text["attention_mask"]
+    timings = text["timings"]
     del text
 
     audio_features = input[1]
+    audio_path = audio_features["audio_path"]
     audio_input_ids = audio_features["audio_features"]
     audio_attention_mask = audio_features["attention_mask"]
     audio_context = audio_features["audio_context"]
     del audio_features
 
     video_embeds = input[2]
+    video_path = video_embeds["video_path"]
     video_input_ids = video_embeds["visual_embeds"]
     video_attention_mask = video_embeds["attention_mask"]
     video_context = video_embeds["visual_context"]
@@ -43,9 +45,12 @@ def get_statistics(input, label, model, criterion, Metric, check="train", epoch=
         text_attention_mask.to(device),
         audio_input_ids.to(device),
         audio_context.to(device),
+        audio_path,
         video_input_ids.to(device),
         video_context.to(device),
+        video_path,
         video_attention_mask.to(device),
+        timings,
         check,
     )
 
