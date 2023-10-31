@@ -102,7 +102,7 @@ class TextAudioVideoDataset(Dataset):
         "video_features" : video,
         "video_context"  : video_context,
         
-        } , np.array(self.labels[idx])
+        } , torch.Tensor(np.array(self.labels[idx])).long()
 
 
 # ------------------------------------------------------------DOUBLE MODELS BELOW--------------------------------------------------------------------

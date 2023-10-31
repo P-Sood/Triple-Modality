@@ -22,7 +22,7 @@ def get_statistics(input: dict, label: np.array, model, criterion, Metric, check
     
     batch_loss = None
     device = "cuda"
-    input = {k: v.to('cuda') for k, v in input.items()}
+    input = {k: v.to(device) for k, v in input.items()}
     
     output = model(**input , check = check)
 
@@ -30,8 +30,8 @@ def get_statistics(input: dict, label: np.array, model, criterion, Metric, check
         input[k] = v.cpu()
         del v
 
-    label = label.type(torch.LongTensor).to(device)
-    Metric.update_metrics(torch.argmax(output, dim=1), label.long())
+    
+    Metric.update_metrics(torch.argmax(output, dim=1), label.to(device))
     if criterion is not None:
         # batch_loss = criterion(output, label)
         batch_loss = criterion(
@@ -46,7 +46,7 @@ def get_statistics_big_batch(input, label, model, criterion, Metric, check="trai
     
     batch_loss = None
     device = "cuda"
-    input = {k: v.to('cuda') for k, v in input.items()}    
+    input = {k: v.to(device) for k, v in input.items()}    
     output = checkpoint(
         model,
         **input,
@@ -57,8 +57,8 @@ def get_statistics_big_batch(input, label, model, criterion, Metric, check="trai
         input[k] = v.cpu()
         del v
 
-    label = label.type(torch.LongTensor).to(device)
-    Metric.update_metrics(torch.argmax(output, dim=1), label.long())
+    
+    Metric.update_metrics(torch.argmax(output, dim=1), label.to(device))
     if criterion is not None:
         # batch_loss = criterion(output, label)
         batch_loss = criterion(
