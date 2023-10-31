@@ -243,57 +243,56 @@ def not_grad_accum(
     gen = iter(train_dataloader)
     batch_size = train_dataloader.batch_size
     fn = get_statistics_big_batch if batch_size > 2 else get_statistics
-    with torch.no_grad():
-        for i in tqdm(range((iters // log_val) + 1), desc="steps"):
-            for j in tqdm(range(log_val), desc="iter"):
-                try:
-                    batch_idx = i * log_val + j
-                    train_input, train_label = next(gen)
-                    train_batch_loss = fn(
-                        train_input,
-                        train_label,
-                        model,
-                        criterion,
-                        Metric,
-                        check="train",
-                        epoch=epoch,
-                    )
-                    del train_input
-                    del train_label
-                    total_loss_train += train_batch_loss.item()
+    for i in tqdm(range((iters // log_val) + 1), desc="steps"):
+        for j in tqdm(range(log_val), desc="iter"):
+            try:
+                batch_idx = i * log_val + j
+                train_input, train_label = next(gen)
+                train_batch_loss = fn(
+                    train_input,
+                    train_label,
+                    model,
+                    criterion,
+                    Metric,
+                    check="train",
+                    epoch=epoch,
+                )
+                del train_input
+                del train_label
+                total_loss_train += train_batch_loss.item()
 
-                    # backward pass
-                    train_batch_loss.backward()
-                    torch.nn.utils.clip_grad_norm_(
-                        [
-                            param
-                            for param in model.parameters()
-                            if param.requires_grad == True
-                        ],
-                        clip,
-                    )
-                    optimizer.step()
-                    scheduler.step(epoch + batch_idx / iters)
-                    model.zero_grad()
-                except StopIteration:
-                    break
-            prev_val_loss, prev_f1 = run_validation(
-                epoch,
-                val_dataloader,
-                model,
-                criterion,
-                optimizer,
-                scheduler,
-                Metric,
-                prev_val_loss,
-                prev_f1,
-                total_loss_train / iters,
-                batch_idx,
-                log_val,
-                path,
-            )
-            if PATIENCE_ITER == patience:
+                # backward pass
+                train_batch_loss.backward()
+                torch.nn.utils.clip_grad_norm_(
+                    [
+                        param
+                        for param in model.parameters()
+                        if param.requires_grad == True
+                    ],
+                    clip,
+                )
+                optimizer.step()
+                scheduler.step(epoch + batch_idx / iters)
+                model.zero_grad()
+            except StopIteration:
                 break
+        prev_val_loss, prev_f1 = run_validation(
+            epoch,
+            val_dataloader,
+            model,
+            criterion,
+            optimizer,
+            scheduler,
+            Metric,
+            prev_val_loss,
+            prev_f1,
+            total_loss_train / iters,
+            batch_idx,
+            log_val,
+            path,
+        )
+        if PATIENCE_ITER == patience:
+            break
     return model, optimizer, criterion, prev_val_loss, prev_f1
 
 

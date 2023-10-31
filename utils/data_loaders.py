@@ -818,7 +818,7 @@ class Data:
             self.iemo = True if "iemo" in audio else False
             self.tiktok = True if "tiktok" in audio else False
         
-        self.meld = True if self.tiktok and self.must and self.iemo else False
+        self.meld = True if not (self.tiktok and self.must and self.iemo) else False
 
     def get_white_noise(self, signal: torch.Tensor, SNR) -> torch.Tensor:
         # @author: sleek_eagle
