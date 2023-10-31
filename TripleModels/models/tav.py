@@ -380,10 +380,12 @@ class TAVForMAE_HDF5(nn.Module):
         del text_attention_mask
 
         aud_outputs = self.wav2vec2(audio_features)[0]
+        aud_outputs = torch.mean(aud_outputs, dim=1)
         del audio_features
         
         if self.must:
             aud_context = self.wav2vec2(context_audio)[0]
+            aud_context = torch.mean(aud_context, dim=1)
             self.f.create_dataset(f"{check}/{video_path[0][1].split('/')[-1][:-4]}_{timings[0][1]}/audio_context", data=aud_context)
             self.f.create_dataset(f"{check}/{video_path[0][0].split('/')[-1][:-4]}_{timings[0][0]}/audio", data=aud_outputs)
             del aud_context
@@ -392,10 +394,12 @@ class TAVForMAE_HDF5(nn.Module):
             
 
         vid_outputs = self.videomae(video_embeds, visual_mask)[0]  
+        vid_outputs = torch.mean(vid_outputs, dim=1)
         del video_embeds
 
         if self.must:
             vid_context = self.videomae(video_context, visual_mask)[0]
+            vid_context = torch.mean(vid_context, dim=1)
             del video_context
             self.f.create_dataset(f"{check}/{video_path[0][1].split('/')[-1][:-4]}_{timings[0][1]}/video_context", data=vid_context)
             self.f.create_dataset(f"{check}/{video_path[0][0].split('/')[-1][:-4]}_{timings[0][0]}/video", data=vid_outputs)
