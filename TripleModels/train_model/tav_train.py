@@ -16,52 +16,19 @@ from torch.optim import AdamW
 import torch
 import os
 from torch.utils.checkpoint import checkpoint
+import numpy as np
 
-def get_statistics(input, label, model, criterion, Metric, check="train", epoch=None):
+def get_statistics(input: dict, label: np.array, model, criterion, Metric, check="train", epoch=None):
+    
     batch_loss = None
     device = "cuda"
-    text = input[0]
-    text_input_ids = text["input_ids"]
-    text_attention_mask = text["attention_mask"]
-    timings = text["timings"]
-    del text
+    input = {k: v.to('cuda') for k, v in input.items()}
+    
+    output = model(**input , check = check)
 
-    audio_features = input[1]
-    audio_path = audio_features["audio_path"]
-    audio_input_ids = audio_features["audio_features"]
-    audio_attention_mask = audio_features["attention_mask"]
-    audio_context = audio_features["audio_context"]
-    del audio_features
-
-    video_embeds = input[2]
-    video_path = video_embeds["video_path"]
-    video_input_ids = video_embeds["visual_embeds"]
-    video_attention_mask = video_embeds["attention_mask"]
-    video_context = video_embeds["visual_context"]
-    del video_embeds
-
-    output = model(
-        text_input_ids.to(device),
-        text_attention_mask.to(device),
-        audio_input_ids.to(device),
-        audio_context.to(device),
-        audio_path,
-        video_input_ids.to(device),
-        video_context.to(device),
-        video_path,
-        video_attention_mask.to(device),
-        timings,
-        check,
-    )
-
-    del audio_input_ids
-    del video_context
-    del audio_context
-    del audio_attention_mask
-    del video_input_ids
-    del video_attention_mask
-    del text_input_ids
-    del text_attention_mask
+    for k, v in input.items():
+        input[k] = v.cpu()
+        del v
 
     label = label.type(torch.LongTensor).to(device)
     Metric.update_metrics(torch.argmax(output, dim=1), label.long())
@@ -75,49 +42,20 @@ def get_statistics(input, label, model, criterion, Metric, check="train", epoch=
     return batch_loss
 
 
-def get_statistics_big_batch(
-    input, label, model, criterion, Metric, check="train", epoch=None
-):
+def get_statistics_big_batch(input, label, model, criterion, Metric, check="train", epoch=None):
+    
     batch_loss = None
     device = "cuda"
-    text = input[0]
-    text_input_ids = text["input_ids"]
-    text_attention_mask = text["attention_mask"]
-    del text
-
-    audio_features = input[1]
-    audio_input_ids = audio_features["audio_features"]
-    audio_attention_mask = audio_features["attention_mask"]
-    audio_context = audio_features["audio_context"]
-    del audio_features
-
-    video_embeds = input[2]
-    video_input_ids = video_embeds["visual_embeds"]
-    video_attention_mask = video_embeds["attention_mask"]
-    video_context = video_embeds["visual_context"]
-    del video_embeds
-
+    input = {k: v.to('cuda') for k, v in input.items()}    
     output = checkpoint(
         model,
-        text_input_ids.to(device),
-        text_attention_mask.to(device),
-        audio_input_ids.to(device),
-        audio_context.to(device),
-        video_input_ids.to(device),
-        video_context.to(device),
-        video_attention_mask.to(device),
-        check,
+        **input,
+        check = check,
         use_reentrant=False,
     )
-
-    del audio_input_ids
-    del video_context
-    del audio_context
-    del audio_attention_mask
-    del video_input_ids
-    del video_attention_mask
-    del text_input_ids
-    del text_attention_mask
+    for k, v in input.items():
+        input[k] = v.cpu()
+        del v
 
     label = label.type(torch.LongTensor).to(device)
     Metric.update_metrics(torch.argmax(output, dim=1), label.long())

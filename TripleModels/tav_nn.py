@@ -12,7 +12,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 from train_model.tav_train import train_tav_network, evaluate_tav
-from models.tav import TAVForMAE_HDF5, collate_batch
+from models.tav import TAVForMAE
 import wandb
 from utils.data_loaders import TextAudioVideoDataset
 import pandas as pd
@@ -21,14 +21,6 @@ import numpy as np
 from utils.global_functions import arg_parse, Metrics, MySampler, NewCrossEntropyLoss
 from torch.utils.data import DataLoader
 from torch.utils.data.sampler import WeightedRandomSampler
-
-
-class BatchCollation:
-    def __init__(self, must) -> None:
-        self.must = must
-
-    def __call__(self, batch):
-        return collate_batch(batch, self.must)
 
 
 def prepare_dataloader(
@@ -48,7 +40,6 @@ def prepare_dataloader(
     say we have 32 data points, if batch size = 8 then it will make 4 dataloaders of size 8 each
     """
     num_workers = 0
-    must = True if "must" in str(dataset).lower() else False
     if accum:
         batch_size = 1
         # df , dataset , batch_size , feature_col1 , feature_col2  , label_col , timings = None , accum = False , check = "test"
@@ -110,9 +101,8 @@ def prepare_dataloader(
             pin_memory=pin_memory,
             num_workers=num_workers,
             drop_last=False,
-            shuffle=True,
-            # sampler=sampler,
-            collate_fn=BatchCollation(must),
+            shuffle=False,
+            sampler=sampler,
         )
     else:
         dataloader = DataLoader(
@@ -121,8 +111,7 @@ def prepare_dataloader(
             pin_memory=pin_memory,
             num_workers=num_workers,
             drop_last=False,
-            shuffle=True,
-            collate_fn=BatchCollation(must),
+            shuffle=False,
         )
 
     return dataloader
@@ -184,7 +173,7 @@ def runModel(accelerator, df_train, df_val, df_test, param_dict, model_param):
         df_test, dataset, batch_size, label_task, epoch_switch, check="test"
     )
 
-    model = TAVForMAE_HDF5(model_param).to(device)
+    model = TAVForMAE(model_param).to(device)
 
     # PREFormer = PreFormer().to(f"cpu")
 
