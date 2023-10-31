@@ -96,11 +96,11 @@ class TextAudioVideoDataset(Dataset):
         text = self.Data.textFeatures(self.video_path[idx], self.timings[idx], self.check)
         audio, audio_context = self.Data.audioFeatures(self.video_path[idx], self.timings[idx], self.check)
         video, video_context = self.Data.videoFeatures(self.video_path[idx], self.timings[idx], self.check)
-        return { "text_features": text,
-        "audio_features" : audio,
-        "audio_context"  : audio_context,
-        "video_features" : video,
-        "video_context"  : video_context,
+        return { "text_features": torch.Tensor(text),
+        "audio_features" : torch.Tensor(audio),
+        "audio_context"  : torch.Tensor(audio_context),
+        "video_features" : torch.Tensor(video),
+        "video_context"  : torch.Tensor(video_context),
         
         } , torch.Tensor(np.array(self.labels[idx])).long()
 

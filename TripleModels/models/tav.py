@@ -36,12 +36,13 @@ class TAVForMAE(nn.Module):
         self.p = 0.6
 
         # Everything before this line is unlearnable, everything after is what we are focused on
-        self.wav_2_768_2 = nn.Linear(1024, 768)
-        self.wav_2_768_2.weight = torch.nn.init.xavier_normal_(self.wav_2_768_2.weight)
 
         self.aud_norm = nn.LayerNorm(1024)
         self.bert_norm = nn.LayerNorm(768)
         self.vid_norm = nn.LayerNorm(768)
+        
+        self.wav_2_768_2 = nn.Linear(1024, 768)
+        self.wav_2_768_2.weight = torch.nn.init.xavier_normal_(self.wav_2_768_2.weight)
 
         self.aud_text_layers = nn.ModuleList(
             [
@@ -55,19 +56,19 @@ class TAVForMAE(nn.Module):
                 for _ in range(self.num_layers)
             ]
         )
-        self.fusion_layers = nn.ModuleList(
-            [
-                nn.Linear(768*2, 768)
-                for _ in range(self.num_layers)
-            ]
-        )
-
-        self.dropout = nn.Dropout(self.dropout)
         if self.sota:
+            self.fusion_layers = nn.ModuleList(
+                [
+                    nn.Linear(768*2, 768)
+                    for _ in range(self.num_layers)
+                ]
+            )
             self.linear1 = nn.Linear(768 * 3, 768 * 2)
         else:
             self.linear1 = nn.Linear(768 * 4, 768 * 2)
             
+
+        self.dropout = nn.Dropout(self.dropout)            
         self.linear2 = nn.Linear(768 * 2, self.output_dim)
         self.relu = nn.ReLU()
 
@@ -125,6 +126,8 @@ class TAVForMAE(nn.Module):
         del text_outputs
         del aud_outputs
         del vid_outputs
+        del Ffusion1
+        del Ffusion2
 
         # Classifier Head
         if check == "train":
