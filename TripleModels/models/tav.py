@@ -1,25 +1,25 @@
-from copy import deepcopy
-from glob import glob
-from transformers import logging
-
-logging.set_verbosity_error()
-import warnings
-
-warnings.filterwarnings("ignore")
+import pdb
+import h5py
 import torch
+import warnings
+import numpy as np
 from torch import nn
+from glob import glob
+from copy import deepcopy
+from numpy.random import choice
+from transformers import logging
+from torch.nn.utils.rnn import pad_sequence
 from transformers import VideoMAEModel, AutoModel, AutoProcessor, AutoConfig
 from transformers.models.wav2vec2.modeling_wav2vec2 import _compute_mask_indices
 
-import numpy as np
-from numpy.random import choice
-from torch.nn.utils.rnn import pad_sequence
-from torch import nn
+logging.set_verbosity_error()
+warnings.filterwarnings("ignore")
+
 
 class TAVForMAE(nn.Module):
     """
     Model for Multimodal Alignment and Fusion
-    
+
     Since we have already called an encoder to get all the features for this model, we just need to run the fusion and classifier head over top
     """
 
@@ -31,7 +31,7 @@ class TAVForMAE(nn.Module):
         self.num_layers = args["num_layers"]
         self.dataset = args["dataset"]
         self.sota = args["sota"]
-        
+
         print(f"Using {self.num_layers} layers \nUsing sota = {self.sota}" , flush=True)
 
         self.must = True if "must" in str(self.dataset).lower() else False
@@ -42,7 +42,6 @@ class TAVForMAE(nn.Module):
         self.aud_norm = nn.LayerNorm(1024)
         self.bert_norm = nn.LayerNorm(768)
         self.vid_norm = nn.LayerNorm(768)
-        
         self.wav_2_768_2 = nn.Linear(1024, 768)
         self.wav_2_768_2.weight = torch.nn.init.xavier_normal_(self.wav_2_768_2.weight)
 
@@ -68,9 +67,8 @@ class TAVForMAE(nn.Module):
             self.linear1 = nn.Linear(768 * 3, 768 * 2)
         else:
             self.linear1 = nn.Linear(768 * 4, 768 * 2)
-            
 
-        self.dropout = nn.Dropout(self.dropout)            
+        self.dropout = nn.Dropout(self.dropout)
         self.linear2 = nn.Linear(768 * 2, self.output_dim)
         self.relu = nn.ReLU()
 
@@ -88,7 +86,7 @@ class TAVForMAE(nn.Module):
         aud_outputs = self.aud_norm(audio_features)
         del text_features
         del audio_features
-        
+
         if self.must:
             audio_context = self.aud_norm(audio_context)
             aud_outputs = (aud_outputs * self.p + audio_context * (1 - self.p)) / 2
@@ -103,6 +101,7 @@ class TAVForMAE(nn.Module):
             video_context = self.vid_norm(video_context)
             vid_outputs = (vid_outputs * self.p + video_context * (1 - self.p)) / 2
             del video_context
+
         # Model Head
         if self.sota:
             for i in range(self.num_layers):
@@ -141,4 +140,3 @@ class TAVForMAE(nn.Module):
         tav = self.linear2(tav)
 
         return tav  # returns [batch_size,output_dim]
-

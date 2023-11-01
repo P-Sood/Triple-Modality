@@ -1,36 +1,32 @@
-from transformers import logging
-
-logging.set_verbosity_error()
-import warnings
-
-warnings.filterwarnings("ignore")
-import torch
-from tqdm import tqdm
+import os
 import wandb
+import torch
+import warnings
+import numpy as np
+from tqdm import tqdm
+from torch.optim import AdamW
+from transformers import logging
+from torch.utils.checkpoint import checkpoint
 from utils.early_stopping import EarlyStopping
 from utils.global_functions import save_model, load_model
 from torch.optim.lr_scheduler import CosineAnnealingWarmRestarts
 
+logging.set_verbosity_error()
+warnings.filterwarnings("ignore")
+
 # from transformers.optimization import AdamW
-from torch.optim import AdamW
-import torch
-import os
-from torch.utils.checkpoint import checkpoint
-import numpy as np
 
 def get_statistics(input: dict, label: np.array, model, criterion, Metric, check="train", epoch=None):
-    
     batch_loss = None
     device = "cuda"
     input = {k: v.to(device) for k, v in input.items()}
-    
+
     output = model(**input , check = check)
 
     for k, v in input.items():
         input[k] = v.cpu()
         del v
 
-    
     Metric.update_metrics(torch.argmax(output, dim=1), label.to(device))
     if criterion is not None:
         # batch_loss = criterion(output, label)
@@ -43,7 +39,6 @@ def get_statistics(input: dict, label: np.array, model, criterion, Metric, check
 
 
 def get_statistics_big_batch(input, label, model, criterion, Metric, check="train", epoch=None):
-    
     batch_loss = None
     device = "cuda"
     input = {k: v.to(device) for k, v in input.items()}    
@@ -57,7 +52,6 @@ def get_statistics_big_batch(input, label, model, criterion, Metric, check="trai
         input[k] = v.cpu()
         del v
 
-    
     Metric.update_metrics(torch.argmax(output, dim=1), label.to(device))
     if criterion is not None:
         # batch_loss = criterion(output, label)
@@ -68,10 +62,8 @@ def get_statistics_big_batch(input, label, model, criterion, Metric, check="trai
     del label
     return batch_loss
 
-
 PATIENCE_ITER = 0
 F1_ITER = 0
-
 
 def grad_accum(
     epoch,
@@ -94,7 +86,7 @@ def grad_accum(
     global PATIENCE_ITER, F1_ITER
     gen = iter(train_dataloader)
     batch_size = train_dataloader.batch_size
-    fn = get_statistics_big_batch if batch_size > 2 else get_statistics
+    fn = get_statistics_big_batch if batch_size > 9 else get_statistics
     for i in tqdm(range((iters // log_val) + 1), desc="steps"):
         for j in tqdm(range(log_val), desc="iter"):
             try:
@@ -180,8 +172,9 @@ def not_grad_accum(
     global PATIENCE_ITER, F1_ITER
     gen = iter(train_dataloader)
     batch_size = train_dataloader.batch_size
-    fn = get_statistics_big_batch if batch_size > 2 else get_statistics
-    for i in tqdm(range((iters // log_val) + 1), desc="steps"):
+    fn = get_statistics_big_batch if batch_size > 17 else get_statistics
+    #for i in tqdm(range((iters // log_val) + 1), desc="steps"):
+    for i in tqdm(range((iters // log_val)), desc="steps"):
         for j in tqdm(range(log_val), desc="iter"):
             try:
                 batch_idx = i * log_val + j
@@ -274,7 +267,7 @@ def run_validation(
 def validate(val_dataloader, model, criterion, Metric, name="val"):
     total_loss_val = 0
     with torch.no_grad():
-        for val_input, val_label in tqdm(val_dataloader, desc="Val"):
+        for val_input, val_label in tqdm(val_dataloader, desc=name):
             val_batch_loss = get_statistics(
                 val_input, val_label, model, criterion, Metric, name, epoch=None
             )
@@ -308,8 +301,8 @@ def one_epoch(
     total_loss_train = 0
     iters1 = len(train_dataloader[0])
     iters2 = len(train_dataloader[1])
-    log_val1 = iters1 // 5
-    log_val2 = iters2 // 5
+    log_val1 = iters1 
+    log_val2 = iters2 
     wandb.log({"log_val_multinomial": log_val1, "log_val_iterative": log_val2})
 
     regular = False

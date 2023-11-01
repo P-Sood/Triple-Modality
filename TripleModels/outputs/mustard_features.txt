@@ -1,0 +1,80 @@
+wandb: Currently logged in as: zeerak (ddi). Use `wandb login --relogin` to force relogin
+wandb: Tracking run with wandb version 0.15.12
+wandb: Run data is saved locally in /l/users/zeerak.talat/Triple-Modality/TripleModels/run_slurm/wandb/run-20231101_101927-8h7t9rbe
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run major-spaceship-36
+wandb: ⭐️ View project at https://wandb.ai/ddi/Triple-Modality-TripleModels
+wandb: 🚀 View run at https://wandb.ai/ddi/Triple-Modality-TripleModels/runs/8h7t9rbe
+ in main 
+ param_dict = {'epoch': 1, 'patience': 10.0, 'lr': 1e-06, 'clip': 1.0, 'batch_size': 1, 'weight_decay': 0.0001, 'model': 'MAE_encoder', 'T_max': 2, 'seed': 32, 'label_task': 'sarcasm', 'mask': False, 'loss': 'NewCrossEntropy', 'beta': 1, 'epoch_switch': 2, 'weights': tensor([0.5000, 0.5000]), 'label2id': {'Sarcasm': 1, 'NonSarcasm': 0}, 'id2label': {1: 'Sarcasm', 0: 'NonSarcasm'}} 
+ model_param = {'output_dim': 2, 'dropout': 0.5, 'early_div': False, 'num_layers': 12, 'learn_PosEmbeddings': True, 'dataset': '../../data/must', 'sota': False} 
+ df ../../data/must , with df = 1202 
+ 
+NewCrossEntropy
+841
+841
+<class 'pandas.core.frame.DataFrame'>:240
+Using 12 layers 
+Using sota = False
+epochs:   0%|          | 0/1 [00:00<?, ?it/s]
+steps:   0%|          | 0/2 [00:00<?, ?it/s][A
+
+iter:   0%|          | 0/841 [00:00<?, ?it/s][A[Aiter:   0%|          | 0/841 [00:00<?, ?it/s]
+steps:   0%|          | 0/2 [00:00<?, ?it/s]
+epochs:   0%|          | 0/1 [00:00<?, ?it/s]
+Traceback (most recent call last):
+  File "/l/users/zeerak.talat/Triple-Modality/TripleModels/run_slurm/../tav_nn.py", line 306, in <module>
+    main()
+  File "/l/users/zeerak.talat/Triple-Modality/TripleModels/run_slurm/../tav_nn.py", line 302, in main
+    runModel("cuda", df_train, df_val, df_test, param_dict, model_param)
+  File "/l/users/zeerak.talat/Triple-Modality/TripleModels/run_slurm/../tav_nn.py", line 199, in runModel
+    model = train_tav_network(
+            ^^^^^^^^^^^^^^^^^^
+  File "/l/users/zeerak.talat/Triple-Modality/TripleModels/train_model/tav_train.py", line 456, in train_tav_network
+    model, optimizer, criterion, scheduler, prev_val_loss, prev_f1 = one_epoch(
+                                                                     ^^^^^^^^^^
+  File "/l/users/zeerak.talat/Triple-Modality/TripleModels/train_model/tav_train.py", line 381, in one_epoch
+    model, optimizer, criterion, prev_val_loss, prev_f1 = not_grad_accum(
+                                                          ^^^^^^^^^^^^^^^
+  File "/l/users/zeerak.talat/Triple-Modality/TripleModels/train_model/tav_train.py", line 251, in not_grad_accum
+    train_batch_loss = fn(
+                       ^^^
+  File "/l/users/zeerak.talat/Triple-Modality/TripleModels/train_model/tav_train.py", line 43, in get_statistics
+    output = model(
+             ^^^^^^
+  File "/home/zeerak.talat/.conda/envs/trimodal/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1518, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zeerak.talat/.conda/envs/trimodal/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1568, in _call_impl
+    result = forward_call(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/l/users/zeerak.talat/Triple-Modality/TripleModels/models/tav.py", line 201, in forward
+    self.f.create_dataset(f"{check}/{video_path[0][0].split('/')[-1][:-4]}_{timings[0]}/text", data=text_outputs.cpu().detach().numpy())
+  File "/home/zeerak.talat/.conda/envs/trimodal/lib/python3.11/site-packages/h5py/_hl/group.py", line 183, in create_dataset
+    dsid = dataset.make_new_dset(group, shape, dtype, data, name, **kwds)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zeerak.talat/.conda/envs/trimodal/lib/python3.11/site-packages/h5py/_hl/dataset.py", line 163, in make_new_dset
+    dset_id = h5d.create(parent.id, name, tid, sid, dcpl=dcpl, dapl=dapl)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "h5py/_objects.pyx", line 54, in h5py._objects.with_phil.wrapper
+  File "h5py/_objects.pyx", line 55, in h5py._objects.with_phil.wrapper
+  File "h5py/h5d.pyx", line 137, in h5py.h5d.create
+ValueError: Unable to synchronously create dataset (name already exists)
+wandb: Waiting for W&B process to finish... (failed 1). Press Control-C to abort syncing.
+wandb: - 0.027 MB of 0.027 MB uploaded (0.000 MB deduped)wandb: \ 0.027 MB of 0.027 MB uploaded (0.000 MB deduped)wandb: | 0.027 MB of 0.027 MB uploaded (0.000 MB deduped)wandb: / 0.027 MB of 0.027 MB uploaded (0.000 MB deduped)wandb: 
+wandb: Run history:
+wandb:               epoch ▁
+wandb:       learning_rate ▁
+wandb:   log_val_iterative ▁
+wandb: log_val_multinomial ▁
+wandb: 
+wandb: Run summary:
+wandb:               epoch 0
+wandb:       learning_rate 0.0
+wandb:   log_val_iterative 841
+wandb: log_val_multinomial 841
+wandb: 
+wandb: 🚀 View run major-spaceship-36 at: https://wandb.ai/ddi/Triple-Modality-TripleModels/runs/8h7t9rbe
+wandb: ️⚡ View job at https://wandb.ai/ddi/Triple-Modality-TripleModels/jobs/QXJ0aWZhY3RDb2xsZWN0aW9uOjExMTUxOTQ5OA==/version_details/v7
+wandb: Synced 6 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20231101_101927-8h7t9rbe/logs
