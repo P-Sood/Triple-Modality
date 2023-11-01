@@ -370,8 +370,8 @@ def one_epoch(
     total_loss_train = 0
     iters1 = len(train_dataloader[0])
     iters2 = len(train_dataloader[1])
-    log_val1 = iters1 // 5
-    log_val2 = iters2 // 5
+    log_val1 = iters1 
+    log_val2 = iters2 
     wandb.log({"log_val_multinomial": log_val1, "log_val_iterative": log_val2})
 
     regular = False
