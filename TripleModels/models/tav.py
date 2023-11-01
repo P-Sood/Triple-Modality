@@ -1,16 +1,7 @@
-import pdb
-import h5py
 import torch
 import warnings
-import numpy as np
 from torch import nn
-from glob import glob
-from copy import deepcopy
-from numpy.random import choice
 from transformers import logging
-from torch.nn.utils.rnn import pad_sequence
-from transformers import VideoMAEModel, AutoModel, AutoProcessor, AutoConfig
-from transformers.models.wav2vec2.modeling_wav2vec2 import _compute_mask_indices
 
 logging.set_verbosity_error()
 warnings.filterwarnings("ignore")
