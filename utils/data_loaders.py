@@ -131,8 +131,9 @@ class Data:
     """
     def __init__(self, file) -> None:
         self.FILE = h5py.File(file, "r", libver="latest", swmr=True)
-        self.must = False
-
+        
+        print(f"FILE IS {self.FILE}" , flush=True)
+        
         self.must = True if "must" in file else False
         self.iemo = True if "iemo" in file else False
         self.tiktok = True if "tiktok" in file else False
@@ -155,5 +156,6 @@ class Data:
             audio_context = torch.Tensor(self.FILE[f"{check}/{path[1].split('/')[-1][:-4]}_{timings[1]}/audio_context"][()])
             return audio , audio_context
     def textFeatures(self, path, timings, check):
+        print(f"\n path we are trying to access is \n{check}/{path.split('/')[-1][:-4]}_{timings}/text" , flush=True)
         text = torch.Tensor(self.FILE[f"{check}/{path.split('/')[-1][:-4]}_{timings}/text"][()])
         return text
