@@ -83,15 +83,18 @@ def get_statistics_big_batch(
     text = input[0]
     text_input_ids = text["input_ids"]
     text_attention_mask = text["attention_mask"]
+    timings = text["timings"]
     del text
 
     audio_features = input[1]
+    audio_path = audio_features["audio_path"]
     audio_input_ids = audio_features["audio_features"]
     audio_attention_mask = audio_features["attention_mask"]
     audio_context = audio_features["audio_context"]
     del audio_features
 
     video_embeds = input[2]
+    video_path = video_embeds["video_path"]
     video_input_ids = video_embeds["visual_embeds"]
     video_attention_mask = video_embeds["attention_mask"]
     video_context = video_embeds["visual_context"]
@@ -103,9 +106,12 @@ def get_statistics_big_batch(
         text_attention_mask.to(device),
         audio_input_ids.to(device),
         audio_context.to(device),
+        audio_path,
         video_input_ids.to(device),
         video_context.to(device),
+        video_path,
         video_attention_mask.to(device),
+        timings,
         check,
         use_reentrant=False,
     )
@@ -156,7 +162,7 @@ def grad_accum(
     global PATIENCE_ITER, F1_ITER
     gen = iter(train_dataloader)
     batch_size = train_dataloader.batch_size
-    fn = get_statistics_big_batch if batch_size > 2 else get_statistics
+    fn = get_statistics_big_batch if batch_size > 9 else get_statistics
     for i in tqdm(range((iters // log_val) + 1), desc="steps"):
         for j in tqdm(range(log_val), desc="iter"):
             try:
