@@ -111,7 +111,7 @@ class TextAudioVideoDataset(Dataset):
             self.texts = []
             for i in range(0, len(df[feature_col2]), 2):
                 # concatenate the text
-                text = df[feature_col2].iloc[i] + " " + df[feature_col2].iloc[i + 1]
+                text = df[feature_col3].iloc[i] + " " + df[feature_col3].iloc[i + 1]
                 # tokenize the concatenated text
                 tokens = tokenizer(
                     text,

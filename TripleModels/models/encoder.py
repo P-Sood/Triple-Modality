@@ -18,14 +18,11 @@ from numpy.random import choice
 from torch.nn.utils.rnn import pad_sequence
 from torch import nn
 
-
-
 def collate_batch(batch, must):  # batch is a pseudo pandas array of two columns
     """
     Here we are going to take some raw-input and pre-process them into what we need
     So we can see all the steps in the ML as they go along
     """
-
     video_list = []
     speech_context = []
     speech_list = []
@@ -40,16 +37,18 @@ def collate_batch(batch, must):  # batch is a pseudo pandas array of two columns
         video_context = [torch.empty((1, 1, 1, 1)), torch.empty((1, 1, 1, 1))]
     else:
         video_context = []
+
     speech_list_context_input_values = torch.empty((1))
     speech_list_mask = None
     vid_mask = None
 
-    for input, label in batch:
-        text = input[0]
-        input_list.append(text["input_ids"].tolist()[0])
+    for data, label in batch:
+        text = data[0]
+        data_list.append(text["data_ids"].tolist()[0])
         text_mask.append(text["attention_mask"].tolist()[0])
-        audio_path = input[1]
-        vid_features = input[2]  # [6:] for debug
+        audio_path = data[1]
+        vid_features = data[2]  # [6:] for debug
+
         if not must:
             path_audio.append(audio_path[0])
             path_video.append(vid_features[0])
@@ -72,16 +71,15 @@ def collate_batch(batch, must):  # batch is a pseudo pandas array of two columns
 
     vid_mask = torch.randint(
         -13, 2, (batch_size, 1568)
-    )  # 8*14*14 = 1568 is just the sequence length of every video with VideoMAE, so i just hardcoded it,
+    )  # 8*14*14 = 1568: Seq len for all videos processed w VideoMAE 
     vid_mask[vid_mask > 0] = 0
-    vid_mask = vid_mask.bool()
-    # now we have a random mask over values so it can generalize better
+    vid_mask = vid_mask.bool()  # RAndom mask over values
     x = torch.count_nonzero(vid_mask.int()).item()
     rem = (1568 * batch_size - x) % batch_size
+
+    # What does this if statement do? I.e., what is "rem"?
     if rem != 0:
-        idx = torch.where(vid_mask.view(-1) == 0)[
-            0
-        ]  # get all indicies of 0 in flat tensor
+        idx = torch.where(vid_mask.view(-1) == 0)[0]  # Flatten and get 0-indices
         num_to_change = rem  # as follows from example abow
         idx_to_change = choice(idx, size=num_to_change, replace=False)
         vid_mask.view(-1)[idx_to_change] = 1
@@ -118,10 +116,7 @@ def collate_batch(batch, must):  # batch is a pseudo pandas array of two columns
     }
     return [text, audio_features, visual_embeds], torch.Tensor(np.array(label_list))
 
-
-
-
-class TAVForMAE_HDF5(nn.Module):
+class TAVEncoder(nn.Module):
     """
     Model for Bert and VideoMAE classifier
     """
@@ -134,9 +129,7 @@ class TAVForMAE_HDF5(nn.Module):
         self.num_layers = args["num_layers"]
         self.dataset = args["dataset"]
         self.sota = args["sota"]
-        
-        self.must = False
-        self.tiktok = False
+
         if "meld" in str(self.dataset.lower()):
             dataset_name = "meld"
         elif "iemo" in str(self.dataset).lower():
@@ -147,14 +140,13 @@ class TAVForMAE_HDF5(nn.Module):
         else:
             dataset_name = "mustard"
             self.must = True
-        self.f = h5py.File(f"../../data/{dataset_name}.features.hdf5", "a", libver="latest", swmr=True)
-        try:
-            self.f.swmr_mode = True
-        except:
-            pass
+        
+        self.f = h5py.File(f"../../data/{dataset_name}.features.hdf5", "a", liver="latest", swmr=True)
+        self.f.swmr_mode = True
 
-        self.p = 0.6
+        self.p = 0.6  # Document this.
 
+        # Load pre-trained models.
         if self.must:
             self.bert = AutoModel.from_pretrained("jkhan447/sarcasm-detection-RoBerta-base-CR")
             self.wav2vec2 = AutoModel.from_pretrained("ehcalabres/wav2vec2-lg-xlsr-en-speech-emotion-recognition")
@@ -191,16 +183,20 @@ class TAVForMAE_HDF5(nn.Module):
             input_ids=input_ids, attention_mask=text_attention_mask, return_dict=False
         )
         
+        # Create HDF5 datasets
         if self.must:
             self.f.create_dataset(f"{check}/{video_path[0][0].split('/')[-1][:-4]}_{timings[0]}/text", data=text_outputs.cpu().detach().numpy())
         else:
             self.f.create_dataset(f"{check}/{video_path[0].split('/')[-1][:-4]}_{timings[0]}/text", data=text_outputs.cpu().detach().numpy())
+
+        # Get audio features
+        aud_outputs = self.wav2vec2(audio_features)[0]
+        aud_outputs = torch.mean(aud_outputs, dim=1)
+
+        # Delete information to take up less GPU mem
         del _
         del input_ids
         del text_attention_mask
-
-        aud_outputs = self.wav2vec2(audio_features)[0]
-        aud_outputs = torch.mean(aud_outputs, dim=1)
         del audio_features
         
         if self.must:
@@ -211,7 +207,6 @@ class TAVForMAE_HDF5(nn.Module):
             del aud_context
         else:
             self.f.create_dataset(f"{check}/{video_path[0].split('/')[-1][:-4]}_{timings[0]}/audio", data=aud_outputs.cpu().detach().numpy())
-            
 
         vid_outputs = self.videomae(video_embeds, visual_mask)[0]  
         vid_outputs = torch.mean(vid_outputs, dim=1)

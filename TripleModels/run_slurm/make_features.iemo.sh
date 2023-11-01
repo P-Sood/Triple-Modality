@@ -2,7 +2,7 @@
 
 # Give job a name
 
-#SBATCH --time 00:02:00 # time (DD-HH:MM)
+#SBATCH --time 00-10:00 # time (DD-HH:MM)
 #SBATCH -p gpu
 #SBATCH -q gpu-8
 #SBATCH --nodes=1
@@ -14,7 +14,7 @@
 # #SBATCH --output=../outputs/mustard_test_prev_SOTA.txt
 #SBATCH --output=../outputs/iemo_features.txt
 
-python ../tav_nn.py -e 1 -d ../../data/iemo -lt emotion
+python ../tav_nn.py -b 1 -e 1 -d ../../data/iemo -lt emotion
 
 #wandb agent ddi/TiktokTest/nreuhli2 # OURS
 # wandb agent ddi/MustardTriple/nznlgus3  # Prev. SOTA paper

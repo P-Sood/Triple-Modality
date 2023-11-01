@@ -210,6 +210,7 @@ def runModel(accelerator, df_train, df_val, df_test, param_dict, model_param):
         epoch_switch,
         checkpoint,
     )
+    #model = TAVForMAE_HDF5(model_param).to(device)
     evaluate_tav(model, df_test, Metric)
 
 
