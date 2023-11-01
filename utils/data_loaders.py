@@ -67,7 +67,7 @@ class TextAudioVideoDataset(Dataset):
         self.labels = df[label_col].values.tolist()
 
         assert (
-            len(self.audio_path) == len(self.video_path) == len(self.texts)
+            len(self.audio_path) == len(self.video_path)
         ), "wrong lengths"
 
         if accum:
@@ -135,11 +135,11 @@ class Data:
     def audioFeatures(self, path, timings, check):
         if not self.must:
             audio = torch.Tensor(self.FILE[f"{check}/{path[0].split('/')[-1][:-4]}_{timings[0]}/audio"][()])
-            audio_context = torch.Tensor(self.FILE[f"{check}/{path[1].split('/')[-1][:-4]}_{timings[1]}/audio_context"][()])
-            return audio , audio_context
+            return audio , None
         else:
             audio = torch.Tensor(self.FILE[f"{check}/{path.split('/')[-1][:-4]}_{timings}/audio"][()])
-            return audio , None
+            audio_context = torch.Tensor(self.FILE[f"{check}/{path[1].split('/')[-1][:-4]}_{timings[1]}/audio_context"][()])
+            return audio , audio_context
     def textFeatures(self, path, timings, check):
         text = torch.Tensor(self.FILE[f"{check}/{path.split('/')[-1][:-4]}_{timings}/text"][()])
         return text
