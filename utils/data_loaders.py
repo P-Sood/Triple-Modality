@@ -48,18 +48,21 @@ class TextAudioVideoDataset(Dataset):
             self.timings = [None] * len(self.audio_path)
 
         if "meld" in str(dataset).lower():
-            self.Data = Data(file = "../../data/meld_features.hdf5")
+            file = "../../data/meld_features.hdf5"
         elif "iemo" in str(dataset).lower():
-            self.Data = Data(file = "../../data/iemo_features.hdf5")
+            file = "../../data/iemo_features.hdf5"
         elif "tiktok" in str(dataset).lower():
-            self.Data = Data(file = "../../data/tiktok_features.hdf5")
+            file = "../../data/tiktok_features.hdf5"
         else:
-            self.Data = Data(file = "../../data/must_features.hdf5")
+            # Need to reshape the columns because it is context followed by target constantly. Thus only half of the rows are targets.
+            file = "../../data/must_features.hdf5"
             self.timings = df["timings"].values.reshape(-1, 2).tolist()
             self.audio_path = df[feature_col1].values.reshape(-1, 2).tolist()
             self.video_path = df[feature_col2].values.reshape(-1, 2).tolist()
             df = df[df["context"] == False]
-            
+        
+        
+        self.Data = Data(file = file)    
         self.check = check
         self.labels = df[label_col].values.tolist()
 
@@ -107,6 +110,10 @@ class TextAudioVideoDataset(Dataset):
 
 # ------------------------------------------------------------DOUBLE MODELS BELOW--------------------------------------------------------------------
 class Data:
+    """
+    Just get the features from hdf5 and return them to the dataloader for our loops
+    This would technically be our collate batch function
+    """
     def __init__(self, file) -> None:
         self.FILE = h5py.File(file, "r", libver="latest", swmr=True)
         

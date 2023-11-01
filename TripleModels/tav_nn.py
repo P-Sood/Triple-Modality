@@ -35,9 +35,11 @@ def prepare_dataloader(
     accum=False,
 ):
     """
-    we load in our dataset, and we just make a random distributed sampler to evenly partition our
-    dataset on each GPU
-    say we have 32 data points, if batch size = 8 then it will make 4 dataloaders of size 8 each
+    Take in pandas dataframe, name of dataset, batch size, label task, whether we are training or testing, or if we are accumulating gradients or not
+    
+    If we are training then we create two dataloaders, one for accumulating gradients with iterative sampler and one for regular with weighted sampling
+    
+    Otherwise we just create a regular dataloader for val/test that just do shuffle
     """
     num_workers = 0
     if accum:
@@ -120,7 +122,7 @@ def prepare_dataloader(
 def runModel(accelerator, df_train, df_val, df_test, param_dict, model_param):
     """
     Start by getting all the required values from our dictionary
-    Then when all the stuff is done, we start to apply our multi-processing to our model and start it up
+    Start and init all classes required for training
     """
     device = accelerator
     epoch = param_dict["epoch"]

@@ -19,6 +19,8 @@ from torch import nn
 class TAVForMAE(nn.Module):
     """
     Model for Multimodal Alignment and Fusion
+    
+    Since we have already called an encoder to get all the features for this model, we just need to run the fusion and classifier head over top
     """
 
     def __init__(self, args):
@@ -33,7 +35,7 @@ class TAVForMAE(nn.Module):
         print(f"Using {self.num_layers} layers \nUsing sota = {self.sota}" , flush=True)
 
         self.must = True if "must" in str(self.dataset).lower() else False
-        self.p = 0.6
+        self.p = 0.6 # This is to decide how much to weight the context vs the actual features for Mustard
 
         # Everything before this line is unlearnable, everything after is what we are focused on
 
