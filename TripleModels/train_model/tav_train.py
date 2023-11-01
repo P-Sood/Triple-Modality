@@ -19,13 +19,13 @@ warnings.filterwarnings("ignore")
 def get_statistics(input: dict, label: np.array, model, criterion, Metric, check="train", epoch=None):
     batch_loss = None
     device = "cuda"
-    input = {k: v.to(device) for k, v in input.items()}
+    input = {k: v.to(device) if v is not None else v for k, v in input.items()}
 
     output = model(**input , check = check)
 
-    for k, v in input.items():
-        input[k] = v.cpu()
-        del v
+    # for k, v in input.items():
+    #     input[k] = v.cpu()
+    #     del v
 
     Metric.update_metrics(torch.argmax(output, dim=1), label.to(device))
     if criterion is not None:
@@ -41,16 +41,16 @@ def get_statistics(input: dict, label: np.array, model, criterion, Metric, check
 def get_statistics_big_batch(input, label, model, criterion, Metric, check="train", epoch=None):
     batch_loss = None
     device = "cuda"
-    input = {k: v.to(device) for k, v in input.items()}    
+    input = {k: v.to(device) if v is not None else v for k, v in input.items()}
     output = checkpoint(
         model,
         **input,
         check = check,
         use_reentrant=False,
     )
-    for k, v in input.items():
-        input[k] = v.cpu()
-        del v
+    # for k, v in input.items():
+    #     input[k] = v.cpu()
+    #     del v
 
     Metric.update_metrics(torch.argmax(output, dim=1), label.to(device))
     if criterion is not None:

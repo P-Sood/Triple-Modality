@@ -105,16 +105,27 @@ class TextAudioVideoDataset(Dataset):
         return len(self.labels)
 
     def __getitem__(self, idx):
-        text = self.Data.textFeatures(self.video_path[idx], self.timings[idx], self.check)
-        audio, audio_context = self.Data.audioFeatures(self.video_path[idx], self.timings[idx], self.check)
-        video, video_context = self.Data.videoFeatures(self.video_path[idx], self.timings[idx], self.check)
+        timings = list(self.timings[idx])
+        print(f"{timings}", flush=True)
+        text = self.Data.textFeatures(self.video_path[idx], timings, self.check)
+        audio, audio_context = self.Data.audioFeatures(self.video_path[idx], timings, self.check)
+        video, video_context = self.Data.videoFeatures(self.video_path[idx], timings, self.check)
+
         return { "text_features": torch.Tensor(text),
         "audio_features" : torch.Tensor(audio),
-        "audio_context"  : torch.Tensor(audio_context),
+        "audio_context"  : None if audio_context is None else torch.Tensor(audio_context),
         "video_features" : torch.Tensor(video),
-        "video_context"  : torch.Tensor(video_context),
+        "video_context"  : None if video_context is None else torch.Tensor(video_context),
 
-        } , torch.Tensor(np.array(self.labels[idx])).long()
+        }, torch.Tensor(np.array(self.labels[idx])).long()
+
+        # return { "text_features": torch.Tensor(text),
+        # "audio_features" : torch.Tensor(audio),
+        # "audio_context"  : torch.Tensor(audio_context),
+        # "video_features" : torch.Tensor(video),
+        # "video_context"  : torch.Tensor(video_context),
+        #
+        # } , torch.Tensor(np.array(self.labels[idx])).long()
 
 
 # ------------------------------------------------------------DOUBLE MODELS BELOW--------------------------------------------------------------------
@@ -125,9 +136,9 @@ class Data:
     """
     def __init__(self, file) -> None:
         self.FILE = h5py.File(file, "r", libver="latest", swmr=True)
-        
+
         print(f"FILE IS {self.FILE}" , flush=True)
-        
+
         self.must = True if "must" in file else False
         self.iemo = True if "iemo" in file else False
         self.tiktok = True if "tiktok" in file else False
@@ -141,6 +152,7 @@ class Data:
             video = torch.Tensor(self.FILE[f"{check}/{path[0].split('/')[-1][:-4]}_{timings[0]}/video"][()])
             video_context = torch.Tensor(self.FILE[f"{check}/{path[1].split('/')[-1][:-4]}_{timings[1]}/video_context"][()])
             return video , video_context
+
     def audioFeatures(self, path, timings, check):
         if not self.must:
             audio = torch.Tensor(self.FILE[f"{check}/{path[0].split('/')[-1][:-4]}_{timings[0]}/audio"][()])
@@ -149,6 +161,7 @@ class Data:
             audio = torch.Tensor(self.FILE[f"{check}/{path.split('/')[-1][:-4]}_{timings}/audio"][()])
             audio_context = torch.Tensor(self.FILE[f"{check}/{path[1].split('/')[-1][:-4]}_{timings[1]}/audio_context"][()])
             return audio , audio_context
+
     def textFeatures(self, path, timings, check):
         print(f"\n path we are trying to access is \n{check}/{path.split('/')[-1][:-4]}_{timings}/text" , flush=True)
         text = torch.Tensor(self.FILE[f"{check}/{path.split('/')[-1][:-4]}_{timings}/text"][()])
