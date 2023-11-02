@@ -191,6 +191,9 @@ class TAVForMAE_HDF5(nn.Module):
             input_ids=input_ids, attention_mask=text_attention_mask, return_dict=False
         )
         
+        #TODO ZEERAK, does last_hidden_text_state contain the seq len dimension? comment or uncomment the below
+        print(f"last_hidden_text_state.shape: {last_hidden_text_state.shape}", flush=True)
+        
         if self.must:
             self.f.create_dataset(f"{check}/{video_path[0][0].split('/')[-1][:-4]}_{timings[0]}/text", data=last_hidden_text_state.cpu().detach().numpy())
         else:
