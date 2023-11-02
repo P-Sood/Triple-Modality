@@ -22,6 +22,8 @@ from utils.global_functions import arg_parse, Metrics, MySampler, NewCrossEntrop
 from torch.utils.data import DataLoader
 from torch.utils.data.sampler import WeightedRandomSampler
 
+    
+TESTING_PIPELINE = True
 
 def prepare_dataloader(
     df,
@@ -169,10 +171,10 @@ def runModel(accelerator, df_train, df_val, df_test, param_dict, model_param):
         accum=False,
     )
     df_val = prepare_dataloader(
-        df_val, dataset, batch_size, label_task, epoch_switch, check="val"
+        df_val, dataset, batch_size, label_task, epoch_switch, check="val" if TESTING_PIPELINE == False else "train"
     )
     df_test = prepare_dataloader(
-        df_test, dataset, batch_size, label_task, epoch_switch, check="test"
+        df_test, dataset, batch_size, label_task, epoch_switch, check="test" if TESTING_PIPELINE == False else "train"
     )
 
     model = TAVForMAE(model_param).to(device)
@@ -233,9 +235,15 @@ def main():
     }
 
     df = pd.read_pickle(f"{config.dataset}.pkl")
-    df_train = df[df["split"] == "train"]
-    df_test = df[df["split"] == "test"]
-    df_val = df[df["split"] == "val"]
+    
+    if TESTING_PIPELINE:
+        df_train = df[df["split"] == "train"].head(100)
+        df_test = df[df["split"] == "train"].head(100)
+        df_val = df[df["split"] == "train"].head(100)
+    else:
+        df_train = df[df["split"] == "train"]
+        df_test = df[df["split"] == "test"]
+        df_val = df[df["split"] == "val"]
 
     if param_dict["label_task"] == "sentiment":
         number_index = "sentiment"
