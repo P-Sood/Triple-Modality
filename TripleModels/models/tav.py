@@ -2,10 +2,8 @@ import torch
 import warnings
 from torch import nn
 from transformers import logging
-
 logging.set_verbosity_error()
 warnings.filterwarnings("ignore")
-
 
 class TAVForMAE(nn.Module):
     """
@@ -65,11 +63,11 @@ class TAVForMAE(nn.Module):
 
     def forward(
         self,
-        text_features,
-        audio_features,
-        audio_context,
-        video_features,
-        video_context,
+        text_features : torch.Tensor,
+        audio_features : torch.Tensor,
+        audio_context : torch.Tensor,
+        video_features : torch.Tensor,
+        video_context : torch.Tensor,
         check="train",
     ):
         # Transformer Time
@@ -103,8 +101,8 @@ class TAVForMAE(nn.Module):
                 fusion_layer = self.fusion_layers[i]
                 Ffusion1, _ = aud_text_layer(Ffusion1, Ffusion1, aud_outputs)
                 Ffusion2, _ = vid_text_layer(Ffusion2, Ffusion2, vid_outputs)
-                text_outputs = fusion_layer(torch.cat([Ffusion1, Ffusion2], dim=1))
-            tav = torch.cat([text_outputs, aud_outputs, vid_outputs], dim=1)
+                text_outputs = fusion_layer(torch.cat([Ffusion1, Ffusion2], dim=-1))
+            tav = torch.cat([text_outputs, aud_outputs, vid_outputs], dim=-1)
         else:
             Ffusion1 = text_outputs
             Ffusion2 = text_outputs
@@ -113,7 +111,8 @@ class TAVForMAE(nn.Module):
                 vid_text_layer = self.vid_text_layers[i]
                 Ffusion1, _ = aud_text_layer(Ffusion1, aud_outputs, aud_outputs)
                 Ffusion2, _ = vid_text_layer(Ffusion2, vid_outputs, vid_outputs)
-            tav = torch.cat([Ffusion1, Ffusion2, aud_outputs, vid_outputs], dim=1)
+            tav = torch.cat([Ffusion1, Ffusion2, aud_outputs, vid_outputs], dim=-1)
+        tav = tav.squeeze(dim = 1)
 
         del text_outputs
         del aud_outputs
