@@ -1,4 +1,4 @@
-p"Val"rogram: ../tav_nn.py
+program: ../tav_nn.py
 command:
   - ${env}
   - python3
@@ -46,7 +46,7 @@ parameters:
   hidden_layers:
     values: ["300"]
   label_task:
-    values: ['sarcasm']
+    values: ['emotion']
   sota:
     values: [True, False]
   model:

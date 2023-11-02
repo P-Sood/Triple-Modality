@@ -13,14 +13,12 @@ from torch.optim.lr_scheduler import CosineAnnealingWarmRestarts
 
 logging.set_verbosity_error()
 warnings.filterwarnings("ignore")
-
 # from transformers.optimization import AdamW
 
 def get_statistics(input: dict, label: np.array, model, criterion, Metric, check="train", epoch=None):
     batch_loss = None
     device = "cuda"
     input = {k: v.to(device) for k, v in input.items()}
-
     output = model(**input , check = check)
 
     for k, v in input.items():
@@ -86,7 +84,7 @@ def grad_accum(
     global PATIENCE_ITER, F1_ITER
     gen = iter(train_dataloader)
     batch_size = train_dataloader.batch_size
-    fn = get_statistics_big_batch if batch_size > 9 else get_statistics
+    fn = get_statistics_big_batch if batch_size > 17 else get_statistics
     for i in tqdm(range((iters // log_val) + 1), desc="steps"):
         for j in tqdm(range(log_val), desc="iter"):
             try:
@@ -173,8 +171,7 @@ def not_grad_accum(
     gen = iter(train_dataloader)
     batch_size = train_dataloader.batch_size
     fn = get_statistics_big_batch if batch_size > 17 else get_statistics
-    #for i in tqdm(range((iters // log_val) + 1), desc="steps"):
-    for i in tqdm(range((iters // log_val)), desc="steps"):
+    for i in tqdm(range((iters // log_val) + 1), desc="steps"):
         for j in tqdm(range(log_val), desc="iter"):
             try:
                 batch_idx = i * log_val + j
@@ -301,8 +298,8 @@ def one_epoch(
     total_loss_train = 0
     iters1 = len(train_dataloader[0])
     iters2 = len(train_dataloader[1])
-    log_val1 = iters1 
-    log_val2 = iters2 
+    log_val1 = iters1 // 5
+    log_val2 = iters2 // 5
     wandb.log({"log_val_multinomial": log_val1, "log_val_iterative": log_val2})
 
     regular = False
