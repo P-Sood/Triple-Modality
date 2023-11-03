@@ -29,7 +29,7 @@ def get_statistics(input: dict, label: np.array, model, criterion, Metric, check
     if criterion is not None:
         # batch_loss = criterion(output, label)
         batch_loss = criterion(
-            output, label, epoch=epoch if epoch is not None else 0
+            output, label.to(device), epoch=epoch if epoch is not None else 0
         )  # TODO: Turn this on with Sampler
     del output
     del label
@@ -54,7 +54,7 @@ def get_statistics_big_batch(input, label, model, criterion, Metric, check="trai
     if criterion is not None:
         # batch_loss = criterion(output, label)
         batch_loss = criterion(
-            output, label, epoch=epoch if epoch is not None else 0
+            output, label.to(device), epoch=epoch if epoch is not None else 0
         )  # TODO: Turn this on with Sampler
     del output
     del label
