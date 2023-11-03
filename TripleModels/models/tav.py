@@ -4,6 +4,7 @@ from torch import nn
 from transformers import logging
 logging.set_verbosity_error()
 warnings.filterwarnings("ignore")
+from torch.nn.utils.rnn import pad_sequence
 
 class TAVForMAE(nn.Module):
     """
@@ -36,13 +37,13 @@ class TAVForMAE(nn.Module):
 
         self.aud_text_layers = nn.ModuleList(
             [
-                nn.MultiheadAttention(embed_dim=768, num_heads=8)
+                nn.MultiheadAttention(embed_dim=768, num_heads=8 , batch_first=True)
                 for _ in range(self.num_layers)
             ]
         )
         self.vid_text_layers = nn.ModuleList(
             [
-                nn.MultiheadAttention(embed_dim=768, num_heads=8)
+                nn.MultiheadAttention(embed_dim=768, num_heads=8 , batch_first=True)
                 for _ in range(self.num_layers)
             ]
         )
@@ -70,6 +71,7 @@ class TAVForMAE(nn.Module):
         video_context : torch.Tensor,
         check="train",
     ):
+        print(f"inside model forward, the shape of tensors are: Text: {text_features.shape}, Audio:{audio_features.shape},, Video:{video_features.shape}, ", flush=True)
         # Transformer Time
         text_outputs = self.bert_norm(text_features)
         aud_outputs = self.aud_norm(audio_features)
@@ -90,20 +92,30 @@ class TAVForMAE(nn.Module):
             video_context = self.vid_norm(video_context)
             vid_outputs = (vid_outputs * self.p + video_context * (1 - self.p)) / 2
             del video_context
-
+        
+        
         # Model Head
         if self.sota:
+            text_audi_video_aligned = pad_sequence(torch.unbind(text_features, dim=0)  + torch.unbind(audio_features, dim=0)  + torch.unbind(video_features, dim=0)  , batch_first=True)
+            bs = len(text_audi_video_aligned) // 3
+            text_features , audio_features , video_features = text_audi_video_aligned[:bs] , text_audi_video_aligned[bs:2*bs] , text_audi_video_aligned[2*bs:]
+            
+            # Pad the sequence length dimension based on batch sizes. This is because the MHA expects a fixed sequence length
+            
             for i in range(self.num_layers):
                 Ffusion1 = text_outputs
                 Ffusion2 = text_outputs
                 aud_text_layer = self.aud_text_layers[i]
                 vid_text_layer = self.vid_text_layers[i]
                 fusion_layer = self.fusion_layers[i]
-                Ffusion1, _ = aud_text_layer(Ffusion1, Ffusion1, aud_outputs)
-                Ffusion2, _ = vid_text_layer(Ffusion2, Ffusion2, vid_outputs)
+                Ffusion1, _ = aud_text_layer(Ffusion1, aud_outputs , Ffusion1)
+                Ffusion2, _ = vid_text_layer(Ffusion2, vid_outputs , Ffusion2)
                 text_outputs = fusion_layer(torch.cat([Ffusion1, Ffusion2], dim=-1))
             tav = torch.cat([text_outputs, aud_outputs, vid_outputs], dim=-1)
         else:
+            
+            # Dont need the fixed MHA encoder here because QV, only need to be the same size
+            
             Ffusion1 = text_outputs
             Ffusion2 = text_outputs
             for i in range(self.num_layers):
@@ -112,13 +124,14 @@ class TAVForMAE(nn.Module):
                 Ffusion1, _ = aud_text_layer(Ffusion1, aud_outputs, aud_outputs)
                 Ffusion2, _ = vid_text_layer(Ffusion2, vid_outputs, vid_outputs)
             tav = torch.cat([Ffusion1, Ffusion2, aud_outputs, vid_outputs], dim=-1)
-        tav = tav.squeeze(dim = 1)
+            
+        tav = tav.mean(dim = 1) # I take the mean here
 
         del text_outputs
         del aud_outputs
         del vid_outputs
-        del Ffusion1
-        del Ffusion2
+        # del Ffusion1
+        # del Ffusion2
 
         # Classifier Head
         if check == "train":

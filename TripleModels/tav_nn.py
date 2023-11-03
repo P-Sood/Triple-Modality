@@ -23,7 +23,7 @@ from torch.utils.data import DataLoader
 from torch.utils.data.sampler import WeightedRandomSampler
 
     
-TESTING_PIPELINE = True
+TESTING_PIPELINE = False
 
 def prepare_dataloader(
     df,
