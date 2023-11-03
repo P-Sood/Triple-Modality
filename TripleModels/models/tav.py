@@ -3,9 +3,11 @@ import torch
 import warnings
 from torch import nn
 from transformers import logging
+
 logging.set_verbosity_error()
 warnings.filterwarnings("ignore")
 from torch.nn.utils.rnn import pad_sequence
+
 
 def collate_batch(batch):
     text = []
@@ -21,7 +23,7 @@ def collate_batch(batch):
     # video = batch[0]["video_features"]#.squeeze()
     # video_context = batch[0]["video_context"]#.squeeze()
 
-    for input , label in batch:
+    for input, label in batch:
         text.append(input["text_features"].squeeze())
         audio.append(input["audio_features"].squeeze())
         # audio_context.append(input["audio_context"].squeeze())
@@ -35,19 +37,15 @@ def collate_batch(batch):
     video = pad_sequence(video, batch_first=True).squeeze(dim=1)
     # video_context = pad_sequence(video_context, batch_first=True)
 
-    return { "text_features": text,
-        "audio_features" : audio,
+    return {
+        "text_features": text,
+        "audio_features": audio,
         # "audio_context"  : audio_context,
         "audio_context": torch.Tensor([]),
-        "video_features" : video,
+        "video_features": video,
         "video_context": torch.Tensor([]),
         # "video_context"  : video_context,
-
-        } , torch.Tensor(np.array(labels)).long()
-
-
-
-
+    }, torch.Tensor(np.array(labels)).long()
 
 
 class TAVForMAE(nn.Module):
@@ -66,10 +64,10 @@ class TAVForMAE(nn.Module):
         self.dataset = args["dataset"]
         self.sota = args["sota"]
 
-        print(f"Using {self.num_layers} layers \nUsing sota = {self.sota}" , flush=True)
+        print(f"Using {self.num_layers} layers \nUsing sota = {self.sota}", flush=True)
 
         self.must = True if "must" in str(self.dataset).lower() else False
-        self.p = 0.6 # This is to decide how much to weight the context vs the actual features for Mustard
+        self.p = 0.6  # This is to decide how much to weight the context vs the actual features for Mustard
 
         # Everything before this line is unlearnable, everything after is what we are focused on
 
@@ -81,22 +79,19 @@ class TAVForMAE(nn.Module):
 
         self.aud_text_layers = nn.ModuleList(
             [
-                nn.MultiheadAttention(embed_dim=768, num_heads=8 , batch_first=True)
+                nn.MultiheadAttention(embed_dim=768, num_heads=8, batch_first=True)
                 for _ in range(self.num_layers)
             ]
         )
         self.vid_text_layers = nn.ModuleList(
             [
-                nn.MultiheadAttention(embed_dim=768, num_heads=8 , batch_first=True)
+                nn.MultiheadAttention(embed_dim=768, num_heads=8, batch_first=True)
                 for _ in range(self.num_layers)
             ]
         )
         if self.sota:
             self.fusion_layers = nn.ModuleList(
-                [
-                    nn.Linear(768*2, 768)
-                    for _ in range(self.num_layers)
-                ]
+                [nn.Linear(768 * 2, 768) for _ in range(self.num_layers)]
             )
             self.linear1 = nn.Linear(768 * 3, 768 * 2)
         else:
@@ -108,11 +103,11 @@ class TAVForMAE(nn.Module):
 
     def forward(
         self,
-        text_features : torch.Tensor,
-        audio_features : torch.Tensor,
-        audio_context : torch.Tensor,
-        video_features : torch.Tensor,
-        video_context : torch.Tensor,
+        text_features: torch.Tensor,
+        audio_features: torch.Tensor,
+        audio_context: torch.Tensor,
+        video_features: torch.Tensor,
+        video_context: torch.Tensor,
         check="train",
     ):
         # Transformer Time
@@ -140,9 +135,18 @@ class TAVForMAE(nn.Module):
         # aud_outputs = aud_outputs.squeeze(dim = 1)
         # vid_outputs = vid_outputs.squeeze(dim = 1)
 
-        text_audi_video_aligned = pad_sequence(torch.unbind(text_outputs, dim=0)  + torch.unbind(aud_outputs, dim=0)  + torch.unbind(vid_outputs, dim=0)  , batch_first=True)
+        text_audi_video_aligned = pad_sequence(
+            torch.unbind(text_outputs, dim=0)
+            + torch.unbind(aud_outputs, dim=0)
+            + torch.unbind(vid_outputs, dim=0),
+            batch_first=True,
+        )
         bs = len(text_audi_video_aligned) // 3
-        text_outputs , aud_outputs , vid_outputs = text_audi_video_aligned[:bs] , text_audi_video_aligned[bs:2*bs] , text_audi_video_aligned[2*bs:]
+        text_outputs, aud_outputs, vid_outputs = (
+            text_audi_video_aligned[:bs],
+            text_audi_video_aligned[bs : 2 * bs],
+            text_audi_video_aligned[2 * bs :],
+        )
         # Create the padding mask for the aud tensor
         audio_mask = torch.any(aud_outputs == 0, dim=-1)
 
@@ -157,22 +161,30 @@ class TAVForMAE(nn.Module):
                 aud_text_layer = self.aud_text_layers[i]
                 vid_text_layer = self.vid_text_layers[i]
                 fusion_layer = self.fusion_layers[i]
-                Ffusion1, _ = aud_text_layer(Ffusion1, aud_outputs , Ffusion1 , key_padding_mask = audio_mask)
-                Ffusion2, _ = vid_text_layer(Ffusion2, vid_outputs , Ffusion2 , key_padding_mask = video_mask)
+                Ffusion1, _ = aud_text_layer(
+                    Ffusion1, aud_outputs, Ffusion1, key_padding_mask=audio_mask
+                )
+                Ffusion2, _ = vid_text_layer(
+                    Ffusion2, vid_outputs, Ffusion2, key_padding_mask=video_mask
+                )
                 text_outputs = fusion_layer(torch.cat([Ffusion1, Ffusion2], dim=-1))
             tav = torch.cat([text_outputs, aud_outputs, vid_outputs], dim=-1)
         else:
             # Dont need the fixed MHA encoder here because QV, only need to be the same size
-            Ffusion1 = text_outputs 
+            Ffusion1 = text_outputs
             Ffusion2 = text_outputs
             for i in range(self.num_layers):
                 aud_text_layer = self.aud_text_layers[i]
                 vid_text_layer = self.vid_text_layers[i]
-                Ffusion1, _ = aud_text_layer(Ffusion1, aud_outputs, aud_outputs, key_padding_mask = audio_mask)
-                Ffusion2, _ = vid_text_layer(Ffusion2, vid_outputs, vid_outputs, key_padding_mask = video_mask)
+                Ffusion1, _ = aud_text_layer(
+                    Ffusion1, aud_outputs, aud_outputs, key_padding_mask=audio_mask
+                )
+                Ffusion2, _ = vid_text_layer(
+                    Ffusion2, vid_outputs, vid_outputs, key_padding_mask=video_mask
+                )
             tav = torch.cat([Ffusion1, Ffusion2, aud_outputs, vid_outputs], dim=-1)
-            
-        tav = tav.mean(dim = 1) # I take the mean here
+
+        tav = tav.mean(dim=1)  # I take the mean here
 
         del text_outputs
         del aud_outputs

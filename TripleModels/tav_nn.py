@@ -22,8 +22,9 @@ from utils.global_functions import arg_parse, Metrics, MySampler, NewCrossEntrop
 from torch.utils.data import DataLoader
 from torch.utils.data.sampler import WeightedRandomSampler
 
-    
+
 TESTING_PIPELINE = False
+
 
 def prepare_dataloader(
     df,
@@ -38,9 +39,9 @@ def prepare_dataloader(
 ):
     """
     Take in pandas dataframe, name of dataset, batch size, label task, whether we are training or testing, or if we are accumulating gradients or not
-    
+
     If we are training then we create two dataloaders, one for accumulating gradients with iterative sampler and one for regular with weighted sampling
-    
+
     Otherwise we just create a regular dataloader for val/test that just do shuffle
     """
     num_workers = 0
@@ -107,7 +108,7 @@ def prepare_dataloader(
             drop_last=False,
             shuffle=False,
             sampler=sampler,
-            collate_fn = collate_batch
+            collate_fn=collate_batch,
         )
     else:
         dataloader = DataLoader(
@@ -117,7 +118,7 @@ def prepare_dataloader(
             num_workers=num_workers,
             drop_last=False,
             shuffle=False,
-            collate_fn = collate_batch
+            collate_fn=collate_batch,
         )
 
     return dataloader
@@ -173,10 +174,20 @@ def runModel(accelerator, df_train, df_val, df_test, param_dict, model_param):
         accum=False,
     )
     df_val = prepare_dataloader(
-        df_val, dataset, batch_size, label_task, epoch_switch, check="val" if TESTING_PIPELINE == False else "train"
+        df_val,
+        dataset,
+        batch_size,
+        label_task,
+        epoch_switch,
+        check="val" if TESTING_PIPELINE == False else "train",
     )
     df_test = prepare_dataloader(
-        df_test, dataset, batch_size, label_task, epoch_switch, check="test" if TESTING_PIPELINE == False else "train"
+        df_test,
+        dataset,
+        batch_size,
+        label_task,
+        epoch_switch,
+        check="test" if TESTING_PIPELINE == False else "train",
     )
 
     model = TAVForMAE(model_param).to(device)
@@ -205,7 +216,7 @@ def runModel(accelerator, df_train, df_val, df_test, param_dict, model_param):
         epoch_switch,
         checkpoint,
     )
-    #model = TAVForMAE_HDF5(model_param).to(device)
+    # model = TAVForMAE_HDF5(model_param).to(device)
     evaluate_tav(model, df_test, Metric)
 
 
@@ -237,7 +248,7 @@ def main():
     }
 
     df = pd.read_pickle(f"{config.dataset}.pkl")
-    
+
     if TESTING_PIPELINE:
         df_train = df[df["split"] == "train"].head(100)
         df_test = df[df["split"] == "train"].head(100)
@@ -254,7 +265,9 @@ def main():
         number_index = "sarcasm"
         label_index = "sarcasm_label"
         df = df[df["context"] == False]
-    elif param_dict["label_task"] == "content": # Needs this to be content too not tiktok
+    elif (
+        param_dict["label_task"] == "content"
+    ):  # Needs this to be content too not tiktok
         number_index = "content"
         label_index = "content_label"
     else:

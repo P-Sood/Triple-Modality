@@ -15,11 +15,14 @@ logging.set_verbosity_error()
 warnings.filterwarnings("ignore")
 # from transformers.optimization import AdamW
 
-def get_statistics(input: dict, label: np.array, model, criterion, Metric, check="train", epoch=None):
+
+def get_statistics(
+    input: dict, label: np.array, model, criterion, Metric, check="train", epoch=None
+):
     batch_loss = None
     device = "cuda"
     input = {k: v.to(device) for k, v in input.items()}
-    output = model(**input , check = check)
+    output = model(**input, check=check)
 
     # for k, v in input.items():
     #     input[k] = v.cpu()
@@ -36,14 +39,16 @@ def get_statistics(input: dict, label: np.array, model, criterion, Metric, check
     return batch_loss
 
 
-def get_statistics_big_batch(input, label, model, criterion, Metric, check="train", epoch=None):
+def get_statistics_big_batch(
+    input, label, model, criterion, Metric, check="train", epoch=None
+):
     batch_loss = None
     device = "cuda"
     input = {k: v.to(device) if v is not None else v for k, v in input.items()}
     output = checkpoint(
         model,
         **input,
-        check = check,
+        check=check,
         use_reentrant=False,
     )
     # for k, v in input.items():
@@ -60,8 +65,10 @@ def get_statistics_big_batch(input, label, model, criterion, Metric, check="trai
     del label
     return batch_loss
 
+
 PATIENCE_ITER = 0
 F1_ITER = 0
+
 
 def grad_accum(
     epoch,

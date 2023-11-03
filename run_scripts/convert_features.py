@@ -1,6 +1,7 @@
 import h5py
 import torch
 
+
 class Data:
     def __init__(self, video, audio) -> None:
         self.VIDEOS = (
@@ -96,82 +97,83 @@ class Data:
             # print(f"path is {path}\nshape of ret is {ret.shape}\n" , flush = True)
             return speech_array_target, speech_array_context
 
+
 class Main:
     if "meld" in str(dataset).lower():
-            max_len = int(70 * 2.5)
-            tokenizer = AutoTokenizer.from_pretrained(
-                "j-hartmann/emotion-english-distilroberta-base"
+        max_len = int(70 * 2.5)
+        tokenizer = AutoTokenizer.from_pretrained(
+            "j-hartmann/emotion-english-distilroberta-base"
+        )
+        self.Data = Data(
+            video="../../data/videos_context.hdf5", audio="../../data/audio.hdf5"
+        )
+        self.texts = [
+            tokenizer(
+                text,
+                padding="max_length",
+                max_length=max_len,
+                truncation=True,
+                return_tensors="pt",
             )
-            self.Data = Data(
-                video="../../data/videos_context.hdf5", audio="../../data/audio.hdf5"
+            for text in df[feature_col3]
+        ]
+    elif "iemo" in str(dataset).lower():
+        max_len = int(70 * 2.5)
+        tokenizer = AutoTokenizer.from_pretrained(
+            "j-hartmann/emotion-english-distilroberta-base"
+        )
+        self.Data = Data(
+            video="../../data/iemo_videos.hdf5", audio="../../data/iemo_audio.hdf5"
+        )
+        self.texts = [
+            tokenizer(
+                text,
+                padding="max_length",
+                max_length=max_len,
+                truncation=True,
+                return_tensors="pt",
             )
-            self.texts = [
-                tokenizer(
-                    text,
-                    padding="max_length",
-                    max_length=max_len,
-                    truncation=True,
-                    return_tensors="pt",
-                )
-                for text in df[feature_col3]
-            ]
-        elif "iemo" in str(dataset).lower():
-            max_len = int(70 * 2.5)
-            tokenizer = AutoTokenizer.from_pretrained(
-                "j-hartmann/emotion-english-distilroberta-base"
+            for text in df[feature_col3]
+        ]
+    elif "tiktok" in str(dataset).lower():
+        max_len = 300
+        tokenizer = AutoTokenizer.from_pretrained("bert-base-multilingual-cased")
+        self.Data = Data(
+            video="../../data/tiktok_videos.hdf5",
+            audio="../../data/tiktok_audio.hdf5",
+        )
+        self.texts = [
+            tokenizer(
+                text,
+                padding="max_length",
+                max_length=max_len,
+                truncation=True,
+                return_tensors="pt",
             )
-            self.Data = Data(
-                video="../../data/iemo_videos.hdf5", audio="../../data/iemo_audio.hdf5"
+            for text in df[feature_col3]
+        ]
+    else:
+        max_len = 300
+        tokenizer = AutoTokenizer.from_pretrained(
+            "jkhan447/sarcasm-detection-RoBerta-base-CR"
+        )
+        self.Data = Data(
+            video="../../data/must_videos.hdf5", audio="../../data/must_audio.hdf5"
+        )
+        self.texts = []
+        for i in range(0, len(df[feature_col2]), 2):
+            # concatenate the text
+            text = df[feature_col2].iloc[i] + " " + df[feature_col2].iloc[i + 1]
+            # tokenize the concatenated text
+            tokens = tokenizer(
+                text,
+                padding="max_length",
+                max_length=max_len,
+                truncation=True,
+                return_tensors="pt",
             )
-            self.texts = [
-                tokenizer(
-                    text,
-                    padding="max_length",
-                    max_length=max_len,
-                    truncation=True,
-                    return_tensors="pt",
-                )
-                for text in df[feature_col3]
-            ]
-        elif "tiktok" in str(dataset).lower():
-            max_len = 300
-            tokenizer = AutoTokenizer.from_pretrained("bert-base-multilingual-cased")
-            self.Data = Data(
-                video="../../data/tiktok_videos.hdf5",
-                audio="../../data/tiktok_audio.hdf5",
-            )
-            self.texts = [
-                tokenizer(
-                    text,
-                    padding="max_length",
-                    max_length=max_len,
-                    truncation=True,
-                    return_tensors="pt",
-                )
-                for text in df[feature_col3]
-            ]
-        else:
-            max_len = 300
-            tokenizer = AutoTokenizer.from_pretrained(
-                "jkhan447/sarcasm-detection-RoBerta-base-CR"
-            )
-            self.Data = Data(
-                video="../../data/must_videos.hdf5", audio="../../data/must_audio.hdf5"
-            )
-            self.texts = []
-            for i in range(0, len(df[feature_col2]), 2):
-                # concatenate the text
-                text = df[feature_col2].iloc[i] + " " + df[feature_col2].iloc[i + 1]
-                # tokenize the concatenated text
-                tokens = tokenizer(
-                    text,
-                    padding="max_length",
-                    max_length=max_len,
-                    truncation=True,
-                    return_tensors="pt",
-                )
-                self.texts.append(tokens)
-            self.timings = df["timings"].values.reshape(-1, 2).tolist()
-            self.audio_path = df[feature_col1].values.reshape(-1, 2).tolist()
-            self.video_path = df[feature_col2].values.reshape(-1, 2).tolist()
-            df = df[df["context"] == False]
+            self.texts.append(tokens)
+        self.timings = df["timings"].values.reshape(-1, 2).tolist()
+        self.audio_path = df[feature_col1].values.reshape(-1, 2).tolist()
+        self.video_path = df[feature_col2].values.reshape(-1, 2).tolist()
+        df = df[df["context"] == False]
