@@ -12,7 +12,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 from train_model.tav_train import train_tav_network, evaluate_tav
-from models.tav import TAVForMAE
+from models.tav import TAVForMAE, collate_batch
 import wandb
 from utils.data_loaders import TextAudioVideoDataset
 import pandas as pd
@@ -107,6 +107,7 @@ def prepare_dataloader(
             drop_last=False,
             shuffle=False,
             sampler=sampler,
+            collate_fn = collate_batch
         )
     else:
         dataloader = DataLoader(
@@ -116,6 +117,7 @@ def prepare_dataloader(
             num_workers=num_workers,
             drop_last=False,
             shuffle=False,
+            collate_fn = collate_batch
         )
 
     return dataloader

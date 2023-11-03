@@ -1,3 +1,4 @@
+import numpy as np
 import torch
 import warnings
 from torch import nn
@@ -5,6 +6,50 @@ from transformers import logging
 logging.set_verbosity_error()
 warnings.filterwarnings("ignore")
 from torch.nn.utils.rnn import pad_sequence
+import pdb
+
+def collate_batch(batch):
+    text = []
+    audio = []
+    audio_context = []
+    video = []
+    video_context = []
+    labels = []
+
+    # text = batch[0]["text_features"]#.squeeze()
+    # audio = batch[0]["audio_features"]#.squeeze()
+    # audio_context = batch[0]["audio_context"]#.squeeze()
+    # video = batch[0]["video_features"]#.squeeze()
+    # video_context = batch[0]["video_context"]#.squeeze()
+
+    for input , label in batch:
+        text.append(input["text_features"].squeeze())
+        audio.append(input["audio_features"].squeeze())
+        # audio_context.append(input["audio_context"].squeeze())
+        video.append(input["video_features"].squeeze())
+        # video_context.append(input["video_context"].squeeze())
+        labels.append(label)
+
+    text = torch.stack(text, dim=0).squeeze(dim=1)
+    audio = pad_sequence(audio, batch_first=True).squeeze(dim=1)
+    # audio_context = pad_sequence(audio_context, batch_first=True)
+    video = pad_sequence(video, batch_first=True).squeeze(dim=1)
+    # video_context = pad_sequence(video_context, batch_first=True)
+
+    return { "text_features": text,
+        "audio_features" : audio,
+        # "audio_context"  : audio_context,
+        "audio_context": torch.Tensor([]),
+        "video_features" : video,
+        "video_context": torch.Tensor([]),
+        # "video_context"  : video_context,
+
+        } , torch.Tensor(np.array(labels)).long()
+
+
+
+
+
 
 class TAVForMAE(nn.Module):
     """
@@ -71,7 +116,6 @@ class TAVForMAE(nn.Module):
         video_context : torch.Tensor,
         check="train",
     ):
-        print(f"inside model forward, the shape of tensors are: Text: {text_features.shape}, Audio:{audio_features.shape},, Video:{video_features.shape}, ", flush=True)
         # Transformer Time
         text_outputs = self.bert_norm(text_features)
         aud_outputs = self.aud_norm(audio_features)
@@ -92,19 +136,22 @@ class TAVForMAE(nn.Module):
             video_context = self.vid_norm(video_context)
             vid_outputs = (vid_outputs * self.p + video_context * (1 - self.p)) / 2
             del video_context
-        
-        
+
+        # text_outputs = text_outputs.squeeze(dim = 1)
+        # aud_outputs = aud_outputs.squeeze(dim = 1)
+        # vid_outputs = vid_outputs.squeeze(dim = 1)
+
+        text_audi_video_aligned = pad_sequence(torch.unbind(text_outputs, dim=0)  + torch.unbind(aud_outputs, dim=0)  + torch.unbind(vid_outputs, dim=0)  , batch_first=True)
+        bs = len(text_audi_video_aligned) // 3
+        text_outputs , aud_outputs , vid_outputs = text_audi_video_aligned[:bs] , text_audi_video_aligned[bs:2*bs] , text_audi_video_aligned[2*bs:]
+        # Create the padding mask for the aud tensor
+        audio_mask = torch.any(aud_outputs == 0, dim=-1)
+
+        # Create the padding mask for the video tensor
+        video_mask = torch.any(vid_outputs == 0, dim=-1)
+        # Pad the sequence length dimension based on batch sizes. This is because the MHA expects a fixed sequence length
         # Model Head
         if self.sota:
-            text_audi_video_aligned = pad_sequence(torch.unbind(text_features, dim=0)  + torch.unbind(audio_features, dim=0)  + torch.unbind(video_features, dim=0)  , batch_first=True)
-            bs = len(text_audi_video_aligned) // 3
-            text_features , audio_features , video_features = text_audi_video_aligned[:bs] , text_audi_video_aligned[bs:2*bs] , text_audi_video_aligned[2*bs:]
-            # Create the padding mask for the audio tensor
-            audio_mask = torch.any(audio_features == 0, dim=-1)
-
-            # Create the padding mask for the video tensor
-            video_mask = torch.any(video_features == 0, dim=-1)
-            # Pad the sequence length dimension based on batch sizes. This is because the MHA expects a fixed sequence length
             
             for i in range(self.num_layers):
                 Ffusion1 = text_outputs
@@ -117,16 +164,15 @@ class TAVForMAE(nn.Module):
                 text_outputs = fusion_layer(torch.cat([Ffusion1, Ffusion2], dim=-1))
             tav = torch.cat([text_outputs, aud_outputs, vid_outputs], dim=-1)
         else:
-            
             # Dont need the fixed MHA encoder here because QV, only need to be the same size
-            
-            Ffusion1 = text_outputs
+            print(aud_outputs.shape, vid_outputs.shape, text_outputs.shape)
+            Ffusion1 = text_outputs 
             Ffusion2 = text_outputs
             for i in range(self.num_layers):
                 aud_text_layer = self.aud_text_layers[i]
                 vid_text_layer = self.vid_text_layers[i]
-                Ffusion1, _ = aud_text_layer(Ffusion1, aud_outputs, aud_outputs)
-                Ffusion2, _ = vid_text_layer(Ffusion2, vid_outputs, vid_outputs)
+                Ffusion1, _ = aud_text_layer(Ffusion1, aud_outputs, aud_outputs, key_padding_mask = audio_mask)
+                Ffusion2, _ = vid_text_layer(Ffusion2, vid_outputs, vid_outputs, key_padding_mask = video_mask)
             tav = torch.cat([Ffusion1, Ffusion2, aud_outputs, vid_outputs], dim=-1)
             
         tav = tav.mean(dim = 1) # I take the mean here

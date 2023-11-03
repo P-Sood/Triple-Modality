@@ -95,7 +95,6 @@ class TextAudioVideoDataset(Dataset):
         text = self.Data.textFeatures(self.video_path[idx], timings, self.check)
         audio, audio_context = self.Data.audioFeatures(self.video_path[idx], timings, self.check)
         video, video_context = self.Data.videoFeatures(self.video_path[idx], timings, self.check)
-        print(f"inside dataloaders, the shape of tensors are: Text: {text.shape}, Audio:{audio.shape},, Video:{video.shape}, ", flush=True)
         
         return { "text_features": text,
         "audio_features" : audio,
