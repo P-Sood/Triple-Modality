@@ -6,7 +6,6 @@ from transformers import logging
 logging.set_verbosity_error()
 warnings.filterwarnings("ignore")
 from torch.nn.utils.rnn import pad_sequence
-import pdb
 
 def collate_batch(batch):
     text = []
@@ -152,7 +151,6 @@ class TAVForMAE(nn.Module):
         # Pad the sequence length dimension based on batch sizes. This is because the MHA expects a fixed sequence length
         # Model Head
         if self.sota:
-            
             for i in range(self.num_layers):
                 Ffusion1 = text_outputs
                 Ffusion2 = text_outputs
@@ -165,7 +163,6 @@ class TAVForMAE(nn.Module):
             tav = torch.cat([text_outputs, aud_outputs, vid_outputs], dim=-1)
         else:
             # Dont need the fixed MHA encoder here because QV, only need to be the same size
-            print(aud_outputs.shape, vid_outputs.shape, text_outputs.shape)
             Ffusion1 = text_outputs 
             Ffusion2 = text_outputs
             for i in range(self.num_layers):
