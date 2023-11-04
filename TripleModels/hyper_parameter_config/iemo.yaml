@@ -22,7 +22,7 @@ parameters:
     min: 0.00007547282482083273
     distribution: uniform
   batch_size:
-    values: [2, 4, 8, 16]
+    values: [2, 4, 8, 16, 24]
   seed:
     values: [32, 64, 96]
   dropout:
@@ -52,6 +52,6 @@ parameters:
   model:
     values: ['MAE_encoder']
   loss:
-    values: ['NewCrossEntropy']
+    values: ['NewCrossEntropy' , 'CrossEntropy']
   beta:
     values: [1]
