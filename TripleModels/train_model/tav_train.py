@@ -30,12 +30,12 @@ def get_statistics(
 
     Metric.update_metrics(torch.argmax(output, dim=1), label.to(device))
     if criterion is not None:
-        if criterion.__class__.__name__ == "CrossEntropy":
-            batch_loss = criterion(output, label)
-        else:
+        if criterion.__class__.__name__ == "NewCrossEntropyLoss":
             batch_loss = criterion(
                 output, label.to(device), epoch=epoch if epoch is not None else 0
             )  # TODO: Turn this on with Sampler
+        else:
+            batch_loss = criterion(output, label)
     del output
     del label
     return batch_loss
@@ -59,12 +59,12 @@ def get_statistics_big_batch(
 
     Metric.update_metrics(torch.argmax(output, dim=1), label.to(device))
     if criterion is not None:
-        if criterion.__class__.__name__ == "CrossEntropy":
-            batch_loss = criterion(output, label)
-        else:
+        if criterion.__class__.__name__ == "NewCrossEntropyLoss":
             batch_loss = criterion(
                 output, label.to(device), epoch=epoch if epoch is not None else 0
             )  # TODO: Turn this on with Sampler
+        else:
+            batch_loss = criterion(output, label)
     del output
     del label
     return batch_loss
