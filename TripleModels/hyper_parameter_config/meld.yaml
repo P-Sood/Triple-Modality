@@ -44,7 +44,7 @@ parameters:
   T_max:
    values: [2 , 3]
   hidden_layers:
-    values: ["300"]
+    values: [384 , 768 , 1536]
   label_task:
     values: ['emotion']
   sota:

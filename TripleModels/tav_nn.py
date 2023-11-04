@@ -305,6 +305,7 @@ def main():
         "learn_PosEmbeddings": config.learn_PosEmbeddings,
         "dataset": config.dataset,
         "sota": config.sota,
+        "hidden_size": config.hidden_size,
     }
     param_dict["weights"] = weights
     param_dict["label2id"] = label2id

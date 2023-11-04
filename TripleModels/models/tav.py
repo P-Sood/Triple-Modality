@@ -63,6 +63,7 @@ class TAVForMAE(nn.Module):
         self.num_layers = args["num_layers"]
         self.dataset = args["dataset"]
         self.sota = args["sota"]
+        self.hidden_size = args["hidden_size"]
 
         print(f"Using {self.num_layers} layers \nUsing sota = {self.sota}", flush=True)
 
@@ -93,12 +94,12 @@ class TAVForMAE(nn.Module):
             self.fusion_layers = nn.ModuleList(
                 [nn.Linear(768 * 2, 768) for _ in range(self.num_layers)]
             )
-            self.linear1 = nn.Linear(768 * 3, 768 * 2)
+            self.linear1 = nn.Linear(768 * 3, self.hidden_size)
         else:
-            self.linear1 = nn.Linear(768 * 4, 768 * 2)
+            self.linear1 = nn.Linear(768 * 4, self.hidden_size)
 
         self.dropout = nn.Dropout(self.dropout)
-        self.linear2 = nn.Linear(768 * 2, self.output_dim)
+        self.linear2 = nn.Linear(self.hidden_size, self.output_dim)
         self.relu = nn.ReLU()
 
     def forward(

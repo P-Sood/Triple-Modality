@@ -493,8 +493,8 @@ def arg_parse(description):
         "--hidden_layers",
         "-o",
         help="values corresponding to each hidden layer",
-        default="32,32",
-        type=str,
+        default=768,
+        type=int,
     )
     parser.add_argument(
         "--early_div",
