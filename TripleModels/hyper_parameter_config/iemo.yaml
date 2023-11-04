@@ -52,6 +52,6 @@ parameters:
   model:
     values: ['MAE_encoder']
   loss:
-    values: ['NewCrossEntropy' , 'CrossEntropy']
+    values: ['NewCrossEntropy' , 'CrossEntropy' , 'WeightedCrossEntropy']
   beta:
     values: [1]
