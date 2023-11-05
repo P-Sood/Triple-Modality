@@ -145,6 +145,7 @@ def runModel(accelerator, df_train, df_val, df_test, param_dict, model_param):
     model_name = param_dict["model"]
     mask = param_dict["mask"]
     epoch_switch = param_dict["epoch_switch"]
+    sampler = param_dict["sampler"]
 
     num_labels = model_param["output_dim"]
     dataset = model_param["dataset"]
@@ -207,7 +208,7 @@ def runModel(accelerator, df_train, df_val, df_test, param_dict, model_param):
 
     model = train_tav_network(
         model,
-        [df_train_no_accum, df_train_accum],
+        [df_train_no_accum, df_train_accum , sampler],
         df_val,
         criterion,
         lr,
@@ -249,6 +250,7 @@ def main():
         "loss": config.loss,
         "beta": config.beta,
         "epoch_switch": config.epoch_switch,
+        "sampler": config.sampler,
     }
 
     df = pd.read_pickle(f"{config.dataset}.pkl")
