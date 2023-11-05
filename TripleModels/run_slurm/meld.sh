@@ -11,4 +11,5 @@
 #SBATCH --cpus-per-task=6 # maximum CPU cores per GPU request: 6 on Cedar, 16 on Graham.
 #SBATCH --output=../outputs/meld_triple.txt
 
-wandb agent ddi/MeldTriple/jtzs474d
+#wandb agent ddi/MeldTriple/jtzs474d
+wandb agent ddi/MeldOneLoss/unx4sx7l
