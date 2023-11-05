@@ -96,7 +96,8 @@ def grad_accum(
     gen = iter(train_dataloader)
     batch_size = train_dataloader.batch_size
     fn = get_statistics_big_batch if batch_size > 17 else get_statistics
-    for i in tqdm(range((iters // log_val) + 1), desc="steps"):
+    steps = iters // log_val + 1 if iters % log_val != 0 else iters // log_val
+    for i in tqdm(range(steps), desc="steps"):
         for j in tqdm(range(log_val), desc="iter"):
             try:
                 batch_idx = i * log_val + j
@@ -182,7 +183,8 @@ def not_grad_accum(
     gen = iter(train_dataloader)
     batch_size = train_dataloader.batch_size
     fn = get_statistics_big_batch if batch_size > 17 else get_statistics
-    for i in tqdm(range((iters // log_val) + 1), desc="steps"):
+    steps = iters // log_val + 1 if iters % log_val != 0 else iters // log_val
+    for i in tqdm(range(steps), desc="steps"):
         for j in tqdm(range(log_val), desc="iter"):
             try:
                 batch_idx = i * log_val + j
@@ -309,8 +311,8 @@ def one_epoch(
     total_loss_train = 0
     iters1 = len(train_dataloader[0])
     iters2 = len(train_dataloader[1])
-    log_val1 = iters1 // 5
-    log_val2 = iters2 // 5
+    log_val1 = iters1 // 1
+    log_val2 = iters2 // 1
     wandb.log({"log_val_multinomial": log_val1, "log_val_iterative": log_val2})
 
     regular = False
