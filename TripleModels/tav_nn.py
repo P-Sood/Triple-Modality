@@ -158,6 +158,10 @@ def runModel(accelerator, df_train, df_val, df_test, param_dict, model_param):
         criterion = NewCrossEntropyLoss(
             class_weights=weights.to(device), epoch_switch=epoch_switch
         ).to(device)
+    elif loss == "WeightedCrossEntropy":
+        criterion = torch.nn.CrossEntropyLoss(weight=weights.to(device)
+        ).to(device)
+        
 
     print(loss, flush=True)
     Metric = Metrics(num_classes=num_labels, id2label=id2label, rank=device)

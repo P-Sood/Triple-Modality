@@ -35,7 +35,7 @@ def get_statistics(
                 output, label.to(device), epoch=epoch if epoch is not None else 0
             )  # TODO: Turn this on with Sampler
         else:
-            batch_loss = criterion(output, label)
+            batch_loss = criterion(output, label.to(device))
     del output
     del label
     return batch_loss
@@ -64,7 +64,7 @@ def get_statistics_big_batch(
                 output, label.to(device), epoch=epoch if epoch is not None else 0
             )  # TODO: Turn this on with Sampler
         else:
-            batch_loss = criterion(output, label)
+            batch_loss = criterion(output, label.to(device))
     del output
     del label
     return batch_loss
