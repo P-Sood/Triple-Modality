@@ -36,6 +36,7 @@ def prepare_dataloader(
     num_workers=0,
     check="train",
     accum=False,
+    sampler = None,
 ):
     """
     Take in pandas dataframe, name of dataset, batch size, label task, whether we are training or testing, or if we are accumulating gradients or not
@@ -46,7 +47,7 @@ def prepare_dataloader(
     """
     num_workers = 0
     if accum:
-        batch_size = 1
+        batch_size = 1 if sampler == "Both" else batch_size
         # df , dataset , batch_size , feature_col1 , feature_col2  , label_col , timings = None , accum = False , check = "test"
         dataset = TextAudioVideoDataset(
             df,
@@ -167,7 +168,7 @@ def runModel(accelerator, df_train, df_val, df_test, param_dict, model_param):
     print(loss, flush=True)
     Metric = Metrics(num_classes=num_labels, id2label=id2label, rank=device)
     df_train_accum = prepare_dataloader(
-        df_train, dataset, 1, label_task, epoch_switch, check="train", accum=True
+        df_train, dataset, 1, label_task, epoch_switch, check="train", accum=True , sampler=sampler
     )
     df_train_no_accum = prepare_dataloader(
         df_train,
