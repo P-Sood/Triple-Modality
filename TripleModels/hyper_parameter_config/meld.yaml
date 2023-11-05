@@ -53,5 +53,7 @@ parameters:
     values: ['MAE_encoder']
   loss:
     values: ['NewCrossEntropy' , 'CrossEntropy' , 'WeightedCrossEntropy']
+  sampler:
+    values: ['Both' , 'Iterative' , 'Weighted']
   beta:
     values: [1]
