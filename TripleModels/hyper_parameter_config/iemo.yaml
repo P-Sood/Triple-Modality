@@ -25,8 +25,6 @@ parameters:
     values: [2, 4, 8, 16, 24]
   seed:
     values: [32, 64, 96]
-  dropout:
-    values: [ 0.0 , 0.1 , 0.2 , 0.3 ]
   mask:
     values: [False]
   early_div:
@@ -34,13 +32,17 @@ parameters:
   learn_PosEmbeddings:
     values: [False]
   num_layers:
-    values: [3, 4, 5, 6, 7, 8]
+    values: [4, 5, 6, 7]
+  num_encoders:
+    values: [1 , 2 , 3]
   patience:
     values: [14]
   clip:
     values: [1 , 5]
   epoch_switch:
     values: [2 , 3]
+  dropout:
+    values: [ 0.0 , 0.1 , 0.2 , 0.3 , 0.4 ]
   T_max:
    values: [2 , 3]
   hidden_layers:

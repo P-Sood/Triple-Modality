@@ -310,6 +310,7 @@ def main():
         "dataset": config.dataset,
         "sota": config.sota,
         "hidden_size": config.hidden_size,
+        "num_encoders": config.num_encoders,
     }
     param_dict["weights"] = weights
     param_dict["label2id"] = label2id

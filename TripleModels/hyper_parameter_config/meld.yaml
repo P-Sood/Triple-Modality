@@ -32,7 +32,9 @@ parameters:
   learn_PosEmbeddings:
     values: [False]
   num_layers:
-    values: [3, 4, 5, 6, 7, 8]
+    values: [4, 5, 6, 7]
+  num_encoders:
+    values: [1 , 2 , 3]
   patience:
     values: [14]
   clip:
@@ -40,7 +42,7 @@ parameters:
   epoch_switch:
     values: [2 , 3]
   dropout:
-    values: [ 0.0 , 0.1 , 0.2 , 0.3 ]
+    values: [ 0.0 , 0.1 , 0.2 , 0.3 , 0.4 ]
   T_max:
    values: [2 , 3]
   hidden_layers:

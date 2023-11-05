@@ -51,8 +51,6 @@ def collate_batch(batch):
 class TAVForMAE(nn.Module):
     """
     Model for Multimodal Alignment and Fusion
-
-    Since we have already called an encoder to get all the features for this model, we just need to run the fusion and classifier head over top
     """
 
     def __init__(self, args):
@@ -61,6 +59,7 @@ class TAVForMAE(nn.Module):
         self.dropout = args["dropout"]
         self.learn_PosEmbeddings = args["learn_PosEmbeddings"]
         self.num_layers = args["num_layers"]
+        self.num_encoders = args["num_encoders"]
         self.dataset = args["dataset"]
         self.sota = args["sota"]
         self.hidden_size = args["hidden_size"]
@@ -90,6 +89,26 @@ class TAVForMAE(nn.Module):
                 for _ in range(self.num_layers)
             ]
         )
+        
+        self.text_encoder_layers = nn.ModuleList(
+            [
+                nn.MultiheadAttention(embed_dim=768, num_heads=8, batch_first=True)
+                for _ in range(self.num_encoders)
+            ]
+        )
+        self.audio_encoder_layers = nn.ModuleList(
+            [
+                nn.MultiheadAttention(embed_dim=768, num_heads=8, batch_first=True)
+                for _ in range(self.num_encoders)
+            ]
+        )
+        self.video_encoder_layers = nn.ModuleList(
+            [
+                nn.MultiheadAttention(embed_dim=768, num_heads=8, batch_first=True)
+                for _ in range(self.num_encoders)
+            ]
+        )
+        
         if self.sota:
             self.fusion_layers = nn.ModuleList(
                 [nn.Linear(768 * 2, 768) for _ in range(self.num_layers)]
@@ -131,10 +150,14 @@ class TAVForMAE(nn.Module):
             video_context = self.vid_norm(video_context)
             vid_outputs = (vid_outputs * self.p + video_context * (1 - self.p)) / 2
             del video_context
-
-        # text_outputs = text_outputs.squeeze(dim = 1)
-        # aud_outputs = aud_outputs.squeeze(dim = 1)
-        # vid_outputs = vid_outputs.squeeze(dim = 1)
+            
+        text_mask = torch.any(text_outputs == 0, dim=-1)
+        audio_mask = torch.any(aud_outputs == 0, dim=-1)
+        video_mask = torch.any(vid_outputs == 0, dim=-1)    
+        for i in range(self.num_encoders):
+            text_outputs = self.text_encoder_layers[i](text_outputs , src_key_padding_mask = text_mask)
+            aud_outputs  = self.audio_encoder_layers[i](aud_outputs , src_key_padding_mask = audio_mask)
+            vid_outputs  = self.video_encoder_layers[i](vid_outputs , src_key_padding_mask = video_mask)
 
         text_audi_video_aligned = pad_sequence(
             torch.unbind(text_outputs, dim=0)
@@ -148,6 +171,7 @@ class TAVForMAE(nn.Module):
             text_audi_video_aligned[bs : 2 * bs],
             text_audi_video_aligned[2 * bs :],
         )
+        del text_audi_video_aligned
         # Create the padding mask for the aud tensor
         audio_mask = torch.any(aud_outputs == 0, dim=-1)
 
@@ -190,8 +214,8 @@ class TAVForMAE(nn.Module):
         del text_outputs
         del aud_outputs
         del vid_outputs
-        # del Ffusion1
-        # del Ffusion2
+        del Ffusion1
+        del Ffusion2
 
         # Classifier Head
         if check == "train":
