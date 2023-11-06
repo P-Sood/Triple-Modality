@@ -92,19 +92,19 @@ class TAVForMAE(nn.Module):
         
         self.text_encoder_layers = nn.ModuleList(
             [
-                nn.MultiheadAttention(embed_dim=768, num_heads=8, batch_first=True)
+                nn.TransformerEncoderLayer(embed_dim=768, num_heads=8, batch_first=True)
                 for _ in range(self.num_encoders)
             ]
         )
         self.audio_encoder_layers = nn.ModuleList(
             [
-                nn.MultiheadAttention(embed_dim=768, num_heads=8, batch_first=True)
+                nn.TransformerEncoderLayer(embed_dim=768, num_heads=8, batch_first=True)
                 for _ in range(self.num_encoders)
             ]
         )
         self.video_encoder_layers = nn.ModuleList(
             [
-                nn.MultiheadAttention(embed_dim=768, num_heads=8, batch_first=True)
+                nn.TransformerEncoderLayer(embed_dim=768, num_heads=8, batch_first=True)
                 for _ in range(self.num_encoders)
             ]
         )
