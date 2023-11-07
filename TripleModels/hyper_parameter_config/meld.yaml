@@ -1,4 +1,4 @@
-p"Val"rogram: ../tav_nn.py
+program: ../tav_nn.py
 command:
   - ${env}
   - python3
@@ -14,44 +14,46 @@ parameters:
   epoch: 
     values: [6]
   learning_rate:
+    max: 0.00016779848447346176
+    min: 0.0000033463851154990775
     distribution: uniform
-    max: 1e-4
-    min: 1e-6
-  batch_size:
-    values: [2, 4, 8, 16]
   weight_decay:
+    max: 0.0015336682533379652
+    min: 0.00006686748300918932
     distribution: uniform
-    max: 1e-3
-    min: 1e-5
+  batch_size:
+    values: [2, 4, 8, 16 , 24]
   seed:
     values: [32, 64, 96]
-  dropout:
-    values: [ 0.3 , 0.4 , 0.5 ]
   mask:
     values: [False]
   early_div:
-    values: [True]
+    values: [False]
   learn_PosEmbeddings:
-    values: [True,False]
+    values: [False]
   num_layers:
-    values: [3, 4, 5, 6, 7,8]
+    values: [3, 4, 5, 6, 7, 8]
   patience:
-    values: [10]
+    values: [14]
   clip:
     values: [1 , 5]
   epoch_switch:
     values: [2 , 3]
+  dropout:
+    values: [ 0.2 , 0.3 , 0.4 , 0.5 ]
   T_max:
    values: [2 , 3]
   hidden_layers:
-    values: ["300"]
+    values: [64, 128, 256, 384, 768, 1536]
   label_task:
-    values: ['sarcasm']
+    values: ['emotion']
   sota:
     values: [True, False]
   model:
     values: ['MAE_encoder']
   loss:
-    values: ['NewCrossEntropy']
+    values: ['NewCrossEntropy' , 'CrossEntropy' , 'WeightedCrossEntropy']
+  sampler:
+    values: ['Both' , 'Iterative' , 'Weighted']
   beta:
     values: [1]

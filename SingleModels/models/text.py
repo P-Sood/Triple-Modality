@@ -2,7 +2,7 @@ import torch
 from torch import nn
 from transformers import AutoModel
 import torch.nn as nn
-
+import pdb
 
 class BertClassifier(nn.Module):
     def __init__(self, args):
@@ -10,42 +10,30 @@ class BertClassifier(nn.Module):
         self.dropout = args["dropout"]
         self.output_dim = args["output_dim"]
         self.dataset = args["dataset"]
-
+        self.BertModel = args["BertModel"]
+        self.hidden_size = args["hidden_size"]
+        
+        
         self.must = True if "must" in str(self.dataset).lower() else False
 
         if self.must:
-            self.bert = AutoModel.from_pretrained(
-                "jkhan447/sarcasm-detection-RoBerta-base-CR"
-            )
+            self.bert = AutoModel.from_pretrained(self.BertModel)
         else:
-            self.bert = AutoModel.from_pretrained(
-                "j-hartmann/emotion-english-distilroberta-base"
-            )
+            self.bert = AutoModel.from_pretrained(self.BertModel , from_tf = True if self.BertModel == "arpanghoshal/EmoRoBERTa" else False)
 
-        self.bert_norm = nn.LayerNorm(768)
         self.dropout = nn.Dropout(self.dropout)
 
-        self.linear = nn.Linear(768, self.output_dim)
+        self.linear1 = nn.Linear(self.bert.encoder.layer[0].output.dense.out_features, self.output_dim)
 
-    def forward(self, input_ids, mask, check):
-        _, text_outputs = self.bert(
-            input_ids=input_ids, attention_mask=mask, return_dict=False
-        )
 
+    def forward(self, input_ids, attention_mask, check):
+        _, text_outputs = self.bert(input_ids=input_ids, attention_mask=attention_mask, return_dict=False)
         del _
-        del mask
+        del attention_mask
         del input_ids
-
-        text_outputs = self.bert_norm(text_outputs)
 
         if check == "train":
             text_outputs = self.dropout(text_outputs)
 
-        text_outputs = self.linear(text_outputs)
-
+        text_outputs = self.linear1(text_outputs)
         return text_outputs
-
-    # make sure all the params are stored in a massive matrix which will end up being
-    # a complicated hell to make sure we get the params on every model type
-
-    # multi modal images

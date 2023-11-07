@@ -4,8 +4,7 @@ command:
   - python3
   - ${program}
   - "--dataset"
-  - "../../data/TAV_all_datapoints"
-
+  - "../../data/meld"
 method: bayes
 
 metric:
@@ -17,115 +16,48 @@ parameters:
     min: 6
     distribution: int_uniform
   learning_rate:
-    max: 1e-4
-    min: 5e-6
+    max: 9e-4
+    min: 1e-6
+    distribution: uniform
+  weight_decay:
+    max: 1e-2
+    min: 1e-4
     distribution: uniform
   batch_size:
-    values: [8 , 16 , 32 , 64 , 128]
-  weight_decay:
-    max: 0.09309855642934205
-    min: 0.0005829245121082495
+    values: [8 , 16 , 32]
   seed:
-    max: 192
-    min: 16
-    distribution: int_uniform
-  dropout:
-    max: 0.70
-    min: 0.35
-    distribution: uniform
+    values: [32, 64, 96]
   mask:
     values: [False]
   early_div:
-    values: [True]
-  learn_PosEmbeddings:
-    values: [True,False]
-  num_layers:
-    values: [12]
-  patience:
-    max: 15
-    min: 10
-    distribution: int_uniform
-  clip:
-    max: 10
-    min: 4
-    distribution: int_uniform
-  epoch_switch:
-    values: [2 , 3]
-  T_max:
-   values: [2 , 3]
-  hidden_layers:
-    values: ["300"]
-  label_task:
-    values: ['emotion']
-  model:
-    values: ['MAE_encoder']
-  loss:
-    values: ['NewCrossEntropy']
-  beta:
-    values: [1]
-
-program: ../text_nn.py
-command:
-  - ${env}
-  - python3
-  - ${program}
-  - "--dataset"
-  - "../../data/TAV_all_datapoints"
-
-method: bayes
-
-metric:
-  goal: maximize
-  name: val/weighted-f1-score
-parameters:
-  epoch:
-    max: 12
-    min: 6
-    distribution: int_uniform
-  learning_rate:
-    max: 1e-4
-    min: 5e-6
-    distribution: uniform
-  batch_size:
-    values: [8 , 16 , 32 , 64 , 128]
-  weight_decay:
-    max: 0.09309855642934205
-    min: 0.0005829245121082495
-  seed:
-    max: 192
-    min: 16
-    distribution: int_uniform
-  dropout:
-    max: 0.70
-    min: 0.35
-    distribution: uniform
-  mask:
     values: [False]
-  early_div:
-    values: [True]
   learn_PosEmbeddings:
-    values: [True,False]
+    values: [False]
   num_layers:
-    values: [12]
+    values: [3, 4, 5, 6, 7, 8]
   patience:
-    max: 15
-    min: 10
-    distribution: int_uniform
+    values: [14]
   clip:
-    max: 10
-    min: 4
-    distribution: int_uniform
+    values: [1 , 5]
   epoch_switch:
     values: [2 , 3]
+  dropout:
+    values: [ 0.2 , 0.3 , 0.4 , 0.5 ]
   T_max:
    values: [2 , 3]
-  hidden_layers:
-    values: ["300"]
+  hidden_size:
+    values: [64, 128, 256, 384, 768, 1536]
   label_task:
     values: ['emotion']
+  sota:
+    values: [True, False]
   model:
     values: ['MAE_encoder']
   loss:
-    values: ['NewCrossEntropy']
+    values: ['NewCrossEntropy' , 'CrossEntropy' , 'WeightedCrossEntropy']
+  sampler:
+    values: ['Both' , 'Iterative' , 'Weighted']
+  BertModel:
+    values: ['arpanghoshal/EmoRoBERTa' , 'tae898/emoberta-large' , 'j-hartmann/emotion-english-roberta-large']
   beta:
     values: [1]
