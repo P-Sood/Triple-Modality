@@ -8,9 +8,8 @@
 #SBATCH --nodes=1
 #SBATCH --gres=gpu:1
 #SBATCH --ntasks=1
-
 #SBATCH --cpus-per-task=6 # maximum CPU cores per GPU request: 6 on Cedar, 16 on Graham.
 
 #SBATCH --output=../outputs/text_PrePended.txt
 
-#wandb agent ddi/TiktokTest/nreuhli2 # OURS
+wandb agent ddi/PrePended_Text/t6f3ueu8
