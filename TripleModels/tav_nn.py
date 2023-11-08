@@ -237,7 +237,7 @@ def main():
     np.random.seed(config.seed)
     torch.random.manual_seed(config.seed)
     param_dict = {
-        "epoch": config.epoch,
+        "epoch": 2 * config.epoch,
         "patience": config.patience,
         "lr": config.learning_rate,
         "clip": config.clip,
@@ -312,7 +312,7 @@ def main():
         "learn_PosEmbeddings": config.learn_PosEmbeddings,
         "dataset": config.dataset,
         "sota": config.sota,
-        "hidden_size": config.hidden_size,
+        "hidden_size": config.hidden_layers,
         "num_encoders": config.num_encoders,
     }
     param_dict["weights"] = weights
