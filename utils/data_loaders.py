@@ -177,7 +177,7 @@ class BertDataset(Dataset):
 
     def __init__(self, df, dataset, batch_size, feature_col, label_col, accum=False , bert = "j-hartmann/emotion-english-distilroberta-base"):
         
-        max_len = int(70 * 2.5)
+        max_len = 86
         tokenizer = AutoTokenizer.from_pretrained(bert)
         self.texts = [
             tokenizer(
