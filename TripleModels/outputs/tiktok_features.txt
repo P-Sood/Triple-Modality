@@ -1,133 +1,0 @@
-wandb: Currently logged in as: zeerak (ddi). Use `wandb login --relogin` to force relogin
-wandb: Tracking run with wandb version 0.15.12
-wandb: Run data is saved locally in /l/users/zeerak.talat/Triple-Modality/TripleModels/run_slurm/wandb/run-20231101_102509-vzmp7aes
-wandb: Run `wandb offline` to turn off syncing.
-wandb: Syncing run treasured-capybara-37
-wandb: ⭐️ View project at https://wandb.ai/ddi/Triple-Modality-TripleModels
-wandb: 🚀 View run at https://wandb.ai/ddi/Triple-Modality-TripleModels/runs/vzmp7aes
- in main 
- param_dict = {'epoch': 1, 'patience': 10.0, 'lr': 1e-06, 'clip': 1.0, 'batch_size': 1, 'weight_decay': 0.0001, 'model': 'MAE_encoder', 'T_max': 2, 'seed': 32, 'label_task': 'content', 'mask': False, 'loss': 'NewCrossEntropy', 'beta': 1, 'epoch_switch': 2, 'weights': tensor([0.2192, 0.3904, 0.3904]), 'label2id': {'educative': 2, 'suggestive': 1, 'others': 0}, 'id2label': {2: 'educative', 1: 'suggestive', 0: 'others'}} 
- model_param = {'output_dim': 3, 'dropout': 0.5, 'early_div': False, 'num_layers': 12, 'learn_PosEmbeddings': True, 'dataset': '../../data/tiktok_sample', 'sota': False} 
- df ../../data/tiktok_sample , with df = 150 
- 
-NewCrossEntropy
-108
-108
-Using 12 layers 
-Using sota = False
-epochs:   0%|          | 0/1 [00:00<?, ?it/s]
-steps:   0%|          | 0/2 [00:00<?, ?it/s][A
-
-iter:   0%|          | 0/108 [00:00<?, ?it/s][A[AWe are in normal unweighted CEL
-
-
-iter:   1%|          | 1/108 [00:01<02:37,  1.47s/it][A[A
-
-iter:   2%|▏         | 2/108 [00:01<01:19,  1.34it/s][A[A
-
-iter:   3%|▎         | 3/108 [00:02<01:00,  1.73it/s][A[A
-
-iter:   4%|▎         | 4/108 [00:02<00:52,  1.99it/s][A[A
-
-iter:   5%|▍         | 5/108 [00:02<00:48,  2.14it/s][A[A
-
-iter:   6%|▌         | 6/108 [00:03<00:41,  2.47it/s][A[A
-
-iter:   6%|▋         | 7/108 [00:03<00:36,  2.79it/s][A[A
-
-iter:   7%|▋         | 8/108 [00:03<00:32,  3.10it/s][A[A
-
-iter:   8%|▊         | 9/108 [00:03<00:31,  3.18it/s][A[A
-
-iter:   9%|▉         | 10/108 [00:04<00:29,  3.37it/s][A[A
-
-iter:  10%|█         | 11/108 [00:04<00:27,  3.56it/s][A[Aiter:  10%|█         | 11/108 [00:05<00:52,  1.85it/s]
-steps:   0%|          | 0/2 [00:05<?, ?it/s]
-epochs:   0%|          | 0/1 [00:05<?, ?it/s]
-Traceback (most recent call last):
-  File "/l/users/zeerak.talat/Triple-Modality/TripleModels/run_slurm/../tav_nn.py", line 305, in <module>
-    main()
-  File "/l/users/zeerak.talat/Triple-Modality/TripleModels/run_slurm/../tav_nn.py", line 301, in main
-    runModel("cuda", df_train, df_val, df_test, param_dict, model_param)
-  File "/l/users/zeerak.talat/Triple-Modality/TripleModels/run_slurm/../tav_nn.py", line 198, in runModel
-    model = train_tav_network(
-            ^^^^^^^^^^^^^^^^^^
-  File "/l/users/zeerak.talat/Triple-Modality/TripleModels/train_model/tav_train.py", line 456, in train_tav_network
-    model, optimizer, criterion, scheduler, prev_val_loss, prev_f1 = one_epoch(
-                                                                     ^^^^^^^^^^
-  File "/l/users/zeerak.talat/Triple-Modality/TripleModels/train_model/tav_train.py", line 381, in one_epoch
-    model, optimizer, criterion, prev_val_loss, prev_f1 = not_grad_accum(
-                                                          ^^^^^^^^^^^^^^^
-  File "/l/users/zeerak.talat/Triple-Modality/TripleModels/train_model/tav_train.py", line 251, in not_grad_accum
-    train_batch_loss = fn(
-                       ^^^
-  File "/l/users/zeerak.talat/Triple-Modality/TripleModels/train_model/tav_train.py", line 43, in get_statistics
-    output = model(
-             ^^^^^^
-  File "/home/zeerak.talat/.conda/envs/trimodal/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1518, in _wrapped_call_impl
-    return self._call_impl(*args, **kwargs)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/zeerak.talat/.conda/envs/trimodal/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1568, in _call_impl
-    result = forward_call(*args, **kwargs)
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/l/users/zeerak.talat/Triple-Modality/TripleModels/models/tav.py", line 208, in forward
-    aud_outputs = self.wav2vec2(audio_features)[0]
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/zeerak.talat/.conda/envs/trimodal/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1518, in _wrapped_call_impl
-    return self._call_impl(*args, **kwargs)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/zeerak.talat/.conda/envs/trimodal/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1527, in _call_impl
-    return forward_call(*args, **kwargs)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/zeerak.talat/.conda/envs/trimodal/lib/python3.11/site-packages/transformers/models/wav2vec2/modeling_wav2vec2.py", line 1579, in forward
-    encoder_outputs = self.encoder(
-                      ^^^^^^^^^^^^^
-  File "/home/zeerak.talat/.conda/envs/trimodal/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1518, in _wrapped_call_impl
-    return self._call_impl(*args, **kwargs)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/zeerak.talat/.conda/envs/trimodal/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1527, in _call_impl
-    return forward_call(*args, **kwargs)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/zeerak.talat/.conda/envs/trimodal/lib/python3.11/site-packages/transformers/models/wav2vec2/modeling_wav2vec2.py", line 908, in forward
-    layer_outputs = layer(
-                    ^^^^^^
-  File "/home/zeerak.talat/.conda/envs/trimodal/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1518, in _wrapped_call_impl
-    return self._call_impl(*args, **kwargs)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/zeerak.talat/.conda/envs/trimodal/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1527, in _call_impl
-    return forward_call(*args, **kwargs)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/zeerak.talat/.conda/envs/trimodal/lib/python3.11/site-packages/transformers/models/wav2vec2/modeling_wav2vec2.py", line 737, in forward
-    hidden_states, attn_weights, _ = self.attention(
-                                     ^^^^^^^^^^^^^^^
-  File "/home/zeerak.talat/.conda/envs/trimodal/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1518, in _wrapped_call_impl
-    return self._call_impl(*args, **kwargs)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/zeerak.talat/.conda/envs/trimodal/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1527, in _call_impl
-    return forward_call(*args, **kwargs)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/zeerak.talat/.conda/envs/trimodal/lib/python3.11/site-packages/transformers/models/wav2vec2/modeling_wav2vec2.py", line 609, in forward
-    attn_weights = nn.functional.softmax(attn_weights, dim=-1)
-                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/zeerak.talat/.conda/envs/trimodal/lib/python3.11/site-packages/torch/nn/functional.py", line 1856, in softmax
-    ret = input.softmax(dim)
-          ^^^^^^^^^^^^^^^^^^
-torch.cuda.OutOfMemoryError: CUDA out of memory. Tried to allocate 20.70 GiB. GPU 0 has a total capacty of 39.59 GiB of which 15.17 GiB is free. Including non-PyTorch memory, this process has 24.42 GiB memory in use. Of the allocated memory 23.44 GiB is allocated by PyTorch, and 476.17 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting max_split_size_mb to avoid fragmentation.  See documentation for Memory Management and PYTORCH_CUDA_ALLOC_CONF
-wandb: Waiting for W&B process to finish... (failed 1). Press Control-C to abort syncing.
-wandb: 
-wandb: Run history:
-wandb:               epoch ▁
-wandb:       learning_rate ▁
-wandb:   log_val_iterative ▁
-wandb: log_val_multinomial ▁
-wandb: 
-wandb: Run summary:
-wandb:               epoch 0
-wandb:       learning_rate 0.0
-wandb:   log_val_iterative 108
-wandb: log_val_multinomial 108
-wandb: 
-wandb: 🚀 View run treasured-capybara-37 at: https://wandb.ai/ddi/Triple-Modality-TripleModels/runs/vzmp7aes
-wandb: ️⚡ View job at https://wandb.ai/ddi/Triple-Modality-TripleModels/jobs/QXJ0aWZhY3RDb2xsZWN0aW9uOjExMTUxOTQ5OA==/version_details/v7
-wandb: Synced 6 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
-wandb: Find logs at: ./wandb/run-20231101_102509-vzmp7aes/logs

@@ -1,5 +1,3 @@
-import torch
-from torch import nn
 from transformers import AutoModel
 import torch.nn as nn
 import pdb

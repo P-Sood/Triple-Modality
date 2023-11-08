@@ -24,7 +24,7 @@ parameters:
     min: 1e-4
     distribution: uniform
   batch_size:
-    values: [8 , 16 , 32]
+    values: [8 , 16]
   seed:
     values: [32, 64, 96]
   mask:
