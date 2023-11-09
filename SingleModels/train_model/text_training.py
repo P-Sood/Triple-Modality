@@ -22,8 +22,9 @@ def get_statistics(
     batch_loss = None
     device = "cuda"
     label = label.to(device)
+    
 
-    input["attention_mask"] = input["attention_mask"]
+    input["attention_mask"] = input["attention_mask"].squeeze(1)
     input["input_ids"] = input["input_ids"].squeeze(1)
     input = {k: v.to(device) for k, v in input.items()}
     
@@ -52,7 +53,7 @@ def get_statistics_big_batch(
     batch_loss = None
     device = "cuda"
     label = label.to(device)
-    input["attention_mask"] = input["attention_mask"]
+    input["attention_mask"] = input["attention_mask"].squeeze(1)
     input["input_ids"] = input["input_ids"].squeeze(1)
     input = {k: v.to(device) for k, v in input.items()}
     

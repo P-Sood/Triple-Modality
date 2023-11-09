@@ -266,7 +266,7 @@ def main():
         "dataset": config.dataset,
         "sota": config.sota,
         "hidden_size": config.hidden_size,
-        "BertModel": config.BertModel,
+        "BertModel": "arpanghoshal/EmoRoBERTa",#config.BertModel,
     }
     param_dict["weights"] = weights
     param_dict["label2id"] = label2id

@@ -430,6 +430,20 @@ def arg_parse(description):
         type=int,
     )
     parser.add_argument(
+        "--sampler",
+        "-sam",
+        help="Set Sampler",
+        default="Weighted",
+        type=str,
+    )
+    parser.add_argument(
+        "--BertModel",
+        "-bm",
+        help="Set Model for bert",
+        default="j-hartmann/emotion-english-roberta-large",
+        type=str,
+    )
+    parser.add_argument(
         "--patience", "-p", help="Set the patience", default=10.0, type=float
     )
     parser.add_argument(
@@ -490,11 +504,11 @@ def arg_parse(description):
         "--lstm_layers", "-ll", help="set number of LSTM layers", default=1, type=int
     )
     parser.add_argument(
-        "--hidden_layers",
+        "--hidden_size",
         "-o",
         help="values corresponding to each hidden layer",
-        default="32,32",
-        type=str,
+        default=768,
+        type=int,
     )
     parser.add_argument(
         "--early_div",
