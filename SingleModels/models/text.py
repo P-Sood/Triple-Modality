@@ -11,6 +11,8 @@ class BertClassifier(nn.Module):
         self.BertModel = args["BertModel"]
         self.hidden_size = args["hidden_size"]
         
+        self.must = False
+        
         if self.must:
             self.bert = AutoModel.from_pretrained(self.BertModel)
         else:
