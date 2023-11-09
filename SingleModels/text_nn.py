@@ -15,9 +15,6 @@ import numpy as np
 from torch.utils.data import DataLoader
 from utils.global_functions import arg_parse, Metrics, MySampler, NewCrossEntropyLoss
 
-import tensorflow as tf
-print("Num GPUs Available: ", len(tf.config.list_physical_devices('GPU')))
-
 
 TESTING_PIPELINE = False
 
@@ -273,7 +270,7 @@ def main():
         "dataset": config.dataset,
         "sota": config.sota,
         "hidden_size": config.hidden_size,
-        "BertModel": config.BertModel,
+        "BertModel": "arpanghoshal/EmoRoBERTa"#config.BertModel,
     }
     param_dict["weights"] = weights
     param_dict["label2id"] = label2id
@@ -282,7 +279,7 @@ def main():
     print(
         f" in main \n param_dict = {param_dict} \n model_param = {model_param} \n df {config.dataset} , with df = {len(df)} \n "
     )
-    runModel("cuda", df_train, df_val, df_test, param_dict, model_param)
+    runModel("cpu", df_train, df_val, df_test, param_dict, model_param)
 
 
 if __name__ == "__main__":
