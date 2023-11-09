@@ -15,6 +15,9 @@ import numpy as np
 from torch.utils.data import DataLoader
 from utils.global_functions import arg_parse, Metrics, MySampler, NewCrossEntropyLoss
 
+import tensorflow as tf
+print("Num GPUs Available: ", len(tf.config.list_physical_devices('GPU')))
+
 
 TESTING_PIPELINE = False
 
