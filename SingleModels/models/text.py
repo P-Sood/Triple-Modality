@@ -1,6 +1,6 @@
 from transformers import AutoModel
 import torch.nn as nn
-import pdb
+import torch
 
 class BertClassifier(nn.Module):
     def __init__(self, args):
@@ -11,9 +11,6 @@ class BertClassifier(nn.Module):
         self.BertModel = args["BertModel"]
         self.hidden_size = args["hidden_size"]
         
-        
-        self.must = True if "must" in str(self.dataset).lower() else False
-
         if self.must:
             self.bert = AutoModel.from_pretrained(self.BertModel)
         else:
@@ -29,6 +26,7 @@ class BertClassifier(nn.Module):
         del _
         del attention_mask
         del input_ids
+        torch.cuda.empty_cache()
 
         if check == "train":
             text_outputs = self.dropout(text_outputs)

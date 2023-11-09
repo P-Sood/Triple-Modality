@@ -116,7 +116,7 @@ def runModel(accelerator, df_train, df_val, df_test, param_dict, model_param):
     weights = param_dict["weights"]
     id2label = param_dict["id2label"]
     label_task = param_dict["label_task"]
-    model_name = param_dict["model"]
+    model_name = param_dict["model"] 
     mask = param_dict["mask"]
     epoch_switch = param_dict["epoch_switch"]
     sampler = param_dict["sampler"]
@@ -125,7 +125,11 @@ def runModel(accelerator, df_train, df_val, df_test, param_dict, model_param):
     num_labels = model_param["output_dim"]
     dataset = model_param["dataset"]
     BertModel = model_param["BertModel"]
-
+    # TODO: IF TF BERTA IS TOO BIG
+    # if BertModel == "arpanghoshal/EmoRoBERTa":
+    #     batch_size = 4
+        
+        
     if loss == "CrossEntropy":
         criterion = torch.nn.CrossEntropyLoss().to(device)
     elif loss == "NewCrossEntropy":
