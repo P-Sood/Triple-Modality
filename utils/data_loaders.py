@@ -177,7 +177,7 @@ class BertDataset(Dataset):
 
     def __init__(self, df, dataset, batch_size, feature_col, label_col, accum=False , bert = "j-hartmann/emotion-english-distilroberta-base"):
         
-        max_len = 86
+        max_len = max([len(text.split()) for text in df[feature_col]]) + 2 # For CLS and SEP tokens
         tokenizer = AutoTokenizer.from_pretrained(bert)
         self.texts = [
             tokenizer(

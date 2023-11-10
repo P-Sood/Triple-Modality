@@ -54,8 +54,8 @@ parameters:
   sampler:
     values: ['Both' , 'Iterative' , 'Weighted']
   BertModel:
-    values: ['tae898/emoberta-large' , 'j-hartmann/emotion-english-roberta-large' , 'tasinhoque/roberta-large-go-emotions-2' , 'roberta-large']
+    values: ['j-hartmann/emotion-english-roberta-large' , 'tasinhoque/roberta-large-go-emotions-2' , 'roberta-large']
   text_column:
-    values: ['all_dialog_text_with_authors' , 'all_dialog_text' , 'text']
+    values: ['all_dialog_text_with_authors' , 'all_dialog_text']
   beta:
     values: [1]
