@@ -17,6 +17,7 @@ data_raw/*
 *.pkl
 *.icloud
 *.DS_Store
+!data/meld.pkl
 !data/HatefulMemes.pkl
 !data/SarcasmVideos.pkl
 !data/emotion_pd_raw.pkl
@@ -32,6 +33,7 @@ SingleModels/run_slurm/wandb/*
 /home/prsood/projects/def-whkchun/prsood/multi-modal-emotion/IEMOCAP/*
 trimodal/*
 !req.txt
+
 *.mp4
 *.wav
 *.pkl
