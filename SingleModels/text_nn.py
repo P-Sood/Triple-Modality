@@ -24,6 +24,7 @@ def prepare_dataloader(
     batch_size,
     label_task,
     epoch_switch,
+    feature_col="text",
     pin_memory=True,
     num_workers=4,
     check="train",
@@ -37,15 +38,10 @@ def prepare_dataloader(
     say we have 32 data points, if batch size = 8 then it will make 4 dataloaders of size 8 each
     """
     must = True if "must" in str(dataset).lower() else False
-    if accum:
-        batch_size = 1 if sampler == "Both" else batch_size
-        dataset = BertDataset(
-            df, dataset, batch_size, feature_col="text", label_col=label_task , accum=accum , bert  = bert
-        )
-    else:
-        dataset = BertDataset(
-           df, dataset, batch_size, feature_col="text", label_col=label_task , accum=accum , bert   = bert
-        )
+    
+    dataset = BertDataset(
+        df, dataset, batch_size = 1 if sampler == "Both" else batch_size, feature_col=feature_col, label_col=label_task , accum=accum , bert   = bert
+    )
 
     if check == "train":
         labels = df[label_task].value_counts()
@@ -117,6 +113,7 @@ def runModel(accelerator, df_train, df_val, df_test, param_dict, model_param):
     mask = param_dict["mask"]
     epoch_switch = param_dict["epoch_switch"]
     sampler = param_dict["sampler"]
+    text_column = param_dict["text_column"]
     
     
     num_labels = model_param["output_dim"]
@@ -140,23 +137,24 @@ def runModel(accelerator, df_train, df_val, df_test, param_dict, model_param):
     print(loss, flush=True)
     Metric = Metrics(num_classes=num_labels, id2label=id2label, rank=device)
     df_train_accum = prepare_dataloader(
-        df_train, dataset, batch_size, label_task, epoch_switch, check="train", accum=True , bert = BertModel , sampler = sampler
+        df_train, dataset, batch_size, label_task, epoch_switch , feature_col = text_column, check="train", accum=True , bert = BertModel , sampler = sampler
     )
     df_train_no_accum = prepare_dataloader(
         df_train,
         dataset,
         batch_size,
         label_task,
-        epoch_switch,
+        epoch_switch , 
+        feature_col = text_column,
         check="train",
         accum=False,
         bert = BertModel
     )
     df_val = prepare_dataloader(
-        df_val, dataset, batch_size, label_task, epoch_switch, check="val" , bert = BertModel
+        df_val, dataset, batch_size, label_task, epoch_switch , feature_col = text_column, check="val" , bert = BertModel
     )
     df_test = prepare_dataloader(
-        df_test, dataset, batch_size, label_task, epoch_switch, check="test" , bert = BertModel
+        df_test, dataset, batch_size, label_task, epoch_switch , feature_col = text_column, check="test" , bert = BertModel
     )
 
     model = BertClassifier(model_param).to(device)
@@ -209,6 +207,7 @@ def main():
         "beta": config.beta,
         "epoch_switch": config.epoch_switch,
         "sampler": config.sampler,
+        "text_column": config.text_column,
     }
 
     df = pd.read_pickle(f"{config.dataset}.pkl")
