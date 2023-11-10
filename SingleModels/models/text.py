@@ -11,12 +11,7 @@ class BertClassifier(nn.Module):
         self.BertModel = args["BertModel"]
         self.hidden_size = args["hidden_size"]
         
-        self.must = False
-        
-        if self.must:
-            self.bert = AutoModel.from_pretrained(self.BertModel)
-        else:
-            self.bert = AutoModel.from_pretrained(self.BertModel , from_tf = True if self.BertModel == "arpanghoshal/EmoRoBERTa" else False)
+        self.bert = AutoModel.from_pretrained(self.BertModel)
 
         self.dropout = nn.Dropout(self.dropout)
 
