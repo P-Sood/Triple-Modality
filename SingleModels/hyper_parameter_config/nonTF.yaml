@@ -56,6 +56,6 @@ parameters:
   BertModel:
     values: ['j-hartmann/emotion-english-roberta-large' , 'tasinhoque/roberta-large-go-emotions-2' , 'roberta-large']
   text_column:
-    values: ['all_dialog_text']
+    values: ['concatenated_with_auth', 'concatenated']
   beta:
     values: [1]
