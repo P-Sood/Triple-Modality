@@ -20,7 +20,7 @@ parameters:
   weight_decay:
     values: [1e-4, 1e-3, 1e-2]
   batch_size:
-    values: [32 , 64 , 128 , 256]
+    values: [8 , 16 , 32 , 64,]
   seed:
     values: [32, 64, 96]
   mask:
@@ -34,7 +34,7 @@ parameters:
   patience:
     values: [14]
   clip:
-    values: [1 , 5]
+    values: [0.1 , 1 , 5]
   epoch_switch:
     values: [2 , 3]
   dropout:
@@ -56,6 +56,6 @@ parameters:
   BertModel:
     values: ['j-hartmann/emotion-english-roberta-large' , 'tasinhoque/roberta-large-go-emotions-2' , 'roberta-large']
   text_column:
-    values: ['all_dialog_text_with_authors' , 'all_dialog_text']
+    values: ['all_dialog_text']
   beta:
     values: [1]
