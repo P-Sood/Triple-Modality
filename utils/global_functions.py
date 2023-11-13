@@ -444,6 +444,13 @@ def arg_parse(description):
         type=str,
     )
     parser.add_argument(
+        "--text_column",
+        "-tc",
+        help="Set text to use for features",
+        default="all_dialog_text",
+        type=str,
+    )
+    parser.add_argument(
         "--patience", "-p", help="Set the patience", default=10.0, type=float
     )
     parser.add_argument(
