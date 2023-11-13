@@ -20,7 +20,7 @@ def get_statistics(
     input: dict, label: np.array, model, criterion, Metric, check="train", epoch=None
 ):
     batch_loss = None
-    device = "cuda"
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     label = label.to(device)
     
 
@@ -51,7 +51,7 @@ def get_statistics_big_batch(
     input, label, model, criterion, Metric, check="train", epoch=None
 ):
     batch_loss = None
-    device = "cuda"
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     label = label.to(device)
     input["attention_mask"] = input["attention_mask"].squeeze(1)
     input["input_ids"] = input["input_ids"].squeeze(1)

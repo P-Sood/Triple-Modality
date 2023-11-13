@@ -123,7 +123,7 @@ def runModel(accelerator, df_train, df_val, df_test, param_dict, model_param):
     # if BertModel == "arpanghoshal/EmoRoBERTa":
     #     batch_size = 4
         
-        
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     if loss == "CrossEntropy":
         criterion = torch.nn.CrossEntropyLoss().to(device)
     elif loss == "NewCrossEntropy":
