@@ -98,8 +98,8 @@ def videoMAE_features(path, timings, check, speaker, bbox):
                     transform=Compose(
                         [
                             UniformTemporalSubsample(num_frames_to_sample),
-                            Lambda(lambda x: body_face(x , bbox)), # cropped bodies only
                             Lambda(lambda x: x / 255.0),
+                            Lambda(lambda x: body_face(x , bbox)), # cropped bodies only
                             NormalizeVideo(mean, std),
                             RandomHorizontalFlip(p=0) if speaker == None else Crop((120,2,245,355)) if speaker else Crop((120,362,245,355)), # Hone in on either the left_speaker or right_speaker in the video
                             Resize(
@@ -118,8 +118,8 @@ def videoMAE_features(path, timings, check, speaker, bbox):
                     transform=Compose(
                         [
                             UniformTemporalSubsample(num_frames_to_sample),
-                            Lambda(lambda x: body_face(x , bbox)), # cropped bodies only
                             Lambda(lambda x: x / 255.0),
+                            Lambda(lambda x: body_face(x , bbox)), # cropped bodies only
                             NormalizeVideo(mean, std),
                             RandomHorizontalFlip(p=0) if speaker == None else Crop((120,2,245,355)) if speaker else Crop((120,362,245,355)),
                             Resize((resize_to, resize_to)),
