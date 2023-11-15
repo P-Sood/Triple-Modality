@@ -168,6 +168,142 @@ class TextAudioVideoDataset(Dataset):
             ),
         ], np.array(self.labels[idx])
 
+    
+class VideoDataset(Dataset):
+    """A basic dataset where the underlying data is a list of (x,y) tuples. Data
+    returned from the dataset should be a (transform(x), y) tuple.
+    Args:
+    source      -- a list of (x,y) data samples
+    transform   -- a torchvision.transforms transform
+    """
+
+    def __init__(
+        self,
+        df,
+        dataset,
+        batch_size,
+        feature_col,
+        label_col,
+        timings=None,
+        accum=False,
+        check="test",
+    ):
+        self.video_path = df[feature_col].values
+
+        try:
+            self.timings = df['timings'].values.tolist()
+        except:
+            self.timings = [None] * len(self.video_path)
+        
+        if "meld" in dataset:
+            dataset = "meld"
+            # dataset = "videos" 
+        elif "iemo" in dataset:
+            dataset = "iemo"
+        elif "tiktok" in dataset:
+            dataset = "tiktok"
+        else:
+            dataset = "mustard"
+            self.timings = df["timings"].values.reshape(-1, 2).tolist()
+            self.video_path = df[feature_col].values.reshape(-1, 2).tolist()
+            df = df[df["context"] == False]
+        
+        self.Data = Data(video=f"../../data/{dataset}_context.hdf5", audio=None)
+        self.check = check
+        self.labels = df[label_col].values.tolist()
+
+        if accum:
+            self.grad = (
+                (df["dialog"].value_counts() / batch_size)
+                .astype(int)
+                .sort_index()
+                .tolist()
+            )
+            self.grad_sum = [sum(self.grad[: i + 1]) for i, x in enumerate(self.grad)]
+            self.ctr = 0
+
+    def retGradAccum(self, i: int) -> int:
+        RETgrad = self.grad[self.ctr]
+        RETgrad_sum = self.grad_sum[self.ctr]
+        if i + 1 == self.grad_sum[self.ctr]:
+            self.ctr += 1
+        if self.ctr == len(self.grad):
+            self.resetCtr()
+        return RETgrad, RETgrad_sum
+
+    def resetCtr(self):
+        self.ctr = 0
+
+    def __len__(self):
+        return len(self.labels)
+
+    def __getitem__(self, idx):
+        return self.Data.videoMAE_features(
+            self.video_path[idx], self.timings[idx], self.check
+        ), np.array(self.labels[idx])
+class WhisperDataset(Dataset):
+    def __init__(
+        self, df, dataset, batch_size, feature_col, label_col, accum=False, check="test"
+    ):
+        """
+        Initialize the dataset loader.
+
+        :data: The dataset to be loaded.
+        :labels: The labels for the dataset."""
+
+        self.audio_path = df[feature_col].values
+
+        
+        try:
+            self.timings = df['timings'].values.tolist()
+        except:
+            self.timings = [None] * len(self.audio_path)
+        
+        if "meld" in dataset:
+            dataset = "meld"
+        elif "iemo" in dataset:
+            dataset = "iemo"
+        elif "tiktok" in dataset:
+            dataset = "tiktok"
+        else:
+            dataset = "mustard"
+            self.timings = df["timings"].values.reshape(-1, 2).tolist()
+            self.audio_path = df[feature_col].values.reshape(-1, 2).tolist()
+            df = df[df["context"] == False]
+        
+        self.Data = Data(video=None, audio=f"../../data/whisper_{dataset}_audio.hdf5")
+        self.check = check
+        self.labels = df[label_col].values.tolist()
+
+        if accum:
+            self.grad = (
+                (df["dialog"].value_counts() / batch_size)
+                .astype(int)
+                .sort_index()
+                .tolist()
+            )
+            self.grad_sum = [sum(self.grad[: i + 1]) for i, x in enumerate(self.grad)]
+            self.ctr = 0
+
+    def retGradAccum(self, i: int) -> int:
+        RETgrad = self.grad[self.ctr]
+        RETgrad_sum = self.grad_sum[self.ctr]
+        if i + 1 == self.grad_sum[self.ctr]:
+            self.ctr += 1
+        if self.ctr == len(self.grad):
+            self.resetCtr()
+        return RETgrad, RETgrad_sum
+
+    def resetCtr(self):
+        self.ctr = 0
+
+    def __getitem__(self, idx: int):
+        return self.Data.speech_file_to_array_fn(
+            self.audio_path[idx], self.timings[idx], self.check
+        ), np.array(self.labels[idx])
+
+    def __len__(self):
+        return len(self.labels)
 
 
 class BertDataset(Dataset):
@@ -175,7 +311,7 @@ class BertDataset(Dataset):
     Load text dataset for BERT processing.
     """
 
-    def __init__(self, df, dataset, batch_size, feature_col, label_col, accum=False , bert = "j-hartmann/emotion-english-distilroberta-base"):
+    def __init__(self, df, dataset, batch_size, feature_col, label_col, accum=False , bert = "roberta-large"):
         
         max_len = 512# max([len(text.split()) for text in df[feature_col]]) + 2 # For CLS and SEP tokens
         tokenizer = AutoTokenizer.from_pretrained(bert)
@@ -310,10 +446,8 @@ class Data:
         singular_func_ = random.choices(population=func_, weights=[0.5, 0.5], k=1)[0]
 
         if not self.must:
-            if self.meld: # MELD
-                speech_array = torch.Tensor(self.AUDIOS[f"{check}_{path.split('/')[-1][:-4]}"][()])
-            else: # IEMO OR TIKTOK
-                speech_array = torch.Tensor(self.AUDIOS[f"{check}_{path.split('/')[-1][:-4]}_{timings}"][()])
+            
+            speech_array = torch.Tensor(self.AUDIOS[f"{check}_{path.split('/')[-1][:-4]}_{timings}"][()])
 
             if check == "train":
                 speech_array += singular_func_(speech_array, SNR=10)

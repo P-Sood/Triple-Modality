@@ -301,17 +301,6 @@ class Metrics:
         )
 
 
-def hidden_layer_count(string):
-    """
-    checks that dimensions of hidden layers are consistent
-    """
-    x = string.split(",")
-    if len(x) == 1 or len(x) % 2 == 0:
-        return list(map(int, x))
-    raise ArgumentParser.ArgumentTypeError(
-        f"Missing a dimension in hidden layers, Need to input an even amount of dimensions, that is greater then 1 : {string}"
-    )
-
 
 def save_model(model, optimizer, criterion, scheduler, epoch, step, path, log_val):
     """
@@ -414,7 +403,7 @@ def arg_parse(description):
         "--sota", "-so", help="Should we use SOTA or not", default=False, type=bool
     )
     parser.add_argument(
-        "--batch_size", "-b", help="Set the batch_size", default=1, type=int
+        "--batch_size", "-b", help="Set the batch_size", default=2, type=int
     )
     parser.add_argument(
         "--weight_decay", "-w", help="Set the weight_decay", default=0.0001, type=float
@@ -440,14 +429,14 @@ def arg_parse(description):
         "--BertModel",
         "-bm",
         help="Set Model for bert",
-        default="j-hartmann/emotion-english-roberta-large",
+        default="roberta-large",
         type=str,
     )
     parser.add_argument(
         "--text_column",
         "-tc",
         help="Set text to use for features",
-        default="all_dialog_text",
+        default="text",
         type=str,
     )
     parser.add_argument(
@@ -488,7 +477,7 @@ def arg_parse(description):
         "--dataset",
         "-d",
         help="The dataset we are using currently, or the folder the dataset is inside",
-        default="../data/text_audio_video_emotion_data",
+        default="../../data/meld",
     )
     parser.add_argument(
         "--model", "-m", help="The model we are using currently", default="MAE_encoder"
