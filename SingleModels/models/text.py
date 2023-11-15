@@ -1,7 +1,29 @@
 from transformers import AutoModel
 import torch.nn as nn
 import torch
+import numpy as np
 
+import pdb
+def collate_batch(batch):  # batch is a pseudo pandas array of two columns
+    """
+    Here we are going to take some raw-input and pre-process them into what we need
+    So we can see all the steps in the ML as they go along
+    """
+    text_list = []
+    text_mask = []
+    label_list = []
+
+    for input, label in batch:
+        text_list.append(input["input_ids"].tolist()[0])
+        text_mask.append(input["attention_mask"].tolist()[0])
+        label_list.append(label)
+
+    audio_features = {
+        "input_ids": torch.Tensor(np.array(text_list)).long(),
+        "attention_mask": torch.Tensor(np.array(text_list)).long(),
+    }
+
+    return audio_features, torch.Tensor(np.array(label_list)).long()
 class BertClassifier(nn.Module):
     def __init__(self, args):
         super(BertClassifier, self).__init__()

@@ -3,8 +3,8 @@ import os
 
 sys.path.insert(0, "/".join(os.getcwd().split("/")[:-2]))
 __package__ = "SingleModels"
-from .train_model.text_training import train_text_network, evaluate_text
-from .models.text import BertClassifier
+from utils.trainer import Trainer
+from .models.text import BertClassifier , collate_batch
 import wandb
 
 from utils.data_loaders import BertDataset
@@ -26,11 +26,11 @@ def prepare_dataloader(
     epoch_switch,
     feature_col="text",
     pin_memory=True,
-    num_workers=4,
+    num_workers=0,
     check="train",
     accum=False,
     bert = None,
-    sampler = None
+    sampler = None,
 ):
     """
     we load in our dataset, and we just make a random distributed sampler to evenly partition our
@@ -76,6 +76,7 @@ def prepare_dataloader(
             num_workers=num_workers,
             drop_last=False,
             # shuffle=True,
+            collate_fn = collate_batch,
             sampler=sampler,
         )
     else:
@@ -86,6 +87,7 @@ def prepare_dataloader(
             num_workers=num_workers,
             drop_last=False,
             shuffle=True,
+            collate_fn = collate_batch,
         )
 
     return dataloader
@@ -163,7 +165,9 @@ def runModel(accelerator, df_train, df_val, df_test, param_dict, model_param):
     wandb.watch(model, log="all")
     checkpoint = None 
     
-    model = train_text_network(
+    trainer = Trainer(big_batch=31 , num_steps=1)
+    
+    model = trainer.train_network(
         model,
         [df_train_no_accum, df_train_accum , sampler],
         df_val,
@@ -178,8 +182,7 @@ def runModel(accelerator, df_train, df_val, df_test, param_dict, model_param):
         epoch_switch,
         checkpoint,
     )
-    #model = TAVForMAE_HDF5(model_param).to(device)
-    evaluate_text(model, df_test, Metric)
+    trainer.evaluate(model, df_test, Metric)
 
 def main():
     os.environ["TOKENIZERS_PARALLELISM"] = "true"
