@@ -68,8 +68,9 @@ def videoMAE_features(path, timings, check, speaker, bbox):
         beg = 0
         end = 500
     else:
-        beg = timings[0]
-        end = timings[1]
+        print(timings)
+        beg = int(timings[0])
+        end = int(timings[1])
         if end - beg < 0.1:
             beg = 0
             end = 500
@@ -137,7 +138,7 @@ def videoMAE_features(path, timings, check, speaker, bbox):
 
 def write2File(writefile: h5py, path, timings, check, speaker , bbox):
     filename = f"{check}_{path.split('/')[-1][:-4]}_{timings}"
-    # print(filename , flush = True)
+    print(filename , flush = True)
     # generate some data for this piece of data
     data = videoMAE_features(path, timings, check, speaker , bbox)
     writefile.create_dataset(filename, data=data)
@@ -145,7 +146,21 @@ def write2File(writefile: h5py, path, timings, check, speaker , bbox):
     h5py.File.flush(writefile)
     gc.collect()
 
+def arg_parse():
+    """
+    description : str , is the name you want to give to the parser usually the model_modality used
+    """
+    # pdb.set_trace()
+    parser = ArgumentParser(description="Convert video into 16 frames with blackground")
 
+    parser.add_argument(
+        "--dataset",
+        "-d",
+        help="The dataset we are using currently, or the folder the dataset is inside",
+        default="../data/meld.pkl",
+    )
+
+    return parser.parse_args()
 
 def main():
     # 405 IS MESSED UP ../data/tiktok_videos/train/educative/sadboy_circus_7177431016494222638.mp4
@@ -173,19 +188,3 @@ def main():
 if __name__ == "__main__":
     main()
     
-    
-def arg_parse():
-    """
-    description : str , is the name you want to give to the parser usually the model_modality used
-    """
-    # pdb.set_trace()
-    parser = ArgumentParser(description="Convert video into 16 frames with blackground")
-
-    parser.add_argument(
-        "--dataset",
-        "-d",
-        help="The dataset we are using currently, or the folder the dataset is inside",
-        default="../data/meld.pkl",
-    )
-
-    return parser.parse_args()
