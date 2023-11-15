@@ -68,9 +68,13 @@ def videoMAE_features(path, timings, check, speaker, bbox):
         beg = 0
         end = 500
     else:
-        print(timings)
-        beg = int(timings[0])
-        end = int(timings[1])
+        try:
+            new_timings = timings.split(",")
+            beg = float(new_timings[0][1:])
+            end = float(new_timings[1][1:-1])
+        except:
+            beg = float(timings[0])
+            end = float(timings[1])
         if end - beg < 0.1:
             beg = 0
             end = 500
