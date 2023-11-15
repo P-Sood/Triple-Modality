@@ -43,7 +43,7 @@ def fun(df, f, i):
 
 def main():
     args = arg_parse()
-    df = pd.read_pickle(args.dataset)
+    df = pd.read_pickle(args.dataset).head(1)
     if "meld" in args.dataset.lower():
         name = "meld"
     else:

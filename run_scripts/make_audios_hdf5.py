@@ -1,28 +1,10 @@
 import h5py
 import torch
-import numpy as np
 import pandas as pd
-from pytorchvideo.data.encoded_video import EncodedVideo
-from numpy.random import choice
 import torchaudio
 import math
-from pytorchvideo.transforms import (
-    ApplyTransformToKey,
-    Normalize,
-    RandomShortSideScale,
-    UniformTemporalSubsample,
-)
 
-from torchvision.transforms._transforms_video import NormalizeVideo
 
-from torchvision.transforms import (
-    Compose,
-    Lambda,
-    RandomHorizontalFlip,
-    RandomVerticalFlip,
-    Resize,
-    PILToTensor,
-)
 from tqdm import tqdm
 
 import gc

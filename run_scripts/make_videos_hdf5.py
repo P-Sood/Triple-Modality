@@ -150,7 +150,7 @@ def write2File(writefile: h5py, path, timings, check, speaker , bbox):
 def main():
     # 405 IS MESSED UP ../data/tiktok_videos/train/educative/sadboy_circus_7177431016494222638.mp4
     args = arg_parse()
-    df = pd.read_pickle(args.dataset)
+    df = pd.read_pickle(args.dataset).head(1)
     if "meld" in args.dataset.lower():
         name = "meld"
     else:
