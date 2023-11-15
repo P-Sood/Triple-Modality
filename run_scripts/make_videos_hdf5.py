@@ -4,6 +4,8 @@ import torch
 import numpy as np
 import pandas as pd
 from pytorchvideo.data.encoded_video import EncodedVideo
+import pdb
+import ast
 
 from pytorchvideo.transforms import (
     ApplyTransformToKey,
@@ -41,7 +43,6 @@ class Crop:
 
 def draw(img , bbox):
     black_img = np.zeros(img.shape)
-    print(bbox, flush = True)
     for i in range(len(bbox)):
         x1 , y1 , x2 , y2 = bbox[i][0],bbox[i][1],bbox[i][2],bbox[i][3]
         roi = img[y1:y2 , x1:x2]
@@ -52,6 +53,7 @@ def draw(img , bbox):
 
 def body_face(test_vid : torch.Tensor , bbox):
   test_vid = test_vid.permute(1,0,2,3)
+  bbox = ast.literal_eval(bbox)
   for i , img in enumerate(test_vid):
     img = img.permute(1 , 2 , 0).numpy()
     output_image =  torch.Tensor(draw(img , bbox[i])).permute(2 , 0 , 1)
@@ -100,12 +102,12 @@ def videoMAE_features(path, timings, check, speaker, bbox):
                         [
                             UniformTemporalSubsample(num_frames_to_sample),
                             Lambda(lambda x: x / 255.0),
+                            Lambda(lambda x: body_face(x , bbox)), # cropped bodies only
                             NormalizeVideo(mean, std),
                             RandomHorizontalFlip(p=0) if speaker == None else Crop((120,2,245,355)) if speaker else Crop((120,362,245,355)), # Hone in on either the left_speaker or right_speaker in the video
                             Resize(
                                 (resize_to, resize_to)
                             ),  # Need to be at 224,224 as our height and width for VideoMAE, bbox is for 224 , 224
-                            Lambda(lambda x: body_face(x , bbox)), # cropped bodies only
                         ]
                     ),
                 ),
@@ -120,10 +122,10 @@ def videoMAE_features(path, timings, check, speaker, bbox):
                         [
                             UniformTemporalSubsample(num_frames_to_sample),
                             Lambda(lambda x: x / 255.0),
+                            Lambda(lambda x: body_face(x , bbox)), # cropped bodies only
                             NormalizeVideo(mean, std),
                             RandomHorizontalFlip(p=0) if speaker == None else Crop((120,2,245,355)) if speaker else Crop((120,362,245,355)),
                             Resize((resize_to, resize_to)),
-                            Lambda(lambda x: body_face(x , bbox)), # cropped bodies only
                         ]
                     ),
                 ),
@@ -172,7 +174,6 @@ def main():
         name = "meld"
     else:
         name = "iemo"
-    df = pd.read_pickle(args.dataset)
     f = h5py.File(f"../data/{name}_videos_blackground.hdf5", "a", libver="latest", swmr=True)
     f.swmr_mode = True
     tqdm.pandas()
@@ -189,4 +190,4 @@ def main():
 
 if __name__ == "__main__":
     main()
-    
+
