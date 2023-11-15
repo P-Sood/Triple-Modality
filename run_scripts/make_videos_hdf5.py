@@ -41,6 +41,7 @@ class Crop:
 
 def draw(img , bbox):
     black_img = np.zeros(img.shape)
+    print(bbox, flush = True)
     for i in range(len(bbox)):
         x1 , y1 , x2 , y2 = bbox[i][0],bbox[i][1],bbox[i][2],bbox[i][3]
         roi = img[y1:y2 , x1:x2]
@@ -99,12 +100,12 @@ def videoMAE_features(path, timings, check, speaker, bbox):
                         [
                             UniformTemporalSubsample(num_frames_to_sample),
                             Lambda(lambda x: x / 255.0),
-                            Lambda(lambda x: body_face(x , bbox)), # cropped bodies only
                             NormalizeVideo(mean, std),
                             RandomHorizontalFlip(p=0) if speaker == None else Crop((120,2,245,355)) if speaker else Crop((120,362,245,355)), # Hone in on either the left_speaker or right_speaker in the video
                             Resize(
                                 (resize_to, resize_to)
                             ),  # Need to be at 224,224 as our height and width for VideoMAE, bbox is for 224 , 224
+                            Lambda(lambda x: body_face(x , bbox)), # cropped bodies only
                         ]
                     ),
                 ),
@@ -119,10 +120,10 @@ def videoMAE_features(path, timings, check, speaker, bbox):
                         [
                             UniformTemporalSubsample(num_frames_to_sample),
                             Lambda(lambda x: x / 255.0),
-                            Lambda(lambda x: body_face(x , bbox)), # cropped bodies only
                             NormalizeVideo(mean, std),
                             RandomHorizontalFlip(p=0) if speaker == None else Crop((120,2,245,355)) if speaker else Crop((120,362,245,355)),
                             Resize((resize_to, resize_to)),
+                            Lambda(lambda x: body_face(x , bbox)), # cropped bodies only
                         ]
                     ),
                 ),
