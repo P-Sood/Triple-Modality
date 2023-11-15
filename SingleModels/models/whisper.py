@@ -1,12 +1,8 @@
 import numpy as np
 import torch
 import torch.nn as nn
-
 from transformers import WhisperForAudioClassification, WhisperFeatureExtractor
 
-
-# TODO: DATASET SPECIFIC
-# PROC = AutoProcessor.from_pretrained("audeering/wav2vec2-large-robust-12-ft-emotion-msp-dim")
 
 FEAT = WhisperFeatureExtractor.from_pretrained("openai/whisper-large")
 
@@ -41,6 +37,14 @@ def collate_batch(batch, must):  # batch is a pseudo pandas array of two columns
 
 
 class WhisperForEmotionClassification(nn.Module):
+    """_summary_
+
+    Args:
+        args: dictionary filled with output_dim, dropout, dataset
+        
+        Returns:
+            aud_outputs: tensor of shape [batch_size, output_dim] logits for each class
+    """
     def __init__(self, args):
         super(WhisperForEmotionClassification, self).__init__()
         self.output_dim = args["output_dim"]

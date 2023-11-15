@@ -1,3 +1,4 @@
+from argparse import ArgumentParser
 import h5py
 import torch
 import numpy as np
@@ -39,10 +40,30 @@ class Crop:
         for idx, frame in enumerate(frames):
             new_vid[idx] = F.crop(frame, *self.params)
         return new_vid
+    
+
+def draw(img , bbox):
+    black_img = np.zeros(img.shape)
+    for i in range(len(bbox)):
+        x1 , y1 , x2 , y2 = bbox[i][0],bbox[i][1],bbox[i][2],bbox[i][3]
+        roi = img[y1:y2 , x1:x2]
+        black_img[y1:y2, x1:x2] = roi
+    del img
+
+    return black_img
+
+def body_face(test_vid : torch.Tensor , bbox):
+  test_vid = test_vid.permute(1,0,2,3)
+  for i , img in enumerate(test_vid):
+    img = img.permute(1 , 2 , 0).numpy()
+    output_image =  torch.Tensor(draw(img , bbox[i])).permute(2 , 0 , 1)
+    del img
+    test_vid[i , ...] = output_image
+  return test_vid.permute(1 , 0 , 2 , 3)
 
 
-def videoMAE_features(path, timings, check, speaker):
-    # TODO: DATASET SPECIFIC
+
+def videoMAE_features(path, timings, check, speaker, bbox):
     if timings == None:
         beg = 0
         end = 500
@@ -61,7 +82,7 @@ def videoMAE_features(path, timings, check, speaker):
     std = [0.229, 0.224, 0.225]
     resize_to = {"shortest_edge": 224}
     resize_to = resize_to["shortest_edge"]
-    num_frames_to_sample = 8  # SET by MODEL CANT CHANGE
+    num_frames_to_sample = 16  # SET by MODEL CANT CHANGE
 
     # print(f"We have path {path}\ntimings are {timings}\nspeaker is {speaker}\ncheck is {check}\nsingular_func_ is {singular_func_.__name__ if singular_func_ is not None else None}" , flush= True)
 
@@ -77,7 +98,8 @@ def videoMAE_features(path, timings, check, speaker):
                             UniformTemporalSubsample(num_frames_to_sample),
                             Lambda(lambda x: x / 255.0),
                             NormalizeVideo(mean, std),
-                            # RandomHorizontalFlip(p=0) if speaker == None else Crop((120,2,245,355)) if speaker else Crop((120,362,245,355)), # Hone in on either the left_speaker or right_speaker in the video
+                            RandomHorizontalFlip(p=0) if speaker == None else Crop((120,2,245,355)) if speaker else Crop((120,362,245,355)), # Hone in on either the left_speaker or right_speaker in the video
+                            Lambda(lambda x: body_face(x , bbox)), # cropped bodies only
                             Resize(
                                 (resize_to, resize_to)
                             ),  # Need to be at 224,224 as our height and width for VideoMAE, bbox is for 224 , 224
@@ -96,62 +118,74 @@ def videoMAE_features(path, timings, check, speaker):
                             UniformTemporalSubsample(num_frames_to_sample),
                             Lambda(lambda x: x / 255.0),
                             NormalizeVideo(mean, std),
-                            # RandomHorizontalFlip(p=0) if speaker == None else Crop((120,2,245,355)) if speaker else Crop((120,362,245,355)),
+                            RandomHorizontalFlip(p=0) if speaker == None else Crop((120,2,245,355)) if speaker else Crop((120,362,245,355)),
+                            Lambda(lambda x: body_face(x , bbox)), # cropped bodies only
                             Resize((resize_to, resize_to)),
                         ]
                     ),
                 ),
             ]
         )
-
+    
     video = EncodedVideo.from_path(path, decode_audio=False)
-    video_data = video.get_clip(start_sec=186, end_sec=end)
+    video_data = video.get_clip(start_sec=beg, end_sec=end)
     del video
     video_data = transform(video_data)
     del transform
     return video_data["video"].numpy()
 
 
-def write2File(writefile: h5py, path, timings, check, speaker):
-    print(f"{path}", flush=True)
-    # filename = f"{check}_{path.split('/')[-1][:-4]}_{timings}"
-    filename = f"{check}_{path.split('/')[-1][:-4]}_2"
+def write2File(writefile: h5py, path, timings, check, speaker , bbox):
+    filename = f"{check}_{path.split('/')[-1][:-4]}_{timings}"
     # print(filename , flush = True)
     # generate some data for this piece of data
-    data = videoMAE_features(path, timings, check, speaker)
+    data = videoMAE_features(path, timings, check, speaker , bbox)
     writefile.create_dataset(filename, data=data)
     del data
     h5py.File.flush(writefile)
     gc.collect()
 
 
-def fun(df, f, i):
-    sub_df = df.iloc[i * 1 : (i + 1) * 1]
-    sub_df.apply(
-        lambda x: write2File(f, x["video_path"], None, x["split"], None), axis=1
-    )
-
 
 def main():
     # 405 IS MESSED UP ../data/tiktok_videos/train/educative/sadboy_circus_7177431016494222638.mp4
-    a = 405
-    df = pd.read_pickle("/home/jupyter/multi-modal-emotion/data/tiktok.pkl")[a : a + 1]
-    print(df["video_path"])
-    f = h5py.File("../data/tiktok_videos.hdf5", "a", libver="latest", swmr=True)
+    args = arg_parse()
+    df = pd.read_pickle(args.dataset)
+    if "meld" in args.dataset.lower():
+        name = "meld"
+    else:
+        name = "iemo"
+    df = pd.read_pickle(args.dataset)
+    f = h5py.File(f"../data/{name}_videos_blackground.hdf5", "a", libver="latest", swmr=True)
     f.swmr_mode = True
-    # tqdm.pandas()
-    for i in tqdm(
-        range(0, 1)
-    ):  # change first arg in range, to the next applicable one in case it crashes
-        fun(df, f, i)
-        gc.collect()
+    tqdm.pandas()
+    
 
-    # df.apply(lambda x: write2File(f , x['video_path'] , None , x['split'] , None  ) , axis = 1 )
+    df.progress_apply(
+        lambda x: write2File(f, x["video_path"], x['timings'], x["split"], x['speaker'] if name == "iemo" else None , x['bbox']), axis=1
+    )
 
-    read_file = h5py.File("../data/tiktok_videos.hdf5", "r", libver="latest", swmr=True)
+    read_file = h5py.File(f"../data/{name}_videos_blackground.hdf5", "r", libver="latest", swmr=True)
     print(list(read_file.keys()))
     print(len(list(read_file.keys())))
 
 
 if __name__ == "__main__":
     main()
+    
+    
+def arg_parse():
+    """
+    description : str , is the name you want to give to the parser usually the model_modality used
+    """
+    # pdb.set_trace()
+    parser = ArgumentParser(description="Convert video into 16 frames with blackground")
+
+    parser.add_argument(
+        "--dataset",
+        "-d",
+        help="The dataset we are using currently, or the folder the dataset is inside",
+        default="../data/meld.pkl",
+    )
+
+    return parser.parse_args()
