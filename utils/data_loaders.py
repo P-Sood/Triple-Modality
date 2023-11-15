@@ -208,7 +208,7 @@ class VideoDataset(Dataset):
             self.video_path = df[feature_col].values.reshape(-1, 2).tolist()
             df = df[df["context"] == False]
         
-        self.Data = Data(video=f"../../data/{dataset}_context.hdf5", audio=None)
+        self.Data = Data(video=f"../../data/{dataset}_videos_blackground.hdf5", audio=None)
         self.check = check
         self.labels = df[label_col].values.tolist()
 
@@ -415,19 +415,11 @@ class Data:
             )
 
         if not self.must:
-            if self.meld: # MELD
-                video = torch.Tensor(
-                    self.VIDEOS[f"{check}_{path.split('/')[-1][:-4]}"][()]
-                )  # H5PY, how to remove data after loading it into memory
-                video = transform(video)
-                return path , video, timings
-            else: #IEMO OR TIKTOK
-                video = torch.Tensor(
-                    self.VIDEOS[f"{check}_{path.split('/')[-1][:-4]}_{timings}"][()]
-                )  # H5PY, how to remove data after loading it into memory
-                video = transform(video)
-
-                return path , video, timings
+            video = torch.Tensor(
+                self.VIDEOS[f"{check}_{path.split('/')[-1][:-4]}_{timings}"][()]
+            )  # H5PY, how to remove data after loading it into memory
+            video = transform(video)
+            return path , video, timings
         else:
             #TODO: Check which path is to which place. Make sure context and targets are right pathing
             video_context = torch.Tensor(
