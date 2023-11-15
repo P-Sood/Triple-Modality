@@ -144,7 +144,7 @@ def write2File(writefile: h5py, path, timings, check, speaker , bbox):
     filename = f"{check}_{path.split('/')[-1][:-4]}_{timings}"
     print(filename , flush = True)
     # generate some data for this piece of data
-    data = videoMAE_features(path, timings, check, speaker , bbox)
+    data = videoMAE_features(path[3:], timings, check, speaker , bbox)
     writefile.create_dataset(filename, data=data)
     del data
     h5py.File.flush(writefile)
