@@ -4,12 +4,10 @@ import torch
 import numpy as np
 import pandas as pd
 from pytorchvideo.data.encoded_video import EncodedVideo
-from numpy.random import choice
 
 from pytorchvideo.transforms import (
     ApplyTransformToKey,
     Normalize,
-    RandomShortSideScale,
     UniformTemporalSubsample,
 )
 
@@ -21,7 +19,6 @@ from torchvision.transforms import (
     RandomHorizontalFlip,
     RandomVerticalFlip,
     Resize,
-    PILToTensor,
 )
 from tqdm import tqdm
 
@@ -101,10 +98,10 @@ def videoMAE_features(path, timings, check, speaker, bbox):
                     transform=Compose(
                         [
                             UniformTemporalSubsample(num_frames_to_sample),
+                            Lambda(lambda x: body_face(x , bbox)), # cropped bodies only
                             Lambda(lambda x: x / 255.0),
                             NormalizeVideo(mean, std),
                             RandomHorizontalFlip(p=0) if speaker == None else Crop((120,2,245,355)) if speaker else Crop((120,362,245,355)), # Hone in on either the left_speaker or right_speaker in the video
-                            Lambda(lambda x: body_face(x , bbox)), # cropped bodies only
                             Resize(
                                 (resize_to, resize_to)
                             ),  # Need to be at 224,224 as our height and width for VideoMAE, bbox is for 224 , 224
@@ -121,10 +118,10 @@ def videoMAE_features(path, timings, check, speaker, bbox):
                     transform=Compose(
                         [
                             UniformTemporalSubsample(num_frames_to_sample),
+                            Lambda(lambda x: body_face(x , bbox)), # cropped bodies only
                             Lambda(lambda x: x / 255.0),
                             NormalizeVideo(mean, std),
                             RandomHorizontalFlip(p=0) if speaker == None else Crop((120,2,245,355)) if speaker else Crop((120,362,245,355)),
-                            Lambda(lambda x: body_face(x , bbox)), # cropped bodies only
                             Resize((resize_to, resize_to)),
                         ]
                     ),
