@@ -1,26 +1,7 @@
 import torch
 from torch import nn
 import numpy as np
-import torch.nn.functional as F
-import torchvision.transforms as T
-from PIL import Image
-from torchvision.transforms import (
-    Compose,
-    Lambda,
-    RandomCrop,
-    RandomHorizontalFlip,
-    RandomVerticalFlip,
-    Resize,
-    PILToTensor,
-    ToPILImage,
-    Normalize,
-    RandomErasing,
-    # RandomShortSideScale,
-)
-import h5py
-from transformers import VideoMAEModel, AutoModel
-from utils.global_functions import Crop
-
+from transformers import VideoMAEModel
 from numpy.random import choice
 
 
@@ -38,10 +19,10 @@ def collate_batch(batch, must):  # batch is a pseudo pandas array of two columns
 
     for input, label in batch:
         if not must:
-            video_list.append(input)
+            video_list.append(input[1])
         else:
-            video_list.append(input[0])
-            video_context.append(input[1])
+            video_list.append(input[1])
+            video_context.append(input[2])
         label_list.append(label)
 
     batch_size = len(label_list)
@@ -62,18 +43,19 @@ def collate_batch(batch, must):  # batch is a pseudo pandas array of two columns
         vid_mask.view(-1)[idx_to_change] = 1
 
     visual_embeds = {
-        "visual_embeds": torch.stack(video_list).permute(0, 2, 1, 3, 4),
-        "attention_mask": vid_mask,
-        "visual_context": torch.stack(video_context).permute(0, 2, 1, 3, 4),
+        "video_embeds": torch.stack(video_list).permute(0, 2, 1, 3, 4),
+        "visual_mask": vid_mask,
+        "video_context": torch.stack(video_context).permute(0, 2, 1, 3, 4),
     }
+
     return visual_embeds, torch.Tensor(np.array(label_list))
 
 
-class VisualClassification(nn.Module):
+class VideoClassification(nn.Module):
     """A simple ConvNet for binary classification."""
 
     def __init__(self, args):
-        super(VisualClassification, self).__init__()
+        super(VideoClassification, self).__init__()
 
         self.output_dim = args["output_dim"]
         self.dropout = args["dropout"]
@@ -84,26 +66,21 @@ class VisualClassification(nn.Module):
         self.must = True if "must" in str(self.dataset).lower() else False
         self.p = 0.6
         self.videomae = VideoMAEModel.from_pretrained(
-            "MCG-NJU/videomae-base-finetuned-kinetics"
+            "MCG-NJU/videomae-base"
         )
         self.vid_norm = nn.LayerNorm(768)
         self.dropout = nn.Dropout(self.dropout)
         self.linear1 = nn.Linear(768, self.output_dim)
 
     def forward(self, video_embeds, video_context, visual_mask, check="train"):
-        vid_outputs = self.videomae(video_embeds, visual_mask)[
-            0
-        ]  # Now it has 2 dimensions
+        vid_outputs = self.videomae(video_embeds, visual_mask)[0][:, 0] 
+        # take the first token now it has 2 dimensions
         del video_embeds
-
-        vid_outputs = torch.mean(vid_outputs, dim=1)  # Now it has 2 dimensions
-        vid_outputs = self.vid_norm(vid_outputs)
+    
 
         if self.must:
-            vid_context = self.videomae(video_context, visual_mask)[0]
+            vid_context = self.videomae(video_context, visual_mask)[0][:, 0]
             del video_context
-            vid_context = torch.mean(vid_context, dim=1)  # Now it has 2 dimensions
-            vid_context = self.vid_norm(vid_context)
             vid_outputs = (vid_outputs * self.p + vid_context * (1 - self.p)) / 2
 
         del visual_mask

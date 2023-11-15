@@ -1,4 +1,4 @@
-program: ../visual_nn.py
+program: ../video_nn.py
 command:
   - ${env}
   - python3

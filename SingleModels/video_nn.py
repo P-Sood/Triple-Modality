@@ -5,24 +5,23 @@ sys.path.insert(0, "/".join(os.getcwd().split("/")[:-2]))
 __package__ = "SingleModels"
 
 import torch
-from .models.visual import VisualClassification
-from utils.data_loaders import VisualDataset
+from .models.video import VideoClassification
+from utils.data_loaders import VideoDataset
 import wandb
 import numpy as np
 import pandas as pd
 
-
-from .train_model.visual_training import train_video_network, evaluate_video
 
 from utils.global_functions import arg_parse, Metrics, MySampler, NewCrossEntropyLoss
 
 
 # NEW IMPORTS
 from torch.utils.data import DataLoader
-from .models.visual import collate_batch
-
+from .models.video import collate_batch
+from utils.trainer import Trainer
 
 ##
+
 class BatchCollation:
     def __init__(self, must) -> None:
         self.must = must
@@ -38,41 +37,22 @@ def prepare_dataloader(
     label_task,
     epoch_switch,
     pin_memory=True,
-    num_workers=2,
+    num_workers=4,
     check="train",
     accum=False,
+    sampler = None,
 ):
     """
     we load in our dataset, and we just make a random distributed sampler to evenly partition our
     dataset on each GPU
     say we have 32 data points, if batch size = 8 then it will make 4 dataloaders of size 8 each
     """
-    num_workers = 32 // batch_size
+    num_workers = 0
     must = True if "must" in str(dataset).lower() else False
-    # TODO: DATASET SPECIFIC
-    if accum:
-        batch_size = 1
-        dataset = VisualDataset(
-            df,
-            dataset,
-            batch_size,
-            feature_col="video_path",
-            label_col=label_task,
-            timings="timings",
-            accum=accum,
-            check=check,
-        )
-    else:
-        dataset = VisualDataset(
-            df,
-            dataset,
-            batch_size,
-            feature_col="video_path",
-            label_col=label_task,
-            timings="timings",
-            accum=accum,
-            check=check,
-        )
+    print(f"Are we running on mustard? {must}", flush=True) 
+    dataset = VideoDataset(
+        df, dataset, batch_size = 1 if sampler == "Both" else batch_size, feature_col="audio_path", label_col=label_task , accum=accum ,check=check
+    )
 
     if check == "train":
         labels = df[label_task].value_counts()
@@ -106,7 +86,6 @@ def prepare_dataloader(
             pin_memory=pin_memory,
             num_workers=num_workers,
             drop_last=False,
-            shuffle=False,
             sampler=sampler,
             collate_fn=BatchCollation(must),
         )
@@ -117,7 +96,7 @@ def prepare_dataloader(
             pin_memory=pin_memory,
             num_workers=num_workers,
             drop_last=False,
-            shuffle=False,
+            shuffle=True,
             collate_fn=BatchCollation(must),
         )
 
@@ -145,25 +124,25 @@ def runModel(accelerator, df_train, df_val, df_test, param_dict, model_param):
     model_name = param_dict["model"]
     mask = param_dict["mask"]
     epoch_switch = param_dict["epoch_switch"]
-
+    sampler = param_dict["sampler"]
     num_labels = model_param["output_dim"]
     dataset = model_param["dataset"]
 
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     if loss == "CrossEntropy":
-        # criterion = NewCrossEntropyLoss(class_weights=weights.to(device)).to(device) # TODO: have to call epoch in forward function
         criterion = torch.nn.CrossEntropyLoss().to(device)
-
     elif loss == "NewCrossEntropy":
-        # criterion = PrecisionLoss(num_classes = num_labels,weights=weights.to(device)).to(device)
         criterion = NewCrossEntropyLoss(
             class_weights=weights.to(device), epoch_switch=epoch_switch
+        ).to(device)
+    elif loss == "WeightedCrossEntropy":
+        criterion = torch.nn.CrossEntropyLoss(weight=weights.to(device)
         ).to(device)
 
     print(loss, flush=True)
     Metric = Metrics(num_classes=num_labels, id2label=id2label, rank=device)
     df_train_accum = prepare_dataloader(
-        df_train, dataset, 1, label_task, epoch_switch, check="train", accum=True
-    )
+        df_train, dataset, batch_size, label_task, epoch_switch, check="train", accum=True, sampler = sampler )
     df_train_no_accum = prepare_dataloader(
         df_train,
         dataset,
@@ -171,29 +150,22 @@ def runModel(accelerator, df_train, df_val, df_test, param_dict, model_param):
         label_task,
         epoch_switch,
         check="train",
-        accum=False,
-    )
+        accum=False, 
+        sampler = sampler )
     df_val = prepare_dataloader(
-        df_val, dataset, batch_size, label_task, epoch_switch, check="val"
-    )
+        df_val, dataset, batch_size, label_task, epoch_switch, check="val", sampler  = sampler )
     df_test = prepare_dataloader(
-        df_test, dataset, batch_size, label_task, epoch_switch, check="test"
-    )
+        df_test, dataset, batch_size, label_task, epoch_switch, check="test", sampler = sampler )
 
-    model = VisualClassification(model_param).to(device)
-
-    # PREFormer = PreFormer().to(f"cpu")
-
+    model = VideoClassification(model_param).to(device)
     wandb.watch(model, log="all")
-    # wandb.watch(PREFormer, log = "all")
-    checkpoint = None  # torch.load(f"/home/prsood/projects/ctb-whkchun/prsood/TAV_Train/MAEncoder/aht69be1/lively-sweep-11/7.pt")
-    # model.load_state_dict(checkpoint['model_state_dict'])
-    # criterion = checkpoint['loss']
-    # PREFormer = checkpoint['PREFormer']
+   
 
-    model = train_video_network(
+    trainer = Trainer(big_batch=31 , num_steps=1)
+    
+    model = trainer.train_network(
         model,
-        [df_train_no_accum, df_train_accum],
+        [df_train_no_accum, df_train_accum , sampler],
         df_val,
         criterion,
         lr,
@@ -204,9 +176,9 @@ def runModel(accelerator, df_train, df_val, df_test, param_dict, model_param):
         patience,
         clip,
         epoch_switch,
-        checkpoint,
+        checkpoint = None,
     )
-    evaluate_video(model, df_test, Metric)
+    trainer.evaluate(model, df_test, Metric)
 
 
 def main():
@@ -229,11 +201,12 @@ def main():
         "model": config.model,
         "T_max": config.T_max,
         "seed": config.seed,
-        "label_task": "sarcasm",  # config.label_task,
+        "label_task": config.label_task,
         "mask": config.mask,
         "loss": config.loss,
         "beta": config.beta,
         "epoch_switch": config.epoch_switch,
+        "sampler": config.sampler,
     }
 
     df = pd.read_pickle(f"{config.dataset}.pkl")
@@ -248,6 +221,9 @@ def main():
         number_index = "sarcasm"
         label_index = "sarcasm_label"
         df = df[df["context"] == False]
+    elif param_dict["label_task"] == "content": # Needs this to be content too not tiktok
+        number_index = "content"
+        label_index = "content_label"
     else:
         number_index = "emotion"
         label_index = "emotion_label"
@@ -282,8 +258,8 @@ def main():
         "num_layers": config.num_layers,
         "learn_PosEmbeddings": config.learn_PosEmbeddings,
         "dataset": config.dataset,
+        "sota": config.sota,
     }
-
     param_dict["weights"] = weights
     param_dict["label2id"] = label2id
     param_dict["id2label"] = id2label
