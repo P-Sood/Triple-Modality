@@ -1,4 +1,4 @@
-program: ../video_nn.py
+program: ../whisper_nn.py
 command:
   - ${env}
   - python3
@@ -54,8 +54,8 @@ parameters:
   sampler:
     values: ['Both' , 'Iterative' , 'Weighted']
   BertModel:
-    values: ["MCG-NJU/videomae-base"]
+    values: ['openai/whisper-large']
   text_column:
-    values: ['video_path']
+    values: ['audio_path']
   beta:
     values: [1]
