@@ -24,7 +24,6 @@ def speech_file_to_array_fn(path, timings, target_sampling_rate=16000):
             # extract the desired segment
             if end_sample - start_sample > sampling_rate*0.2:
                 speech_array = speech_array[start_sample:end_sample]
-
     del sampling_rate
     return speech_array
 
@@ -44,6 +43,21 @@ def fun(df, f, i):
         lambda x: write2File(f, x["audio_path"], x['timings'], x["split"]), axis=1
     )
 
+def arg_parse():
+    """
+    description : str , is the name you want to give to the parser usually the model_modality used
+    """
+    # pdb.set_trace()
+    parser = ArgumentParser(description="Convert raw audio to whisper audio")
+
+    parser.add_argument(
+        "--dataset",
+        "-d",
+        help="The dataset we are using currently, or the folder the dataset is inside",
+        default="../data/meld.pkl",
+    )
+
+    return parser.parse_args()
 
 def main():
     args = arg_parse()
@@ -64,20 +78,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    
-def arg_parse():
-    """
-    description : str , is the name you want to give to the parser usually the model_modality used
-    """
-    # pdb.set_trace()
-    parser = ArgumentParser(description="Convert raw audio to whisper audio")
-
-    parser.add_argument(
-        "--dataset",
-        "-d",
-        help="The dataset we are using currently, or the folder the dataset is inside",
-        default="../data/meld.pkl",
-    )
-
-    return parser.parse_args()
-
