@@ -73,8 +73,14 @@ def videoMAE_features(path, timings, check, speaker, bbox):
             beg = float(new_timings[0][1:])
             end = float(new_timings[1][1:-1])
         except:
-            beg = float(timings[0])
-            end = float(timings[1])
+            try:
+                try:
+                    beg = float(timings[0])
+                    end = float(timings[1])
+                except:
+                    pdb.set_trace()
+            except:
+                pdb.set_trace()
         if end - beg < 0.1:
             beg = 0
             end = 500
@@ -102,12 +108,12 @@ def videoMAE_features(path, timings, check, speaker, bbox):
                         [
                             UniformTemporalSubsample(num_frames_to_sample),
                             Lambda(lambda x: x / 255.0),
-                            Lambda(lambda x: body_face(x , bbox)), # cropped bodies only
                             NormalizeVideo(mean, std),
                             RandomHorizontalFlip(p=0) if speaker == None else Crop((120,2,245,355)) if speaker else Crop((120,362,245,355)), # Hone in on either the left_speaker or right_speaker in the video
                             Resize(
                                 (resize_to, resize_to)
                             ),  # Need to be at 224,224 as our height and width for VideoMAE, bbox is for 224 , 224
+                            Lambda(lambda x: body_face(x , bbox)), # cropped bodies only
                         ]
                     ),
                 ),
@@ -122,16 +128,16 @@ def videoMAE_features(path, timings, check, speaker, bbox):
                         [
                             UniformTemporalSubsample(num_frames_to_sample),
                             Lambda(lambda x: x / 255.0),
-                            Lambda(lambda x: body_face(x , bbox)), # cropped bodies only
                             NormalizeVideo(mean, std),
                             RandomHorizontalFlip(p=0) if speaker == None else Crop((120,2,245,355)) if speaker else Crop((120,362,245,355)),
                             Resize((resize_to, resize_to)),
+                            Lambda(lambda x: body_face(x , bbox)), # cropped bodies only
                         ]
                     ),
                 ),
             ]
         )
-    
+
     video = EncodedVideo.from_path(path, decode_audio=False)
     video_data = video.get_clip(start_sec=beg, end_sec=end)
     del video
@@ -142,7 +148,7 @@ def videoMAE_features(path, timings, check, speaker, bbox):
 
 def write2File(writefile: h5py, path, timings, check, speaker , bbox):
     filename = f"{check}_{path.split('/')[-1][:-4]}_{timings}"
-    print(filename , flush = True)
+    # print(filename , flush = True)
     # generate some data for this piece of data
     data = videoMAE_features(path[3:], timings, check, speaker , bbox)
     writefile.create_dataset(filename, data=data)
@@ -169,7 +175,7 @@ def arg_parse():
 def main():
     # 405 IS MESSED UP ../data/tiktok_videos/train/educative/sadboy_circus_7177431016494222638.mp4
     args = arg_parse()
-    df = pd.read_pickle(args.dataset).head(1)
+    df = pd.read_pickle(args.dataset)
     if "meld" in args.dataset.lower():
         name = "meld"
     else:
@@ -177,15 +183,14 @@ def main():
     f = h5py.File(f"../data/{name}_videos_blackground.hdf5", "a", libver="latest", swmr=True)
     f.swmr_mode = True
     tqdm.pandas()
-    
 
     df.progress_apply(
         lambda x: write2File(f, x["video_path"], x['timings'], x["split"], x['speaker'] if name == "iemo" else None , x['bbox']), axis=1
     )
 
     read_file = h5py.File(f"../data/{name}_videos_blackground.hdf5", "r", libver="latest", swmr=True)
-    print(list(read_file.keys()))
-    print(len(list(read_file.keys())))
+    # print(list(read_file.keys()))
+    # print(len(list(read_file.keys())))
 
 
 if __name__ == "__main__":
