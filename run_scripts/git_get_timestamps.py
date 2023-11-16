@@ -258,6 +258,6 @@ if __name__ == "__main__":
     sr = bundle.sample_rate
     
     tqdm.pandas()
-    df['timings'] = df.progress_apply(lambda x: get_times(x['audio_path'] , model , x['text'].split(":")[-1][1:] , labels , sr , enable_gpu) , axis = 1)
+    df['timings'] = df.progress_apply(lambda x: get_times(x['audio_path'] , model , x['text'].split(":")[-1][1:] , labels , sr , enable_gpu) if pd.isnull(x['timings'] else x['timings']) , axis = 1)
         
     df.to_pickle(dataset)
