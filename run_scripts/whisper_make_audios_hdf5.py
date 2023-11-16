@@ -5,13 +5,17 @@ import pandas as pd
 import whisper
 import math
 from tqdm import tqdm
-
+import ast
 
 
 def speech_file_to_array_fn(path, timings, target_sampling_rate=16000):
     speech_array = whisper.load_audio(path , target_sampling_rate) # Loads it in as a numpy array
     sampling_rate = target_sampling_rate
     if timings is not None:  # MELD is only with Speaker is None and timings is not None, since speaker is not a part of meld pkl
+        try:
+            timings = ast.literal_eval(timings)
+        except:
+            pass
         start = timings[0]
         end = timings[1]
         if end - start > 0.2:
@@ -28,7 +32,7 @@ def speech_file_to_array_fn(path, timings, target_sampling_rate=16000):
 def write2File(writefile, path, timings, check):
     filename = f"{check}_{path.split('/')[-1][:-4]}_{timings}"
     # generate some data for this piece of data
-    data = speech_file_to_array_fn(path, timings)
+    data = speech_file_to_array_fn(path[3:], timings)
     # ERRORS HERE BECAUSE OF PATHING
     writefile.create_dataset(filename, data=data)
     gc.collect()
