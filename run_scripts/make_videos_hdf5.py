@@ -69,18 +69,11 @@ def videoMAE_features(path, timings, check, speaker, bbox):
         end = 500
     else:
         try:
-            new_timings = timings.split(",")
-            beg = float(new_timings[0][1:])
-            end = float(new_timings[1][1:-1])
+            timings = ast.literal_eval(timings)
         except:
-            try:
-                try:
-                    beg = float(timings[0])
-                    end = float(timings[1])
-                except:
-                    pdb.set_trace()
-            except:
-                pdb.set_trace()
+            pass
+        beg = timings[0]
+        end = timings[1]
         if end - beg < 0.1:
             beg = 0
             end = 500
@@ -91,6 +84,7 @@ def videoMAE_features(path, timings, check, speaker, bbox):
     # resize_to = feature_extractor.size['shortest_edge']
     mean = [0.485, 0.456, 0.406]
     std = [0.229, 0.224, 0.225]
+    # Need to be at 224,224 as our height and width for VideoMAE, bbox is for 224 , 224
     resize_to = {"shortest_edge": 224}
     resize_to = resize_to["shortest_edge"]
     num_frames_to_sample = 16  # SET by MODEL CANT CHANGE
@@ -110,9 +104,7 @@ def videoMAE_features(path, timings, check, speaker, bbox):
                             Lambda(lambda x: x / 255.0),
                             NormalizeVideo(mean, std),
                             RandomHorizontalFlip(p=0) if speaker == None else Crop((120,2,245,355)) if speaker else Crop((120,362,245,355)), # Hone in on either the left_speaker or right_speaker in the video
-                            Resize(
-                                (resize_to, resize_to)
-                            ),  # Need to be at 224,224 as our height and width for VideoMAE, bbox is for 224 , 224
+                            Resize((resize_to, resize_to)),
                             Lambda(lambda x: body_face(x , bbox)), # cropped bodies only
                         ]
                     ),

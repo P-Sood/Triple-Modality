@@ -4,7 +4,7 @@ command:
   - python3
   - ${program}
   - "--dataset"
-  - "../../data/meld"
+  - "../../data/meld_iemo"
 method: bayes
 
 metric:
@@ -18,9 +18,9 @@ parameters:
   learning_rate:
     values: [1e-6 , 1e-5 , 1e-4  , 5e-5 , 5e-6]
   weight_decay:
-    values: [1e-4, 1e-3, 1e-2]
+    values: [1e-5 , 1e-4, 1e-3, 1e-2]
   batch_size:
-    values: [2 , 4]
+    values: [8 , 16]
   seed:
     values: [32, 64, 96]
   mask:
@@ -34,7 +34,7 @@ parameters:
   patience:
     values: [14]
   clip:
-    values: [1 , 5]
+    values: [0.1 , 1 , 5]
   epoch_switch:
     values: [2 , 3]
   dropout:
@@ -54,6 +54,8 @@ parameters:
   sampler:
     values: ['Both' , 'Iterative' , 'Weighted']
   BertModel:
-    values: ['arpanghoshal/EmoRoBERTa']
+    values: ['roberta-large']
+  text_column:
+    values: ['text']
   beta:
     values: [1]

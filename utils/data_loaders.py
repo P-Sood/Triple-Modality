@@ -454,7 +454,7 @@ class Data:
             )
 
             if check == "train":
-                speech_array_context += singular_func_(speech_array_context, SNR=10)
-                speech_array_target += singular_func_(speech_array_target, SNR=10)
+                speech_array_context += singular_func_(speech_array_context, SNR=100)
+                speech_array_target += singular_func_(speech_array_target, SNR=100)
             # print(f"path is {path}\nshape of ret is {ret.shape}\n" , flush = True)
             return path , speech_array_target, speech_array_context , timings
