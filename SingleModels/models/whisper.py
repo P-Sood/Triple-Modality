@@ -16,7 +16,7 @@ def collate_batch(batch, must):  # batch is a pseudo pandas array of two columns
     speech_list_context = []
     label_list = []
     speech_list_context_input_values = torch.empty((1))
-    breakpoint()
+    #breakpoint()
     for input, label in batch:
         if not must:
             speech_list.append(FEAT(input[1] , sampling_rate=16000).input_features[0])
@@ -34,7 +34,7 @@ def collate_batch(batch, must):  # batch is a pseudo pandas array of two columns
         "context_audio": speech_list_context_input_values,
     }
 
-    return audio_features, torch.Tensor(np.array(label_list))
+    return audio_features, torch.Tensor(np.array(label_list)).long()
 
 
 class WhisperForEmotionClassification(nn.Module):
@@ -58,10 +58,10 @@ class WhisperForEmotionClassification(nn.Module):
         self.whisper = WhisperForAudioClassification.from_pretrained("openai/whisper-large")
 
         self.dropout = nn.Dropout(self.dropout)
-        self.linear1 = nn.Linear(1024, self.output_dim)
+        self.linear1 = nn.Linear(1280, self.output_dim)
 
     def forward(self, audio_features, context_audio, check):
-        aud_outputs = self.whisper(audio_features).hidden_states
+        aud_outputs = self.whisper.encoder(audio_features)[0]
         aud_outputs = aud_outputs.mean(dim=1)
         del audio_features
         if self.must:
