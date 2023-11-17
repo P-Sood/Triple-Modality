@@ -66,20 +66,22 @@ class VideoClassification(nn.Module):
         self.must = True if "must" in str(self.dataset).lower() else False
         self.p = 0.6
         self.videomae = VideoMAEModel.from_pretrained(
-            "MCG-NJU/videomae-base"
+            "MCG-NJU/videomae-large"
         )
-        self.vid_norm = nn.LayerNorm(768)
+        
         self.dropout = nn.Dropout(self.dropout)
-        self.linear1 = nn.Linear(768, self.output_dim)
+        self.linear1 = nn.Linear(1024, self.output_dim)
 
     def forward(self, video_embeds, video_context, visual_mask, check="train"):
         vid_outputs = self.videomae(video_embeds, visual_mask)[0][:, 0] 
+        vid_outputs = vid_outputs[:, 0] 
         # take the first token now it has 2 dimensions
         del video_embeds
     
 
         if self.must:
-            vid_context = self.videomae(video_context, visual_mask)[0][:, 0]
+            vid_context = self.videomae(video_context, visual_mask)[0]
+            vid_context = vid_context[:, 0] 
             del video_context
             vid_outputs = (vid_outputs * self.p + vid_context * (1 - self.p)) / 2
 
