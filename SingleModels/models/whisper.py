@@ -2,6 +2,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 from transformers import WhisperForAudioClassification, WhisperFeatureExtractor
+import pdb
 
 
 FEAT = WhisperFeatureExtractor.from_pretrained("openai/whisper-large")
@@ -15,7 +16,7 @@ def collate_batch(batch, must):  # batch is a pseudo pandas array of two columns
     speech_list_context = []
     label_list = []
     speech_list_context_input_values = torch.empty((1))
-
+    breakpoint()
     for input, label in batch:
         if not must:
             speech_list.append(FEAT(input[1] , sampling_rate=16000).input_features[0])
