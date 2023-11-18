@@ -12,4 +12,4 @@
 
 #SBATCH --output=../outputs/whisper_start.txt
 
-wandb agent ddi/WhisperStart/savf4nta
+wandb agent ddi/WhisperStart/qgl7153h
