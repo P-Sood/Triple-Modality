@@ -33,7 +33,7 @@ SingleModels/run_slurm/wandb/*
 /home/prsood/projects/def-whkchun/prsood/multi-modal-emotion/IEMOCAP/*
 trimodal/*
 !req.txt
-
+!data/concat.py
 *.mp4
 *.wav
 *.pkl
