@@ -67,7 +67,7 @@ def arg_parse():
 
 def main():
     args = arg_parse()
-    df = pd.read_pickle(args.dataset).head(1)
+    df = pd.read_pickle(args.dataset)
     if "meld" in args.dataset.lower():
         name = "meld"
     else:
