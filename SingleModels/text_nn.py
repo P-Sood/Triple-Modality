@@ -165,7 +165,7 @@ def runModel(accelerator, df_train, df_val, df_test, param_dict, model_param):
     wandb.watch(model, log="all")
     checkpoint = None 
     
-    trainer = Trainer(big_batch=31 , num_steps=1)
+    trainer = Trainer(big_batch=23 , num_steps=1)
     
     model = trainer.train_network(
         model,
@@ -212,6 +212,9 @@ def main():
         "sampler": config.sampler,
         "text_column": config.text_column,
     }
+    if param_dict['sampler'] == "Weighted" and param_dict['loss'] == "WeightedCrossEntropy":
+        print("We are not going to learn anything with sampler == Weighted and loss == WeightedCrossEntropy. \nKill it" , flush=True)
+        return 0
 
     df = pd.read_pickle(f"{config.dataset}.pkl")
 

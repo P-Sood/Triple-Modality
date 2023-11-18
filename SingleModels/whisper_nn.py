@@ -209,6 +209,9 @@ def main():
         "epoch_switch": config.epoch_switch,
         "sampler": config.sampler,
     }
+    if param_dict['sampler'] == "Weighted" and param_dict['loss'] == "WeightedCrossEntropy":
+        print("We are not going to learn anything with sampler == Weighted and loss == WeightedCrossEntropy. \nKill it" , flush=True)
+        return 0
 
     df = pd.read_pickle(f"{config.dataset}.pkl")
     df_train = df[df["split"] == "train"]
