@@ -256,7 +256,9 @@ class WhisperDataset(Dataset):
 
         
         try:
+            df['timings'] = df['timings'].replace({np.nan:None})
             self.timings = df['timings'].values.tolist()
+
         except:
             self.timings = [None] * len(self.audio_path)
         
