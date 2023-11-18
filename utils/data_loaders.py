@@ -191,6 +191,7 @@ class VideoDataset(Dataset):
         self.video_path = df[feature_col].values
 
         try:
+            df['timings'] = df['timings'].replace({np.nan:None})
             self.timings = df['timings'].values.tolist()
         except:
             self.timings = [None] * len(self.video_path)
@@ -390,7 +391,7 @@ class Data:
         
         self.meld = True if (self.tiktok == False) and (self.must == False) and (self.iemo == False) else False
 
-    def get_white_noise(self, signal: torch.Tensor, SNR) -> torch.Tensor:
+    def get_white_noise(self, signal: torch.Tensor, SNR , path) -> torch.Tensor:
         # @author: sleek_eagle
         shap = signal.shape
         signal = torch.flatten(signal)
@@ -398,10 +399,11 @@ class Data:
         RMS_s = torch.sqrt(torch.mean(signal**2))
         # RMS values of noise
         RMS_n = torch.sqrt(RMS_s**2 / (pow(10, SNR / 100)))
+        print(f"For path {path}, our signal is {signal}\n and our RMS_s is {RMS_s} \n and our RMS_n is {RMS_n}\n \n" , flush=True)
         noise = torch.normal(0.0, RMS_n.item(), signal.shape)
         return noise.reshape(shap)
 
-    def ret0(self, signal, SNR) -> int:
+    def ret0(self, signal, SNR , path) -> int:
         return 0
 
     def videoMAE_features(self, path, timings, check):
@@ -447,7 +449,7 @@ class Data:
             speech_array = torch.Tensor(self.AUDIOS[f"{check}_{path.split('/')[-1][:-4]}_{timings}"][()])
 
             if check == "train":
-                speech_array += singular_func_(speech_array, SNR=10)
+                speech_array += singular_func_(speech_array, SNR=100 , path)
             # print(f"path is {path}\nshape of ret is {ret.shape}\n" , flush = True)
             return path , speech_array , timings
         else:

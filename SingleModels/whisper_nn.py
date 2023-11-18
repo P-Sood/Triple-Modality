@@ -162,7 +162,7 @@ def runModel(accelerator, df_train, df_val, df_test, param_dict, model_param):
     wandb.watch(model, log="all")
    
 
-    trainer = Trainer(big_batch=7 , num_steps=1)
+    trainer = Trainer(big_batch=3 , num_steps=1)
     
     model = trainer.train_network(
         model,
