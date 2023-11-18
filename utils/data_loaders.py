@@ -195,9 +195,10 @@ class VideoDataset(Dataset):
         except:
             self.timings = [None] * len(self.video_path)
         
-        if "meld" in dataset:
+        if "meld" in dataset and "iemo" in dataset:
+            dataset = "meld_iemo"
+        elif "meld" in dataset:
             dataset = "meld"
-            # dataset = "videos" 
         elif "iemo" in dataset:
             dataset = "iemo"
         elif "tiktok" in dataset:
@@ -259,7 +260,9 @@ class WhisperDataset(Dataset):
         except:
             self.timings = [None] * len(self.audio_path)
         
-        if "meld" in dataset:
+        if "meld" in dataset and "iemo" in dataset:
+            dataset = "meld_iemo"
+        elif "meld" in dataset:
             dataset = "meld"
         elif "iemo" in dataset:
             dataset = "iemo"
