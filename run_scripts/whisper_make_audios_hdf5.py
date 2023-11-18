@@ -22,8 +22,14 @@ def speech_file_to_array_fn(path, timings, target_sampling_rate=16000):
             start_sample = math.floor(start * sampling_rate)
             end_sample = math.ceil(end * sampling_rate)
             # extract the desired segment
-            if end_sample - start_sample > sampling_rate*0.2:
+            if start_sample >= len(speech_array):
+                speech_array = speech_array
+            elif (end_sample >= len(speech_array)) and (start_sample < len(speech_array)):
+                speech_array = speech_array[start_sample:]
+            else:
                 speech_array = speech_array[start_sample:end_sample]
+    if len(speech_array) < 10:
+        print("Error with file: ", path , "speech_array is too small, at length: ", len(speech_array) , flush=True)
     del sampling_rate
     return speech_array
 
