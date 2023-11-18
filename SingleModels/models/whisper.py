@@ -55,10 +55,10 @@ class WhisperForEmotionClassification(nn.Module):
         self.must = True if "must" in str(self.dataset).lower() else False
         self.p = 0.6
 
-        self.whisper = WhisperForAudioClassification.from_pretrained("openai/whisper-large")
+        self.whisper = WhisperForAudioClassification.from_pretrained("openai/whisper-medium")
 
         self.dropout = nn.Dropout(self.dropout)
-        self.linear1 = nn.Linear(1280, self.output_dim)
+        self.linear1 = nn.Linear(1024, self.output_dim)
 
     def forward(self, audio_features, context_audio, check):
         aud_outputs = self.whisper.encoder(audio_features)[0]
