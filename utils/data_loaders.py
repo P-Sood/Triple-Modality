@@ -399,8 +399,11 @@ class Data:
         RMS_s = torch.sqrt(torch.mean(signal**2))
         # RMS values of noise
         RMS_n = torch.sqrt(RMS_s**2 / (pow(10, SNR / 100)))
-        print(f"For path {path}, our signal is {signal}\n and our RMS_s is {RMS_s} \n and our RMS_n is {RMS_n}\n \n" , flush=True)
-        noise = torch.normal(0.0, RMS_n.item(), signal.shape)
+        try:
+            noise = torch.normal(0.0, RMS_n.item(), signal.shape)
+        except:
+            print(f"For path {path}, our signal is {signal}\n and our RMS_s is {RMS_s} \n and our RMS_n is {RMS_n}\n \n" , flush=True)
+            return 0
         return noise.reshape(shap)
 
     def ret0(self, signal, SNR , path) -> int:
@@ -449,7 +452,7 @@ class Data:
             speech_array = torch.Tensor(self.AUDIOS[f"{check}_{path.split('/')[-1][:-4]}_{timings}"][()])
 
             if check == "train":
-                speech_array += singular_func_(speech_array, SNR=100 , path)
+                speech_array += singular_func_(speech_array, SNR=100 , path = path)
             # print(f"path is {path}\nshape of ret is {ret.shape}\n" , flush = True)
             return path , speech_array , timings
         else:
@@ -461,7 +464,7 @@ class Data:
             )
 
             if check == "train":
-                speech_array_context += singular_func_(speech_array_context, SNR=100)
-                speech_array_target += singular_func_(speech_array_target, SNR=100)
+                speech_array_context += singular_func_(speech_array_context, SNR=100 , path = path)
+                speech_array_target += singular_func_(speech_array_target, SNR=100 , path = path)
             # print(f"path is {path}\nshape of ret is {ret.shape}\n" , flush = True)
             return path , speech_array_target, speech_array_context , timings
