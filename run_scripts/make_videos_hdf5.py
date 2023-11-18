@@ -26,7 +26,7 @@ from tqdm import tqdm
 
 import gc
 from torchvision.transforms import functional as F
-
+import math
 
 class Crop:
     def __init__(self, params):
@@ -182,7 +182,7 @@ def main():
 
     read_file = h5py.File(f"../data/{name}_videos_blackground.hdf5", "r", libver="latest", swmr=True)
     # print(list(read_file.keys()))
-    # print(len(list(read_file.keys())))
+    print(len(list(read_file.keys())))
 
 
 if __name__ == "__main__":
