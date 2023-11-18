@@ -39,7 +39,7 @@ class Crop:
         for idx, frame in enumerate(frames):
             new_vid[idx] = F.crop(frame, *self.params)
         return new_vid
-    
+
 
 def draw(img , bbox):
     black_img = np.zeros(img.shape)
@@ -60,7 +60,6 @@ def body_face(test_vid : torch.Tensor , bbox):
     del img
     test_vid[i , ...] = output_image
   return test_vid.permute(1 , 0 , 2 , 3)
-
 
 
 def videoMAE_features(path, timings, check, speaker, bbox):
