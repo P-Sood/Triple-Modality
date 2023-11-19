@@ -5,7 +5,7 @@ from transformers import WhisperForAudioClassification, WhisperFeatureExtractor
 import pdb
 
 
-FEAT = WhisperFeatureExtractor.from_pretrained("openai/whisper-large")
+FEAT = WhisperFeatureExtractor.from_pretrained("openai/whisper-medium")
 
 def collate_batch(batch, must):  # batch is a pseudo pandas array of two columns
     """
