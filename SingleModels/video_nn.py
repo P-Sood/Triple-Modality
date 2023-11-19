@@ -47,7 +47,6 @@ def prepare_dataloader(
     dataset on each GPU
     say we have 32 data points, if batch size = 8 then it will make 4 dataloaders of size 8 each
     """
-    num_workers = 0
     must = True if "must" in str(dataset).lower() else False
     print(f"Are we running on mustard? {must}", flush=True) 
     dataset = VideoDataset(
