@@ -10,8 +10,7 @@ import warnings
 warnings.filterwarnings("ignore")
 import torch
 from torch import nn
-from transformers import VideoMAEModel, AutoModel, AutoProcessor, AutoConfig
-from transformers.models.wav2vec2.modeling_wav2vec2 import _compute_mask_indices
+from transformers import VideoMAEModel, AutoModel, WhisperFeatureExtractor, WhisperForAudioClassification
 
 import numpy as np
 from numpy.random import choice
@@ -19,6 +18,7 @@ from torch.nn.utils.rnn import pad_sequence
 from torch import nn
 
 
+FEAT = WhisperFeatureExtractor.from_pretrained("openai/whisper-medium")
 
 def collate_batch(batch, must):  # batch is a pseudo pandas array of two columns
     """
@@ -41,8 +41,6 @@ def collate_batch(batch, must):  # batch is a pseudo pandas array of two columns
     else:
         video_context = []
     speech_list_context_input_values = torch.empty((1))
-    speech_list_mask = None
-    vid_mask = None
 
     for input, label in batch:
         text = input[0]
@@ -55,68 +53,39 @@ def collate_batch(batch, must):  # batch is a pseudo pandas array of two columns
             path_video.append(vid_features[0])
             target_timings.append(vid_features[2])
             
-            speech_list.append(audio_path[1])
+            speech_list.append(FEAT(input[1] , sampling_rate=16000).input_features[0])
             video_list.append(vid_features[1])
         else:
             path_audio.append(audio_path[0])
             path_video.append(vid_features[0])
             target_timings.append(vid_features[3])
             
-            speech_list.append(audio_path[1])
-            speech_context.append(audio_path[2])
+            speech_list.append(FEAT(input[1], sampling_rate=16000).input_features[0])
+            speech_context.append(FEAT(input[2], sampling_rate=16000).input_features[0])
             video_list.append(vid_features[1])
             video_context.append(vid_features[2])
 
         label_list.append(label)
-    batch_size = len(label_list)
-
-    vid_mask = torch.randint(
-        -13, 2, (batch_size, 1568)
-    )  # 8*14*14 = 1568 is just the sequence length of every video with VideoMAE, so i just hardcoded it,
-    vid_mask[vid_mask > 0] = 0
-    vid_mask = vid_mask.bool()
-    # now we have a random mask over values so it can generalize better
-    x = torch.count_nonzero(vid_mask.int()).item()
-    rem = (1568 * batch_size - x) % batch_size
-    if rem != 0:
-        idx = torch.where(vid_mask.view(-1) == 0)[
-            0
-        ]  # get all indicies of 0 in flat tensor
-        num_to_change = rem  # as follows from example abow
-        idx_to_change = choice(idx, size=num_to_change, replace=False)
-        vid_mask.view(-1)[idx_to_change] = 1
-
-    speech_list_input_values = pad_sequence(
-        speech_list, batch_first=True, padding_value=0
-    )
-    del speech_list
-
     if must:
-        speech_list_context_input_values = pad_sequence(
-            speech_context, batch_first=True, padding_value=0
-        )
-        del speech_context
-
+        speech_list_context_input_values = torch.Tensor(np.array(speech_context))
+    
     text = {
         "input_ids": torch.Tensor(np.array(input_list)).type(torch.LongTensor),
-        "attention_mask": torch.Tensor(np.array(text_mask)),
+        "text_attention_mask": torch.Tensor(np.array(text_mask)),
         "timings": target_timings,
     }
 
     audio_features = {
-        "audio_path" : path_audio,
-        "audio_features": speech_list_input_values,
-        "attention_mask": speech_list_mask,
-        "audio_context": speech_list_context_input_values,
+        "audio_features": torch.Tensor(np.array(speech_list)),
+        "context_audio": speech_list_context_input_values
     }
 
     visual_embeds = {
         "video_path" : path_video,
-        "visual_embeds": torch.stack(video_list).permute(0, 2, 1, 3, 4),
-        "attention_mask": vid_mask,
-        "visual_context": torch.stack(video_context).permute(0, 2, 1, 3, 4),
+        "video_embeds": torch.stack(video_list).permute(0, 2, 1, 3, 4),
+        "video_context": torch.stack(video_context).permute(0, 2, 1, 3, 4),
     }
-    return [text, audio_features, visual_embeds], torch.Tensor(np.array(label_list))
+    return {**text , **audio_features , **visual_embeds}, torch.Tensor(np.array(label_list))
 
 
 
@@ -137,7 +106,9 @@ class TAVForMAE_HDF5(nn.Module):
         
         self.must = False
         self.tiktok = False
-        if "meld" in str(self.dataset.lower()):
+        if "meld" in str(self.dataset).lower() and "iemo" in str(self.dataset).lower():
+            dataset_name = "meld_iemo"
+        elif "meld" in str(self.dataset).lower():
             dataset_name = "meld"
         elif "iemo" in str(self.dataset).lower():
             dataset_name = "iemo"
@@ -157,19 +128,21 @@ class TAVForMAE_HDF5(nn.Module):
 
         if self.must:
             self.bert = AutoModel.from_pretrained("jkhan447/sarcasm-detection-RoBerta-base-CR")
-            self.wav2vec2 = AutoModel.from_pretrained("ehcalabres/wav2vec2-lg-xlsr-en-speech-emotion-recognition")
         elif self.tiktok:
             self.bert = AutoModel.from_pretrained("bert-base-multilingual-cased")
-            self.wav2vec2 = AutoModel.from_pretrained("justin1983/wav2vec2-xlsr-multilingual-56-finetuned-amd")
         else:
             self.bert = AutoModel.from_pretrained('j-hartmann/emotion-english-distilroberta-base')
-            self.wav2vec2 = AutoModel.from_pretrained("ehcalabres/wav2vec2-lg-xlsr-en-speech-emotion-recognition")
+        
+        
+        self.whisper = WhisperForAudioClassification.from_pretrained("openai/whisper-medium")
         self.videomae = VideoMAEModel.from_pretrained("MCG-NJU/videomae-base")
 
-        for model in [self.bert, self.wav2vec2, self.videomae]:
+        for model in [self.bert, self.whisper, self.videomae]:
             for param in model.base_model.parameters():
                 param.requires_grad = False
-        self.linear1 = nn.Linear(768, self.output_dim)
+                
+        self.dropout = nn.Dropout(self.dropout)
+        self.linear1 = nn.Linear(1024*3, self.output_dim)
 
     def forward(
         self,
@@ -177,11 +150,9 @@ class TAVForMAE_HDF5(nn.Module):
         text_attention_mask,
         audio_features,
         context_audio,
-        audio_path,
         video_embeds,
         video_context,
         video_path,
-        visual_mask,
         timings,
         check="train",
     ):
@@ -191,9 +162,6 @@ class TAVForMAE_HDF5(nn.Module):
             input_ids=input_ids, attention_mask=text_attention_mask, return_dict=False
         )
         
-        #TODO ZEERAK, does last_hidden_text_state contain the seq len dimension? comment or uncomment the below
-        print(f"last_hidden_text_state.shape: {last_hidden_text_state.shape}", flush=True)
-        
         if self.must:
             self.f.create_dataset(f"{check}/{video_path[0][0].split('/')[-1][:-4]}_{timings[0]}/text", data=last_hidden_text_state.cpu().detach().numpy())
         else:
@@ -202,11 +170,11 @@ class TAVForMAE_HDF5(nn.Module):
         del input_ids
         del text_attention_mask
 
-        aud_outputs = self.wav2vec2(audio_features)[0]
+        aud_outputs = self.whisper(audio_features)[0]
         del audio_features
         
         if self.must:
-            aud_context = self.wav2vec2(context_audio)[0]
+            aud_context = self.whisper(context_audio)[0]
             self.f.create_dataset(f"{check}/{video_path[0][1].split('/')[-1][:-4]}_{timings[0][1]}/audio_context", data=aud_context.cpu().detach().numpy())
             self.f.create_dataset(f"{check}/{video_path[0][0].split('/')[-1][:-4]}_{timings[0][0]}/audio", data=aud_outputs.cpu().detach().numpy())
             del aud_context
@@ -214,17 +182,20 @@ class TAVForMAE_HDF5(nn.Module):
             self.f.create_dataset(f"{check}/{video_path[0].split('/')[-1][:-4]}_{timings[0]}/audio", data=aud_outputs.cpu().detach().numpy())
             
 
-        vid_outputs = self.videomae(video_embeds, visual_mask)[0]  
+        vid_outputs = self.videomae(video_embeds, None)[0]  
         del video_embeds
 
         if self.must:
-            vid_context = self.videomae(video_context, visual_mask)[0]
+            vid_context = self.videomae(video_context, None)[0]
             del video_context
             self.f.create_dataset(f"{check}/{video_path[0][1].split('/')[-1][:-4]}_{timings[0][1]}/video_context", data=vid_context.cpu().detach().numpy())
             self.f.create_dataset(f"{check}/{video_path[0][0].split('/')[-1][:-4]}_{timings[0][0]}/video", data=vid_outputs.cpu().detach().numpy())
         else:
             self.f.create_dataset(f"{check}/{video_path[0].split('/')[-1][:-4]}_{timings[0]}/video", data=vid_outputs.cpu().detach().numpy())
-            
+        
+        tav = torch.concatenate((text_outputs, aud_outputs[:,0], vid_outputs[:,0]), dim=1)
+        if check == "train":
+            tav = self.dropout(tav)
         tav = self.linear1(text_outputs)
         
         return tav  # returns [batch_size,output_dim]
