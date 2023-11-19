@@ -32,7 +32,6 @@ def collate_batch(batch, must):  # batch is a pseudo pandas array of two columns
     label_list = []
     input_list = []
     text_mask = []
-    path_audio = []
     path_video = []
     target_timings = []
 
@@ -49,19 +48,17 @@ def collate_batch(batch, must):  # batch is a pseudo pandas array of two columns
         audio_path = input[1]
         vid_features = input[2]  # [6:] for debug
         if not must:
-            path_audio.append(audio_path[0])
             path_video.append(vid_features[0])
             target_timings.append(vid_features[2])
             
-            speech_list.append(FEAT(input[1] , sampling_rate=16000).input_features[0])
+            speech_list.append(FEAT(audio_path[1] , sampling_rate=16000).input_features[0])
             video_list.append(vid_features[1])
         else:
-            path_audio.append(audio_path[0])
             path_video.append(vid_features[0])
             target_timings.append(vid_features[3])
             
-            speech_list.append(FEAT(input[1], sampling_rate=16000).input_features[0])
-            speech_context.append(FEAT(input[2], sampling_rate=16000).input_features[0])
+            speech_list.append(FEAT(audio_path[1], sampling_rate=16000).input_features[0])
+            speech_context.append(FEAT(audio_path[2], sampling_rate=16000).input_features[0])
             video_list.append(vid_features[1])
             video_context.append(vid_features[2])
 
@@ -126,16 +123,9 @@ class TAVForMAE_HDF5(nn.Module):
 
         self.p = 0.6
 
-        if self.must:
-            self.bert = AutoModel.from_pretrained("jkhan447/sarcasm-detection-RoBerta-base-CR")
-        elif self.tiktok:
-            self.bert = AutoModel.from_pretrained("bert-base-multilingual-cased")
-        else:
-            self.bert = AutoModel.from_pretrained('j-hartmann/emotion-english-distilroberta-base')
-        
-        
+        self.bert = AutoModel.from_pretrained("roberta-large")
         self.whisper = WhisperForAudioClassification.from_pretrained("openai/whisper-medium")
-        self.videomae = VideoMAEModel.from_pretrained("MCG-NJU/videomae-base")
+        self.videomae = VideoMAEModel.from_pretrained("MCG-NJU/videomae-large")
 
         for model in [self.bert, self.whisper, self.videomae]:
             for param in model.base_model.parameters():
@@ -170,11 +160,11 @@ class TAVForMAE_HDF5(nn.Module):
         del input_ids
         del text_attention_mask
 
-        aud_outputs = self.whisper(audio_features)[0]
+        aud_outputs = self.whisper.encoder(audio_features)[0]
         del audio_features
         
         if self.must:
-            aud_context = self.whisper(context_audio)[0]
+            aud_context = self.whisper.encoder(context_audio)[0]
             self.f.create_dataset(f"{check}/{video_path[0][1].split('/')[-1][:-4]}_{timings[0][1]}/audio_context", data=aud_context.cpu().detach().numpy())
             self.f.create_dataset(f"{check}/{video_path[0][0].split('/')[-1][:-4]}_{timings[0][0]}/audio", data=aud_outputs.cpu().detach().numpy())
             del aud_context

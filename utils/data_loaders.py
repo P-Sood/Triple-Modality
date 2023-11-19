@@ -38,93 +38,44 @@ class TextAudioVideoDataset(Dataset):
         self.audio_path = df[feature_col1].values
         self.video_path = df[feature_col2].values
 
+        max_len = 512# max([len(text.split()) for text in df[feature_col]]) + 2 # For CLS and SEP tokens
+        tokenizer = AutoTokenizer.from_pretrained("roberta-large")
+        self.texts = [
+            tokenizer(
+                text,
+                padding="max_length",
+                max_length=max_len,
+                truncation=True,
+                return_tensors="pt",
+            )
+            for text in df[feature_col3]
+        ]
         
-        if timings != None:
-            try:
-                self.timings = df[timings].values.tolist()
-            except: 
-                self.timings = [None] * len(self.audio_path)
-        else:
-            self.timings = [None] * len(self.audio_path)
+        try:
+            df[timings] = df[timings].replace({np.nan:None})
+            self.timings = df[timings].values.tolist()
 
-        if "meld" in str(dataset).lower():
-            max_len = int(70 * 2.5)
-            tokenizer = AutoTokenizer.from_pretrained(
-                "j-hartmann/emotion-english-distilroberta-base"
-            )
-            self.Data = Data(
-                video="../../data/videos_context.hdf5", audio="../../data/audio.hdf5"
-            )
-            self.texts = [
-                tokenizer(
-                    text,
-                    padding="max_length",
-                    max_length=max_len,
-                    truncation=True,
-                    return_tensors="pt",
-                )
-                for text in df[feature_col3]
-            ]
-        elif "iemo" in str(dataset).lower():
-            max_len = int(70 * 2.5)
-            tokenizer = AutoTokenizer.from_pretrained(
-                "j-hartmann/emotion-english-distilroberta-base"
-            )
-            self.Data = Data(
-                video="../../data/iemo_videos.hdf5", audio="../../data/iemo_audio.hdf5"
-            )
-            self.texts = [
-                tokenizer(
-                    text,
-                    padding="max_length",
-                    max_length=max_len,
-                    truncation=True,
-                    return_tensors="pt",
-                )
-                for text in df[feature_col3]
-            ]
-        elif "tiktok" in str(dataset).lower():
-            max_len = 300
-            tokenizer = AutoTokenizer.from_pretrained("bert-base-multilingual-cased")
-            self.Data = Data(
-                video="../../data/tiktok_videos.hdf5",
-                audio="../../data/tiktok_audio.hdf5",
-            )
-            self.texts = [
-                tokenizer(
-                    text,
-                    padding="max_length",
-                    max_length=max_len,
-                    truncation=True,
-                    return_tensors="pt",
-                )
-                for text in df[feature_col3]
-            ]
+        except:
+            self.timings = [None] * len(self.audio_path)
+        
+        if "meld" in dataset and "iemo" in dataset:
+            dataset = "meld_iemo"
+        elif "meld" in dataset:
+            dataset = "meld"
+        elif "iemo" in dataset:
+            dataset = "iemo"
+        elif "tiktok" in dataset:
+            dataset = "tiktok"
         else:
-            max_len = 300
-            tokenizer = AutoTokenizer.from_pretrained(
-                "jkhan447/sarcasm-detection-RoBerta-base-CR"
-            )
-            self.Data = Data(
-                video="../../data/must_videos.hdf5", audio="../../data/must_audio.hdf5"
-            )
-            self.texts = []
-            for i in range(0, len(df[feature_col2]), 2):
-                # concatenate the text
-                text = df[feature_col3].iloc[i] + " " + df[feature_col3].iloc[i + 1]
-                # tokenize the concatenated text
-                tokens = tokenizer(
-                    text,
-                    padding="max_length",
-                    max_length=max_len,
-                    truncation=True,
-                    return_tensors="pt",
-                )
-                self.texts.append(tokens)
+            dataset = "mustard"
             self.timings = df["timings"].values.reshape(-1, 2).tolist()
             self.audio_path = df[feature_col1].values.reshape(-1, 2).tolist()
-            self.video_path = df[feature_col2].values.reshape(-1, 2).tolist()
             df = df[df["context"] == False]
+        
+        
+        
+        self.Data = Data(video=f"../../data/{dataset}_videos_blackground.hdf5",
+                         audio=f"../../data/whisper_{dataset}_audio.hdf5")
         self.check = check
         self.labels = df[label_col].values.tolist()
 
