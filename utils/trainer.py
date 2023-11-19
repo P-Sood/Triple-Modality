@@ -34,7 +34,7 @@ class Trainer:
     ):
         batch_loss = None
         label = label.to(self.device)
-        input = {k: v.to(self.device) for k, v in input.items() if is_tensor(v)}
+        input = {k:v.to(self.device) if is_tensor(v) else v for k, v in input.items()}
         
         output = model(**input, check=check)
 
@@ -61,7 +61,7 @@ class Trainer:
         batch_loss = None
         label = label.to(self.device)
         
-        input = {k: v.to(self.device) for k, v in input.items() if is_tensor(v)}
+        input = {k:v.to(self.device) if is_tensor(v) else v for k, v in input.items()}
         
         output = checkpoint(
             model,
