@@ -11,6 +11,7 @@ from torch.utils.checkpoint import checkpoint
 from utils.early_stopping import EarlyStopping
 from utils.global_functions import save_model, load_model
 from torch.optim.lr_scheduler import CosineAnnealingWarmRestarts
+from torch import is_tensor
 
 logging.set_verbosity_error()
 warnings.filterwarnings("ignore")
@@ -33,13 +34,13 @@ class Trainer:
     ):
         batch_loss = None
         label = label.to(self.device)
-        input = {k: v.to(self.device) for k, v in input.items()}
+        input = {k: v.to(self.device) for k, v in input.items() if is_tensor(v)}
         
         output = model(**input, check=check)
 
         for k, v in input.items():
-            input[k] = v.cpu()
-            del v
+            input[k] = v.cpu() if is_tensor(v) else v
+            del input[k]
 
         Metric.update_metrics(torch.argmax(output, dim=1), label)
         if criterion is not None:
@@ -60,7 +61,7 @@ class Trainer:
         batch_loss = None
         label = label.to(self.device)
         
-        input = {k: v.to(self.device) for k, v in input.items()}
+        input = {k: v.to(self.device) for k, v in input.items() if is_tensor(v)}
         
         output = checkpoint(
             model,
@@ -69,8 +70,8 @@ class Trainer:
             use_reentrant=False,
         )
         for k, v in input.items():
-            input[k] = v.cpu()
-            del v
+            input[k] = v.cpu() if is_tensor(v) else v
+            del input[k]
 
         Metric.update_metrics(torch.argmax(output, dim=1), label)
         if criterion is not None:
