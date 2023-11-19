@@ -3,7 +3,7 @@ import sys
 
 sys.path.insert(0, "/".join(os.getcwd().split("/")[:-2]))
 __package__ = "TripleModels"
-
+from utils.trainer import Trainer
 from transformers import logging
 
 logging.set_verbosity_error()
@@ -11,7 +11,6 @@ import warnings
 
 warnings.filterwarnings("ignore")
 
-from train_model.tav_train import train_tav_network, evaluate_tav
 from models.tav import TAVForMAE_HDF5, collate_batch
 import wandb
 from utils.data_loaders import TextAudioVideoDataset
@@ -20,7 +19,6 @@ import torch
 import numpy as np
 from utils.global_functions import arg_parse, Metrics, MySampler, NewCrossEntropyLoss
 from torch.utils.data import DataLoader
-from torch.utils.data.sampler import WeightedRandomSampler
 
 
 class BatchCollation:
@@ -38,46 +36,30 @@ def prepare_dataloader(
     label_task,
     epoch_switch,
     pin_memory=True,
-    num_workers=0,
+    num_workers=4,
     check="train",
     accum=False,
+    sampler = None,
 ):
     """
     we load in our dataset, and we just make a random distributed sampler to evenly partition our
     dataset on each GPU
     say we have 32 data points, if batch size = 8 then it will make 4 dataloaders of size 8 each
     """
-    num_workers = 0
     must = True if "must" in str(dataset).lower() else False
-    if accum:
-        batch_size = 1
-        # df , dataset , batch_size , feature_col1 , feature_col2  , label_col , timings = None , accum = False , check = "test"
-        dataset = TextAudioVideoDataset(
-            df,
-            dataset,
-            batch_size,
-            feature_col1="audio_path",
-            feature_col2="video_path",
-            feature_col3="text",
-            label_col=label_task,
-            timings="timings",
-            accum=accum,
-            check=check,
-        )
-    else:
-        dataset = TextAudioVideoDataset(
-            df,
-            dataset,
-            batch_size,
-            feature_col1="audio_path",
-            feature_col2="video_path",
-            feature_col3="text",
-            label_col=label_task,
-            timings="timings",
-            accum=accum,
-            check=check,
-        )
-
+    dataset = TextAudioVideoDataset(
+        df, 
+        dataset, 
+        batch_size = 1 if sampler == "Both" else batch_size, 
+        feature_col1="audio_path", 
+        feature_col2="video_path", 
+        feature_col3="text", 
+        label_col=label_task, 
+        timings="timings", 
+        accum=accum, 
+        check=check,
+    )
+    
     if check == "train":
         labels = df[label_task].value_counts()
         class_counts = torch.Tensor(
@@ -105,14 +87,14 @@ def prepare_dataloader(
             )
 
         dataloader = DataLoader(
-            dataset,
+            dataset,    
             batch_size=batch_size,
             pin_memory=pin_memory,
             num_workers=num_workers,
             drop_last=False,
-            shuffle=True,
-            # sampler=sampler,
-            collate_fn=BatchCollation(must),
+            # shuffle=True,
+            collate_fn = collate_batch,
+            sampler=sampler,
         )
     else:
         dataloader = DataLoader(
@@ -122,7 +104,7 @@ def prepare_dataloader(
             num_workers=num_workers,
             drop_last=False,
             shuffle=True,
-            collate_fn=BatchCollation(must),
+            collate_fn = collate_batch,
         )
 
     return dataloader
@@ -149,24 +131,26 @@ def runModel(accelerator, df_train, df_val, df_test, param_dict, model_param):
     model_name = param_dict["model"]
     mask = param_dict["mask"]
     epoch_switch = param_dict["epoch_switch"]
+    sampler = param_dict["sampler"]
 
     num_labels = model_param["output_dim"]
     dataset = model_param["dataset"]
 
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     if loss == "CrossEntropy":
-        # criterion = NewCrossEntropyLoss(class_weights=weights.to(device)).to(device) # TODO: have to call epoch in forward function
         criterion = torch.nn.CrossEntropyLoss().to(device)
-
     elif loss == "NewCrossEntropy":
-        # criterion = PrecisionLoss(num_classes = num_labels,weights=weights.to(device)).to(device)
         criterion = NewCrossEntropyLoss(
             class_weights=weights.to(device), epoch_switch=epoch_switch
+        ).to(device)
+    elif loss == "WeightedCrossEntropy":
+        criterion = torch.nn.CrossEntropyLoss(weight=weights.to(device)
         ).to(device)
 
     print(loss, flush=True)
     Metric = Metrics(num_classes=num_labels, id2label=id2label, rank=device)
     df_train_accum = prepare_dataloader(
-        df_train, dataset, 1, label_task, epoch_switch, check="train", accum=True
+        df_train, dataset, 1, label_task, epoch_switch, check="train", accum=True, sampler=sampler
     )
     df_train_no_accum = prepare_dataloader(
         df_train,
@@ -185,19 +169,18 @@ def runModel(accelerator, df_train, df_val, df_test, param_dict, model_param):
     )
 
     model = TAVForMAE_HDF5(model_param).to(device)
-
-    # PREFormer = PreFormer().to(f"cpu")
-
     wandb.watch(model, log="all")
-    # wandb.watch(PREFormer, log = "all")
+    
     checkpoint = None  # torch.load(f"/home/prsood/projects/ctb-whkchun/prsood/TAV_Train/MAEncoder/aht69be1/lively-sweep-11/7.pt")
     # model.load_state_dict(checkpoint['model_state_dict'])
     # criterion = checkpoint['loss']
     # PREFormer = checkpoint['PREFormer']
 
-    model = train_tav_network(
+    trainer = Trainer(big_batch=3 , num_steps=1)
+    
+    model = trainer.train_network(
         model,
-        [df_train_no_accum, df_train_accum],
+        [df_train_no_accum, df_train_accum , sampler],
         df_val,
         criterion,
         lr,
@@ -210,8 +193,7 @@ def runModel(accelerator, df_train, df_val, df_test, param_dict, model_param):
         epoch_switch,
         checkpoint,
     )
-    #model = TAVForMAE_HDF5(model_param).to(device)
-    evaluate_tav(model, df_test, Metric)
+    trainer.evaluate(model, df_test, Metric)
 
 
 def main():
@@ -239,6 +221,7 @@ def main():
         "loss": config.loss,
         "beta": config.beta,
         "epoch_switch": config.epoch_switch,
+        "sampler": config.sampler,
     }
 
     df = pd.read_pickle(f"{config.dataset}.pkl")

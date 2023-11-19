@@ -126,8 +126,16 @@ class TAVForMAE_HDF5(nn.Module):
         self.bert = AutoModel.from_pretrained("roberta-large")
         self.whisper = WhisperForAudioClassification.from_pretrained("openai/whisper-medium")
         self.videomae = VideoMAEModel.from_pretrained("MCG-NJU/videomae-large")
+        
+        path = [
+            "roberta-large.pt",
+            "whisper-medium.pt",
+            "videomae-large.pt",
+        ]
 
-        for model in [self.bert, self.whisper, self.videomae]:
+        for i, model in enumerate([self.bert, self.whisper, self.videomae]):
+            checkpoint = torch.load(f"../../../TAV_Train/{path[i]}")
+            model.load_state_dict(checkpoint['model_state_dict'])
             for param in model.base_model.parameters():
                 param.requires_grad = False
                 
@@ -146,7 +154,6 @@ class TAVForMAE_HDF5(nn.Module):
         timings,
         check="train",
     ):
-        # print("video_path", video_path , flush=True)
         # Transformer Time
         last_hidden_text_state, text_outputs = self.bert(
             input_ids=input_ids, attention_mask=text_attention_mask, return_dict=False
