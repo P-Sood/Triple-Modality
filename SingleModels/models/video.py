@@ -30,7 +30,7 @@ def collate_batch(batch, must):  # batch is a pseudo pandas array of two columns
         "video_context": torch.stack(video_context).permute(0, 2, 1, 3, 4),
     }
 
-    return visual_embeds, torch.Tensor(np.array(label_list))
+    return visual_embeds, torch.Tensor(np.array(label_list)).long()
 
 
 class VideoClassification(nn.Module):
@@ -55,7 +55,7 @@ class VideoClassification(nn.Module):
         self.linear1 = nn.Linear(1024, self.output_dim)
 
     def forward(self, video_embeds, video_context, check="train"):
-        vid_outputs = self.videomae(video_embeds, None)[0][:, 0] 
+        vid_outputs = self.videomae(video_embeds, None)[0]
         vid_outputs = vid_outputs[:, 0] 
         # take the first token now it has 2 dimensions
         del video_embeds
