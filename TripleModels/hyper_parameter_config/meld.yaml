@@ -11,18 +11,16 @@ metric:
   goal: maximize
   name: val/weighted-f1-score
 parameters:
-  epoch: 
-    values: [6]
+  epoch:
+    max: 12
+    min: 6
+    distribution: int_uniform
   learning_rate:
-    max: 0.00016779848447346176
-    min: 0.0000033463851154990775
-    distribution: uniform
+    values: [1e-6 , 1e-5 , 1e-4  , 5e-5 , 5e-6]
   weight_decay:
-    max: 0.0015336682533379652
-    min: 0.00006686748300918932
-    distribution: uniform
+    values: [1e-5 , 1e-4, 1e-3, 1e-2]
   batch_size:
-    values: [2, 4, 8, 16 , 24]
+    values: [24, 32]
   seed:
     values: [32, 64, 96]
   mask:
@@ -36,24 +34,22 @@ parameters:
   patience:
     values: [14]
   clip:
-    values: [1 , 5]
+    values: [0.1 , 1 , 5]
   epoch_switch:
     values: [2 , 3]
   dropout:
-    values: [ 0.0 , 0.1 , 0.2 , 0.3 ]
+    values: [ 0.2 , 0.3 , 0.4 , 0.5 ]
   T_max:
    values: [2 , 3]
-  hidden_layers:
+  hidden_size:
     values: [64, 128, 256, 384, 768, 1536]
   label_task:
     values: ['emotion']
-  sota:
-    values: [True, False]
+  fusion:
+    values: ["sota", "concat", "guiseppe"]
   model:
     values: ['MAE_encoder']
   loss:
     values: ['NewCrossEntropy' , 'CrossEntropy' , 'WeightedCrossEntropy']
   sampler:
     values: ['Both' , 'Iterative' , 'Weighted']
-  beta:
-    values: [1]

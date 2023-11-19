@@ -11,7 +11,7 @@ import warnings
 
 warnings.filterwarnings("ignore")
 
-from train_model.tav_train import train_tav_network, evaluate_tav
+from utils.trainer import Trainer
 from models.tav import TAVForMAE, collate_batch
 import wandb
 from utils.data_loaders import TextAudioVideoDataset
@@ -33,7 +33,7 @@ def prepare_dataloader(
     label_task,
     epoch_switch,
     pin_memory=True,
-    num_workers=0,
+    num_workers=4,
     check="train",
     accum=False,
     sampler = None,
@@ -45,35 +45,19 @@ def prepare_dataloader(
 
     Otherwise we just create a regular dataloader for val/test that just do shuffle
     """
-    num_workers = 0
-    if accum:
-        batch_size = 1 if sampler == "Both" else batch_size
-        # df , dataset , batch_size , feature_col1 , feature_col2  , label_col , timings = None , accum = False , check = "test"
-        dataset = TextAudioVideoDataset(
-            df,
-            dataset,
-            batch_size,
-            feature_col1="audio_path",
-            feature_col2="video_path",
-            feature_col3="text",
-            label_col=label_task,
-            timings="timings",
-            accum=accum,
-            check=check,
-        )
-    else:
-        dataset = TextAudioVideoDataset(
-            df,
-            dataset,
-            batch_size,
-            feature_col1="audio_path",
-            feature_col2="video_path",
-            feature_col3="text",
-            label_col=label_task,
-            timings="timings",
-            accum=accum,
-            check=check,
-        )
+    
+    dataset = TextAudioVideoDataset(
+        df,
+        dataset,
+        batch_size = 1 if sampler == "Both" else batch_size,
+        feature_col1="audio_path",
+        feature_col2="video_path",
+        feature_col3="text",
+        label_col=label_task,
+        timings="timings",
+        accum=accum,
+        check=check,
+    )
 
     if check == "train":
         labels = df[label_task].value_counts()
@@ -138,7 +122,6 @@ def runModel(accelerator, df_train, df_val, df_test, param_dict, model_param):
     T_max = param_dict["T_max"]
     batch_size = param_dict["batch_size"]
     loss = param_dict["loss"]
-    beta = param_dict["beta"]
     weight_decay = param_dict["weight_decay"]
     weights = param_dict["weights"]
     id2label = param_dict["id2label"]
@@ -198,16 +181,11 @@ def runModel(accelerator, df_train, df_val, df_test, param_dict, model_param):
 
     model = TAVForMAE(model_param).to(device)
 
-    # PREFormer = PreFormer().to(f"cpu")
-
     wandb.watch(model, log="all")
-    # wandb.watch(PREFormer, log = "all")
-    checkpoint = None  # torch.load(f"/home/prsood/projects/ctb-whkchun/prsood/TAV_Train/MAEncoder/aht69be1/lively-sweep-11/7.pt")
-    # model.load_state_dict(checkpoint['model_state_dict'])
-    # criterion = checkpoint['loss']
-    # PREFormer = checkpoint['PREFormer']
+    
+    trainer = Trainer(3 , 1)
 
-    model = train_tav_network(
+    model = trainer.train_network(
         model,
         [df_train_no_accum, df_train_accum , sampler],
         df_val,
@@ -220,10 +198,10 @@ def runModel(accelerator, df_train, df_val, df_test, param_dict, model_param):
         patience,
         clip,
         epoch_switch,
-        checkpoint,
+        checkpoint = None,
     )
-    # model = TAVForMAE_HDF5(model_param).to(device)
-    evaluate_tav(model, df_test, Metric)
+    
+    trainer.evaluate(model, df_test, Metric)
 
 
 def main():
@@ -249,7 +227,6 @@ def main():
         "label_task": config.label_task,
         "mask": config.mask,
         "loss": config.loss,
-        "beta": config.beta,
         "epoch_switch": config.epoch_switch,
         "sampler": config.sampler,
     }
@@ -312,7 +289,7 @@ def main():
         "num_layers": config.num_layers,
         "learn_PosEmbeddings": config.learn_PosEmbeddings,
         "dataset": config.dataset,
-        "sota": config.sota,
+        "fusion": config.fusion,
         "hidden_size": int(config.hidden_layers),
     }
     param_dict["weights"] = weights
