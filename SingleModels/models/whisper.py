@@ -61,11 +61,11 @@ class WhisperForEmotionClassification(nn.Module):
         self.linear1 = nn.Linear(1024, self.output_dim)
 
     def forward(self, audio_features, context_audio, check):
-        aud_outputs = self.whisper.encoder(audio_features)[0]
+        aud_outputs = self.whisper.encoder(audio_features)[0][:,:512,:]
         aud_outputs = aud_outputs.mean(dim=1)
         del audio_features
         if self.must:
-            aud_context = self.whisper(context_audio).hidden_states.mean(dim=1)
+            aud_context = self.whisper.encoder(context_audio)[0][:,:512,:]
             aud_context = aud_context.mean(dim=1)
             del context_audio
             aud_outputs = (aud_outputs * self.p + aud_context * (1 - self.p)) / 2
