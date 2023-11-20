@@ -2,7 +2,6 @@
 
 # Give job a name
 
-#SBATCH --time 00-12:00 # time (DD-HH:MM)
 #SBATCH -p gpu
 #SBATCH -q gpu-8
 #SBATCH --nodes=1
