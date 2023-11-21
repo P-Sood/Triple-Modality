@@ -65,6 +65,7 @@ def collate_batch(batch, must):  # batch is a pseudo pandas array of two columns
         label_list.append(label)
     if must:
         speech_list_context_input_values = torch.Tensor(np.array(speech_context))
+        
     batch_size = len(label_list)
     vid_mask = torch.zeros(batch_size, 1568).bool()
     idx = torch.arange(1568)
@@ -123,7 +124,7 @@ class TAVForMAE_HDF5(nn.Module):
         else:
             dataset_name = "mustard"
             self.must = True
-        self.f = h5py.File(f"../../data/{dataset_name}.seq_len.features.hdf5", "a", libver="latest", swmr=True)
+        self.f = h5py.File(f"../../data/{dataset_name}.final.seq_len.features.hdf5", "a", libver="latest", swmr=True)
         try:
             self.f.swmr_mode = True
         except:
@@ -136,14 +137,19 @@ class TAVForMAE_HDF5(nn.Module):
         self.videomae = VideoMAEModel.from_pretrained("MCG-NJU/videomae-large")
         
         path = [
-            "roberta-large.pt",
-            "whisper-medium.pt",
-            "videomae-large.pt",
+            "meld_iemo_finetuning/lq79a7fs/legendary-sweep-11/best.pt",
+            "WhisperStart/qgl7153h/toasty-sweep-9/best.pt",
+            "VideoDA/4g2igbuv/<FILL>/best.pt",
         ]
-
+        
         for i, model in enumerate([self.bert, self.whisper, self.videomae]):
-            checkpoint = torch.load(f"../../../TAV_Train/{path[i]}")
-            model.load_state_dict(checkpoint['model_state_dict'])
+            try:
+                checkpoint = torch.load(f"/l/users/zeerak.talat/TAV_Train/{path[i]}" , map_location=torch.device('cuda'))
+                model.load_state_dict(checkpoint['model_state_dict'])
+            except:
+                print(f"Loading from {path[i]}, got some error here on {i}" , flush = True)
+                checkpoint = torch.load(f"../../../{path[i]}", map_location=torch.device('cuda'))
+                model.load_state_dict(checkpoint['model_state_dict'])
             for param in model.base_model.parameters():
                 param.requires_grad = False
                 

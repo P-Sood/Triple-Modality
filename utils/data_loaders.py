@@ -57,10 +57,8 @@ class TextAudioVideoDataset(Dataset):
 
         except:
             self.timings = [None] * len(self.audio_path)
-        
-        if "meld" in dataset and "iemo" in dataset:
-            dataset = "meld_iemo"
-        elif "meld" in dataset:
+
+        if "meld" in dataset:
             dataset = "meld"
         elif "iemo" in dataset:
             dataset = "iemo"
