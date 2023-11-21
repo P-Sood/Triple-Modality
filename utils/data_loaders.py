@@ -55,7 +55,7 @@ class TextAudioVideoDataset(Dataset):
             self.video_path = df[feature_col2].values.reshape(-1, 2).tolist()
             df = df[df["context"] == False]
 
-        fh = f"{data_path}{dataset}.seq_len.features.hdf5"
+        fh = f"{data_path}{dataset}.final.seq_len.features.hdf5"
 
         self.Data = Data(file=fh)
         self.check = check

@@ -32,9 +32,9 @@ def collate_batch(batch):
         labels.append(label)
 
     text = torch.stack(text, dim=0).squeeze(dim=1)
-    audio = pad_sequence(audio, batch_first=True).squeeze(dim=1)
+    audio = torch.stack(audio, dim=0).squeeze(dim=1)
     # audio_context = pad_sequence(audio_context, batch_first=True)
-    video = pad_sequence(video, batch_first=True).squeeze(dim=1)
+    video = torch.stack(video, dim=0).squeeze(dim=1)
     # video_context = pad_sequence(video_context, batch_first=True)
 
     return {
@@ -82,13 +82,16 @@ class TAVForMAE(nn.Module):
                 for _ in range(self.num_layers)
             ]
         )
-        if self.fusion:
+        if self.fusion == "sota":
             self.fusion_layers = nn.ModuleList(
                 [nn.Linear(1024 * 3, 1024) for _ in range(self.num_layers)]
             )
             self.linear1 = nn.Linear(1024 * 3, self.hidden_size)
-        else:
+        elif self.fusion == "guiseppe":
             self.linear1 = nn.Linear(1024 * 4, self.hidden_size)
+        elif self.fusion == "concat":
+            self.linear1 = nn.Linear(1024 * 3, self.hidden_size)
+            
 
         self.dropout = nn.Dropout(self.dropout)
         self.linear2 = nn.Linear(self.hidden_size, self.output_dim)
@@ -110,27 +113,9 @@ class TAVForMAE(nn.Module):
             video_features = (video_features * self.p + video_context * (1 - self.p)) / 2
             del video_context
 
-
-        text_audio_video_aligned = pad_sequence(
-            torch.unbind(text_features, dim=0)
-            + torch.unbind(audio_features, dim=0)
-            + torch.unbind(video_features, dim=0),
-            batch_first=True,
-        )
-        bs = len(text_audio_video_aligned) // 3
-        text_features, audio_features, video_features = (
-            text_audio_video_aligned[:bs],
-            text_audio_video_aligned[bs : 2 * bs],
-            text_audio_video_aligned[2 * bs :],
-        )
-        # Create the padding mask for the aud tensor
-        audio_mask = torch.any(audio_features == 0, dim=-1)
-
-        # Create the padding mask for the video tensor
-        video_mask = torch.any(video_features == 0, dim=-1)
-        # Pad the sequence length dimension based on batch sizes. This is because the MHA expects a fixed sequence length
         # Model Head
         if self.fusion == "sota":
+            
             for i in range(self.num_layers):
                 Ffusion1 = text_features
                 Ffusion2 = text_features
@@ -138,14 +123,18 @@ class TAVForMAE(nn.Module):
                 vid_text_layer = self.vid_text_layers[i]
                 fusion_layer = self.fusion_layers[i]
                 # Q, K , V inputs
+                # Fuse audio/video to the textual dimension
                 Ffusion1, _ = aud_text_layer(
-                    Ffusion1, audio_features, Ffusion1, key_padding_mask=audio_mask
+                    Ffusion1, audio_features, Ffusion1
                 )
                 Ffusion2, _ = vid_text_layer(
-                    Ffusion2, video_features, Ffusion2, key_padding_mask=video_mask
+                    Ffusion2, video_features, Ffusion2
                 )
+                # run a linear layer over audio_text, video_text and text to become the new text features
                 text_features = fusion_layer(torch.cat([Ffusion1, Ffusion2 , text_features], dim=-1))
+            # Concatenate the text features interlaced with audio and video context, with the audio and video features
             tav = torch.cat([text_features, audio_features, video_features], dim=-1)
+            
         elif self.fusion == "guiseppe":
             # Dont need the fixed MHA encoder here because QV, only need to be the same size
             Ffusion1 = text_features
@@ -153,12 +142,12 @@ class TAVForMAE(nn.Module):
             for i in range(self.num_layers):
                 aud_text_layer = self.aud_text_layers[i]
                 vid_text_layer = self.vid_text_layers[i]
-                # Key the same, Query and Value are the other modality
+                # Query the same, Key and Value are the other modality
                 Ffusion1, _ = aud_text_layer(
-                    Ffusion1, audio_features, audio_features, key_padding_mask=audio_mask
+                    Ffusion1, audio_features, audio_features
                 )
                 Ffusion2, _ = vid_text_layer(
-                    Ffusion2, video_features, video_features, key_padding_mask=video_mask
+                    Ffusion2, video_features, video_features
                 )
             tav = torch.cat([Ffusion1, Ffusion2, audio_features, video_features], dim=-1)
         elif self.fusion == "concat":
