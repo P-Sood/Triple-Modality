@@ -65,6 +65,13 @@ def collate_batch(batch, must):  # batch is a pseudo pandas array of two columns
         label_list.append(label)
     if must:
         speech_list_context_input_values = torch.Tensor(np.array(speech_context))
+    batch_size = len(label_list)
+    vid_mask = torch.zeros(batch_size, 1568).bool()
+    idx = torch.arange(1568)
+    idx_to_change = torch.Tensor(choice(idx, size=1056, replace=False))
+    # Repeat this tensor batch_size times
+    idx_to_change = idx_to_change.repeat(batch_size, 1).long()
+    vid_mask[:, idx_to_change] = True
     
     text = {
         "input_ids": torch.Tensor(np.array(input_list)).type(torch.LongTensor),
@@ -81,6 +88,7 @@ def collate_batch(batch, must):  # batch is a pseudo pandas array of two columns
         "video_path" : path_video,
         "video_embeds": torch.stack(video_list).permute(0, 2, 1, 3, 4),
         "video_context": torch.stack(video_context).permute(0, 2, 1, 3, 4),
+        "video_mask": vid_mask,
     }
     return {**text , **audio_features , **visual_embeds}, torch.Tensor(np.array(label_list))
 
@@ -149,6 +157,7 @@ class TAVForMAE_HDF5(nn.Module):
         audio_features,
         context_audio,
         video_embeds,
+        video_mask,
         video_context,
         video_path,
         timings,
@@ -167,11 +176,11 @@ class TAVForMAE_HDF5(nn.Module):
         del input_ids
         del text_attention_mask
 
-        aud_outputs = self.whisper.encoder(audio_features)[0]
+        aud_outputs = self.whisper.encoder(audio_features)[0][:,:512,:]
         del audio_features
         
         if self.must:
-            aud_context = self.whisper.encoder(context_audio)[0]
+            aud_context = self.whisper.encoder(context_audio)[0][:,:512,:]
             self.f.create_dataset(f"{check}/{video_path[0][1].split('/')[-1][:-4]}_{timings[0][1]}/audio_context", data=aud_context.cpu().detach().numpy())
             self.f.create_dataset(f"{check}/{video_path[0][0].split('/')[-1][:-4]}_{timings[0][0]}/audio", data=aud_outputs.cpu().detach().numpy())
             del aud_context
@@ -179,18 +188,18 @@ class TAVForMAE_HDF5(nn.Module):
             self.f.create_dataset(f"{check}/{video_path[0].split('/')[-1][:-4]}_{timings[0]}/audio", data=aud_outputs.cpu().detach().numpy())
             
 
-        vid_outputs = self.videomae(video_embeds, None)[0]  
+        vid_outputs = self.videomae(video_embeds, bool_masked_pos = video_mask)[0]  
         del video_embeds
 
         if self.must:
-            vid_context = self.videomae(video_context, None)[0]
+            vid_context = self.videomae(video_context, bool_masked_pos = video_mask)[0]
             del video_context
             self.f.create_dataset(f"{check}/{video_path[0][1].split('/')[-1][:-4]}_{timings[0][1]}/video_context", data=vid_context.cpu().detach().numpy())
             self.f.create_dataset(f"{check}/{video_path[0][0].split('/')[-1][:-4]}_{timings[0][0]}/video", data=vid_outputs.cpu().detach().numpy())
         else:
             self.f.create_dataset(f"{check}/{video_path[0].split('/')[-1][:-4]}_{timings[0]}/video", data=vid_outputs.cpu().detach().numpy())
-        
-        tav = torch.concatenate((text_outputs, aud_outputs[:,0], vid_outputs[:,0]), dim=1)
+        assert last_hidden_text_state.shape[1] == aud_outputs.shape[1] == vid_outputs.shape[1] == 512, f"Seq length are not equal {last_hidden_text_state.shape} {aud_outputs.shape} {vid_outputs.shape}"
+        tav = torch.concatenate((text_outputs, aud_outputs.mean(dim = 1), vid_outputs[:,0]), dim=1)
         if check == "train":
             tav = self.dropout(tav)
         tav = self.linear1(text_outputs)
