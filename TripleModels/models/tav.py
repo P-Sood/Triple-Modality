@@ -84,7 +84,7 @@ class TAVForMAE(nn.Module):
         )
         if self.fusion:
             self.fusion_layers = nn.ModuleList(
-                [nn.Linear(1024 * 2, 1024) for _ in range(self.num_layers)]
+                [nn.Linear(1024 * 3, 1024) for _ in range(self.num_layers)]
             )
             self.linear1 = nn.Linear(1024 * 3, self.hidden_size)
         else:
@@ -137,13 +137,14 @@ class TAVForMAE(nn.Module):
                 aud_text_layer = self.aud_text_layers[i]
                 vid_text_layer = self.vid_text_layers[i]
                 fusion_layer = self.fusion_layers[i]
+                # Q, K , V inputs
                 Ffusion1, _ = aud_text_layer(
                     Ffusion1, audio_features, Ffusion1, key_padding_mask=audio_mask
                 )
                 Ffusion2, _ = vid_text_layer(
                     Ffusion2, video_features, Ffusion2, key_padding_mask=video_mask
                 )
-                text_features = fusion_layer(torch.cat([Ffusion1, Ffusion2], dim=-1))
+                text_features = fusion_layer(torch.cat([Ffusion1, Ffusion2 , text_features], dim=-1))
             tav = torch.cat([text_features, audio_features, video_features], dim=-1)
         elif self.fusion == "guiseppe":
             # Dont need the fixed MHA encoder here because QV, only need to be the same size
@@ -152,6 +153,7 @@ class TAVForMAE(nn.Module):
             for i in range(self.num_layers):
                 aud_text_layer = self.aud_text_layers[i]
                 vid_text_layer = self.vid_text_layers[i]
+                # Key the same, Query and Value are the other modality
                 Ffusion1, _ = aud_text_layer(
                     Ffusion1, audio_features, audio_features, key_padding_mask=audio_mask
                 )
@@ -161,8 +163,10 @@ class TAVForMAE(nn.Module):
             tav = torch.cat([Ffusion1, Ffusion2, audio_features, video_features], dim=-1)
         elif self.fusion == "concat":
             tav = torch.cat([text_features, audio_features, video_features], dim=-1)
+            
+        # batch_size , 512 , 1024*3
 
-        tav = tav.mean(dim=1)  # I take the mean here
+        tav = tav.mean(dim=1)  
 
         del text_features
         del audio_features
