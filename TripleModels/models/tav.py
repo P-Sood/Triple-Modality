@@ -198,7 +198,7 @@ class TAVForMAE_HDF5(nn.Module):
             self.f.create_dataset(f"{check}/{video_path[0][0].split('/')[-1][:-4]}_{timings[0][0]}/video", data=vid_outputs.cpu().detach().numpy())
         else:
             self.f.create_dataset(f"{check}/{video_path[0].split('/')[-1][:-4]}_{timings[0]}/video", data=vid_outputs.cpu().detach().numpy())
-        assert last_hidden_text_state.shape[1] == aud_outputs.shape[1] == vid_outputs.shape[1] == 512, f"Seq length are not equal {last_hidden_text_state.shape} {aud_outputs.shape} {vid_outputs.shape}"
+        assert last_hidden_text_state.shape == aud_outputs.shape == vid_outputs.shape, f"Seq length are not equal text: {last_hidden_text_state.shape} audio: {aud_outputs.shape} video: {vid_outputs.shape}"
         tav = torch.concatenate((text_outputs, aud_outputs.mean(dim = 1), vid_outputs[:,0]), dim=1)
         if check == "train":
             tav = self.dropout(tav)
