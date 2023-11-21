@@ -139,7 +139,7 @@ class TAVForMAE_HDF5(nn.Module):
         path = [
             "meld_iemo_finetuning/lq79a7fs/legendary-sweep-11/best.pt",
             "WhisperStart/qgl7153h/toasty-sweep-9/best.pt",
-            "VideoDA/4g2igbuv/<FILL>/best.pt",
+            "VideoDA/4g2igbuv/dry-sweep-7/best.pt",
         ]
         
         for i, model in enumerate([self.bert, self.whisper, self.videomae]):
