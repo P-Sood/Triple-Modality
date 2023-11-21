@@ -11,4 +11,4 @@
 
 #SBATCH --output=../outputs/videoMAE_fullseq.txt
 
-wandb agent ddi/WhisperStart/qgl7153h
+wandb agent ddi/VideoDA/4g2igbuv
