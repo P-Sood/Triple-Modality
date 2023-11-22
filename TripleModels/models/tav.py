@@ -150,7 +150,7 @@ class TAVForMAE_HDF5(nn.Module):
                 for key in roberta_state_dict.keys():
                     bert_key = 'bert.' + key  # prepend 'bert.' to the key
                     if bert_key in bert_state_dict:
-                        print(f"Loading {bert_key}"  , flush = True)
+                        # print(f"Loading {bert_key}"  , flush = True)
                         roberta_state_dict[key] = bert_state_dict[bert_key]
 
                 model.load_state_dict(roberta_state_dict)
@@ -191,28 +191,25 @@ class TAVForMAE_HDF5(nn.Module):
             self.f.create_dataset(f"{check}/{video_path[0][0].split('/')[-1][:-4]}_{timings[0]}/text", data=last_hidden_text_state.cpu().detach().numpy())
         else:
             self.f.create_dataset(f"{check}/{video_path[0].split('/')[-1][:-4]}_{timings[0]}/text", data=last_hidden_text_state.cpu().detach().numpy())
-        del last_hidden_text_state
-        del input_ids
-        del text_attention_mask
+        
 
         aud_outputs = self.whisper.encoder(audio_features)[0][:,:512,:]
-        del audio_features
         
         if self.must:
             aud_context = self.whisper.encoder(context_audio)[0][:,:512,:]
             self.f.create_dataset(f"{check}/{video_path[0][1].split('/')[-1][:-4]}_{timings[0][1]}/audio_context", data=aud_context.cpu().detach().numpy())
             self.f.create_dataset(f"{check}/{video_path[0][0].split('/')[-1][:-4]}_{timings[0][0]}/audio", data=aud_outputs.cpu().detach().numpy())
-            del aud_context
+            
         else:
             self.f.create_dataset(f"{check}/{video_path[0].split('/')[-1][:-4]}_{timings[0]}/audio", data=aud_outputs.cpu().detach().numpy())
             
 
         vid_outputs = self.videomae(video_embeds, bool_masked_pos = video_mask)[0]  
-        del video_embeds
+        
 
         if self.must:
             vid_context = self.videomae(video_context, bool_masked_pos = video_mask)[0]
-            del video_context
+            
             self.f.create_dataset(f"{check}/{video_path[0][1].split('/')[-1][:-4]}_{timings[0][1]}/video_context", data=vid_context.cpu().detach().numpy())
             self.f.create_dataset(f"{check}/{video_path[0][0].split('/')[-1][:-4]}_{timings[0][0]}/video", data=vid_outputs.cpu().detach().numpy())
         else:
