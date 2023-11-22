@@ -141,48 +141,28 @@ class TAVForMAE_HDF5(nn.Module):
         ]
         
         for i, model in enumerate([self.bert, self.whisper, self.videomae]):
-            try:
-                if i == 0:
-                    # On bert
-                    bert_state_dict = torch.load(f"/l/users/zeerak.talat/TAV_Train/{path[i]}" , map_location=torch.device('cuda'))['model_state_dict']
-                    roberta_state_dict = self.bert.state_dict()
+            
+            print(f"Loading from {path[i]}, got some error on hard path on {i}" , flush = True)
+            if i == 0:
+                bert_state_dict = torch.load(f"../../../TAV_Train/{path[i]}" , map_location=torch.device('cuda'))['model_state_dict']
+                roberta_state_dict = self.bert.state_dict()
 
-                    for key in roberta_state_dict.keys():
-                        bert_key = 'bert.' + key  # prepend 'bert.' to the key
-                        if bert_key in bert_state_dict:
-                            roberta_state_dict[key] = bert_state_dict[bert_key]
+                for key in roberta_state_dict.keys():
+                    bert_key = 'bert.' + key  # prepend 'bert.' to the key
+                    if bert_key in bert_state_dict:
+                        roberta_state_dict[key] = bert_state_dict[bert_key]
 
-                    self.bert.load_state_dict(roberta_state_dict)
-                elif i == 1: # Whisper
-                    checkpoint = torch.load(f"/l/users/zeerak.talat/TAV_Train/{path[i]}")
-                    new_state_dict = {k.replace('whisper.', ''): v for k, v in checkpoint.items()}
-
-                    model.load_state_dict(new_state_dict)
-                else:
-                    checkpoint = torch.load(f"/l/users/zeerak.talat/TAV_Train/{path[i]}" , map_location=torch.device('cuda'))
-                    model.load_state_dict(checkpoint['model_state_dict'])
-            except:
-                print(f"Loading from {path[i]}, got some error on hard path on {i}" , flush = True)
-                if i == 0:
-                    bert_state_dict = torch.load(f"../../../TAV_Train/{path[i]}" , map_location=torch.device('cuda'))['model_state_dict']
-                    roberta_state_dict = self.bert.state_dict()
-
-                    for key in roberta_state_dict.keys():
-                        bert_key = 'bert.' + key  # prepend 'bert.' to the key
-                        if bert_key in bert_state_dict:
-                            roberta_state_dict[key] = bert_state_dict[bert_key]
-
-                    model.load_state_dict(roberta_state_dict)
-                elif i == 1: # Whisper
-                    checkpoint = torch.load(f"../../../TAV_Train/{path[i]}")
-                    new_state_dict = {k.replace('whisper.', ''): v for k, v in checkpoint.items()}
-
-                    model.load_state_dict(new_state_dict)
-                else:
-                    checkpoint = torch.load(f"../../../TAV_Train/{path[i]}", map_location=torch.device('cuda'))
-                    model.load_state_dict(checkpoint['model_state_dict'])
-            for param in model.base_model.parameters():
-                param.requires_grad = False
+                model.load_state_dict(roberta_state_dict)
+            elif i == 1: # Whisper
+                checkpoint = torch.load(f"../../../TAV_Train/{path[i]}", map_location=torch.device('cuda'))['model_state_dict']
+                # remove 'whisper.' from key
+                new_state_dict = {k.replace('whisper.', ''): v for k, v in checkpoint.items()}
+                model.load_state_dict(new_state_dict)
+            else:
+                checkpoint = torch.load(f"../../../TAV_Train/{path[i]}", map_location=torch.device('cuda'))
+                model.load_state_dict(checkpoint['model_state_dict'])
+        for param in model.base_model.parameters():
+            param.requires_grad = False
                 
         self.dropout = nn.Dropout(self.dropout)
         self.linear1 = nn.Linear(1024*3, self.output_dim)
