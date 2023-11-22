@@ -32,19 +32,17 @@ def collate_batch(batch):
         labels.append(label)
 
     text = torch.stack(text, dim=0).squeeze(dim=1)
-    audio = pad_sequence(audio, batch_first=True).squeeze(dim=1)
+    audio = torch.stack(audio, dim=0).squeeze(dim=1)
     # audio_context = pad_sequence(audio_context, batch_first=True)
-    video = pad_sequence(video, batch_first=True).squeeze(dim=1)
+    video = torch.stack(video, dim=0).squeeze(dim=1)
     # video_context = pad_sequence(video_context, batch_first=True)
 
     return {
         "text_features": text,
         "audio_features": audio,
-        # "audio_context"  : audio_context,
         "audio_context": torch.Tensor([]),
         "video_features": video,
         "video_context": torch.Tensor([]),
-        # "video_context"  : video_context,
     }, torch.Tensor(np.array(labels)).long()
 
 
@@ -62,41 +60,38 @@ class TAVForMAE(nn.Module):
         self.learn_PosEmbeddings = args["learn_PosEmbeddings"]
         self.num_layers = args["num_layers"]
         self.dataset = args["dataset"]
-        self.sota = args["sota"]
+        self.fusion = args["fusion"]
         self.hidden_size = args["hidden_size"]
 
-        print(f"Using {self.num_layers} layers \nUsing sota = {self.sota}", flush=True)
+        print(f"Using {self.num_layers} layers \nUsing fusion : {self.fusion}", flush=True)
 
         self.must = True if "must" in str(self.dataset).lower() else False
         self.p = 0.6  # This is to decide how much to weight the context vs the actual features for Mustard
 
         # Everything before this line is unlearnable, everything after is what we are focused on
 
-        self.aud_norm = nn.LayerNorm(1024)
-        self.bert_norm = nn.LayerNorm(768)
-        self.vid_norm = nn.LayerNorm(768)
-        self.wav_2_768_2 = nn.Linear(1024, 768)
-        self.wav_2_768_2.weight = torch.nn.init.xavier_normal_(self.wav_2_768_2.weight)
-
         self.aud_text_layers = nn.ModuleList(
             [
-                nn.MultiheadAttention(embed_dim=768, num_heads=8, batch_first=True)
+                nn.MultiheadAttention(embed_dim=1024, num_heads=8, batch_first=True)
                 for _ in range(self.num_layers)
             ]
         )
         self.vid_text_layers = nn.ModuleList(
             [
-                nn.MultiheadAttention(embed_dim=768, num_heads=8, batch_first=True)
+                nn.MultiheadAttention(embed_dim=1024, num_heads=8, batch_first=True)
                 for _ in range(self.num_layers)
             ]
         )
-        if self.sota:
+        if self.fusion == "sota":
             self.fusion_layers = nn.ModuleList(
-                [nn.Linear(768 * 2, 768) for _ in range(self.num_layers)]
+                [nn.Linear(1024 * 3, 1024) for _ in range(self.num_layers)]
             )
-            self.linear1 = nn.Linear(768 * 3, self.hidden_size)
-        else:
-            self.linear1 = nn.Linear(768 * 4, self.hidden_size)
+            self.linear1 = nn.Linear(1024 * 3, self.hidden_size)
+        elif self.fusion == "guiseppe":
+            self.linear1 = nn.Linear(1024 * 4, self.hidden_size)
+        elif self.fusion == "concat":
+            self.linear1 = nn.Linear(1024 * 3, self.hidden_size)
+            
 
         self.dropout = nn.Dropout(self.dropout)
         self.linear2 = nn.Linear(self.hidden_size, self.output_dim)
@@ -112,84 +107,59 @@ class TAVForMAE(nn.Module):
         check="train",
     ):
         # Transformer Time
-        text_outputs = self.bert_norm(text_features)
-        aud_outputs = self.aud_norm(audio_features)
-        del text_features
-        del audio_features
-
         if self.must:
-            audio_context = self.aud_norm(audio_context)
-            aud_outputs = (aud_outputs * self.p + audio_context * (1 - self.p)) / 2
+            audio_features = (audio_features * self.p + audio_context * (1 - self.p)) / 2
             del audio_context
-
-        aud_outputs = self.wav_2_768_2(aud_outputs)
-
-        vid_outputs = self.vid_norm(video_features)
-        del video_features
-
-        if self.must:
-            video_context = self.vid_norm(video_context)
-            vid_outputs = (vid_outputs * self.p + video_context * (1 - self.p)) / 2
+            video_features = (video_features * self.p + video_context * (1 - self.p)) / 2
             del video_context
 
-        # text_outputs = text_outputs.squeeze(dim = 1)
-        # aud_outputs = aud_outputs.squeeze(dim = 1)
-        # vid_outputs = vid_outputs.squeeze(dim = 1)
-
-        text_audi_video_aligned = pad_sequence(
-            torch.unbind(text_outputs, dim=0)
-            + torch.unbind(aud_outputs, dim=0)
-            + torch.unbind(vid_outputs, dim=0),
-            batch_first=True,
-        )
-        bs = len(text_audi_video_aligned) // 3
-        text_outputs, aud_outputs, vid_outputs = (
-            text_audi_video_aligned[:bs],
-            text_audi_video_aligned[bs : 2 * bs],
-            text_audi_video_aligned[2 * bs :],
-        )
-        # Create the padding mask for the aud tensor
-        audio_mask = torch.any(aud_outputs == 0, dim=-1)
-
-        # Create the padding mask for the video tensor
-        video_mask = torch.any(vid_outputs == 0, dim=-1)
-        # Pad the sequence length dimension based on batch sizes. This is because the MHA expects a fixed sequence length
         # Model Head
-        if self.sota:
+        if self.fusion == "sota":
+            
             for i in range(self.num_layers):
-                Ffusion1 = text_outputs
-                Ffusion2 = text_outputs
+                Ffusion1 = text_features
+                Ffusion2 = text_features
                 aud_text_layer = self.aud_text_layers[i]
                 vid_text_layer = self.vid_text_layers[i]
                 fusion_layer = self.fusion_layers[i]
+                # Q, K , V inputs
+                # Fuse audio/video to the textual dimension
                 Ffusion1, _ = aud_text_layer(
-                    Ffusion1, aud_outputs, Ffusion1, key_padding_mask=audio_mask
+                    Ffusion1, audio_features, Ffusion1
                 )
                 Ffusion2, _ = vid_text_layer(
-                    Ffusion2, vid_outputs, Ffusion2, key_padding_mask=video_mask
+                    Ffusion2, video_features, Ffusion2
                 )
-                text_outputs = fusion_layer(torch.cat([Ffusion1, Ffusion2], dim=-1))
-            tav = torch.cat([text_outputs, aud_outputs, vid_outputs], dim=-1)
-        else:
+                # run a linear layer over audio_text, video_text and text to become the new text features
+                text_features = fusion_layer(torch.cat([Ffusion1, Ffusion2 , text_features], dim=-1))
+            # Concatenate the text features interlaced with audio and video context, with the audio and video features
+            tav = torch.cat([text_features, audio_features, video_features], dim=-1)
+            
+        elif self.fusion == "guiseppe":
             # Dont need the fixed MHA encoder here because QV, only need to be the same size
-            Ffusion1 = text_outputs
-            Ffusion2 = text_outputs
+            Ffusion1 = text_features
+            Ffusion2 = text_features
             for i in range(self.num_layers):
                 aud_text_layer = self.aud_text_layers[i]
                 vid_text_layer = self.vid_text_layers[i]
+                # Query the same, Key and Value are the other modality
                 Ffusion1, _ = aud_text_layer(
-                    Ffusion1, aud_outputs, aud_outputs, key_padding_mask=audio_mask
+                    Ffusion1, audio_features, audio_features
                 )
                 Ffusion2, _ = vid_text_layer(
-                    Ffusion2, vid_outputs, vid_outputs, key_padding_mask=video_mask
+                    Ffusion2, video_features, video_features
                 )
-            tav = torch.cat([Ffusion1, Ffusion2, aud_outputs, vid_outputs], dim=-1)
+            tav = torch.cat([Ffusion1, Ffusion2, audio_features, video_features], dim=-1)
+        elif self.fusion == "concat":
+            tav = torch.cat([text_features, audio_features, video_features], dim=-1)
+            
+        # batch_size , 512 , 1024*3
 
-        tav = tav.mean(dim=1)  # I take the mean here
+        tav = tav.mean(dim=1)  
 
-        del text_outputs
-        del aud_outputs
-        del vid_outputs
+        del text_features
+        del audio_features
+        del video_features
         # del Ffusion1
         # del Ffusion2
 
@@ -202,4 +172,4 @@ class TAVForMAE(nn.Module):
             tav = self.dropout(tav)
         tav = self.linear2(tav)
 
-        return tav  # returns [batch_size,output_dim]
+        return tav  
