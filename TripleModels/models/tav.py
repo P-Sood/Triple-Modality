@@ -150,6 +150,7 @@ class TAVForMAE_HDF5(nn.Module):
                 for key in roberta_state_dict.keys():
                     bert_key = 'bert.' + key  # prepend 'bert.' to the key
                     if bert_key in bert_state_dict:
+                        print(f"Loading {bert_key}"  , flush = True)
                         roberta_state_dict[key] = bert_state_dict[bert_key]
 
                 model.load_state_dict(roberta_state_dict)
@@ -159,8 +160,9 @@ class TAVForMAE_HDF5(nn.Module):
                 new_state_dict = {k.replace('whisper.', ''): v for k, v in checkpoint.items() if k in model.state_dict()}
                 model.load_state_dict(new_state_dict)
             else:
-                checkpoint = torch.load(f"../../../TAV_Train/{path[i]}", map_location=torch.device('cuda'))
-                model.load_state_dict(checkpoint['model_state_dict'])
+                checkpoint = torch.load(f"../../../TAV_Train/{path[i]}", map_location=torch.device('cuda'))['model_state_dict']
+                new_state_dict = {k: v for k, v in checkpoint.items() if k in model.state_dict()}
+                model.load_state_dict(new_state_dict)
         for param in model.base_model.parameters():
             param.requires_grad = False
                 
