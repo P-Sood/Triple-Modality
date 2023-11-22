@@ -142,12 +142,35 @@ class TAVForMAE_HDF5(nn.Module):
         
         for i, model in enumerate([self.bert, self.whisper, self.videomae]):
             try:
-                checkpoint = torch.load(f"/l/users/zeerak.talat/TAV_Train/{path[i]}" , map_location=torch.device('cuda'))
-                model.load_state_dict(checkpoint['model_state_dict'])
+                if i == 0:
+                    # On bert
+                    bert_state_dict = torch.load(f"/l/users/zeerak.talat/TAV_Train/{path[i]}" , map_location=torch.device('cuda'))['model_state_dict']
+                    roberta_state_dict = self.bert.state_dict()
+
+                    for key in roberta_state_dict.keys():
+                        bert_key = 'bert.' + key  # prepend 'bert.' to the key
+                        if bert_key in bert_state_dict:
+                            roberta_state_dict[key] = bert_state_dict[bert_key]
+
+                    self.bert.load_state_dict(roberta_state_dict)
+                else:
+                    checkpoint = torch.load(f"/l/users/zeerak.talat/TAV_Train/{path[i]}" , map_location=torch.device('cuda'))
+                    model.load_state_dict(checkpoint['model_state_dict'])
             except:
                 print(f"Loading from {path[i]}, got some error on hard path on {i}" , flush = True)
-                checkpoint = torch.load(f"../../../TAV_Train/{path[i]}", map_location=torch.device('cuda'))
-                model.load_state_dict(checkpoint['model_state_dict'])
+                if i == 0:
+                    bert_state_dict = torch.load(f"../../../TAV_Train/{path[i]}" , map_location=torch.device('cuda'))['model_state_dict']
+                    roberta_state_dict = self.bert.state_dict()
+
+                    for key in roberta_state_dict.keys():
+                        bert_key = 'bert.' + key  # prepend 'bert.' to the key
+                        if bert_key in bert_state_dict:
+                            roberta_state_dict[key] = bert_state_dict[bert_key]
+
+                    self.bert.load_state_dict(roberta_state_dict)
+                else:
+                    checkpoint = torch.load(f"../../../TAV_Train/{path[i]}", map_location=torch.device('cuda'))
+                    model.load_state_dict(checkpoint['model_state_dict'])
             for param in model.base_model.parameters():
                 param.requires_grad = False
                 
@@ -206,6 +229,6 @@ class TAVForMAE_HDF5(nn.Module):
         tav = torch.concatenate((text_outputs, aud_outputs.mean(dim = 1), vid_outputs[:,0]), dim=1)
         if check == "train":
             tav = self.dropout(tav)
-        tav = self.linear1(text_outputs)
+        tav = self.linear1(tav)
         
         return tav  # returns [batch_size,output_dim]
