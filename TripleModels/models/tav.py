@@ -156,7 +156,7 @@ class TAVForMAE_HDF5(nn.Module):
             elif i == 1: # Whisper
                 checkpoint = torch.load(f"../../../TAV_Train/{path[i]}", map_location=torch.device('cuda'))['model_state_dict']
                 # remove 'whisper.' from key
-                new_state_dict = {k.replace('whisper.', ''): v for k, v in checkpoint.items()}
+                new_state_dict = {k.replace('whisper.', ''): v for k, v in checkpoint.items() if k in model.state_dict()}
                 model.load_state_dict(new_state_dict)
             else:
                 checkpoint = torch.load(f"../../../TAV_Train/{path[i]}", map_location=torch.device('cuda'))
