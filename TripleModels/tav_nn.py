@@ -33,7 +33,7 @@ def prepare_dataloader(
     label_task,
     epoch_switch,
     pin_memory=True,
-    num_workers=4,
+    num_workers=0,
     check="train",
     accum=False,
     sampler = None,
