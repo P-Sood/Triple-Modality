@@ -91,7 +91,7 @@ def collate_batch(batch, must):  # batch is a pseudo pandas array of two columns
         "video_context": torch.stack(video_context).permute(0, 2, 1, 3, 4),
         "video_mask": vid_mask,
     }
-    return {**text , **audio_features , **visual_embeds}, torch.Tensor(np.array(label_list))
+    return {**text , **audio_features , **visual_embeds}, torch.Tensor(np.array(label_list)).long()
 
 
 
