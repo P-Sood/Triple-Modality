@@ -11,4 +11,3 @@
 #SBATCH --output=../outputs/meld_fusion.txt
 
 wandb agent ddi/Fusion/0y8z5jjv
-# nohup bash -c "sleep 10; git stash; git checkout NewFeatures; sleep 10; git pull; sleep 10; sbatch meld.sh" & disown
