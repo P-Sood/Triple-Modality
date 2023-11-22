@@ -112,9 +112,7 @@ class TAVForMAE_HDF5(nn.Module):
         
         self.must = False
         self.tiktok = False
-        if "meld" in str(self.dataset).lower() and "iemo" in str(self.dataset).lower():
-            dataset_name = "meld_iemo"
-        elif "meld" in str(self.dataset).lower():
+        if "meld" in str(self.dataset).lower():
             dataset_name = "meld"
         elif "iemo" in str(self.dataset).lower():
             dataset_name = "iemo"
@@ -148,7 +146,7 @@ class TAVForMAE_HDF5(nn.Module):
                 model.load_state_dict(checkpoint['model_state_dict'])
             except:
                 print(f"Loading from {path[i]}, got some error on hard path on {i}" , flush = True)
-                checkpoint = torch.load(f"../../../{path[i]}", map_location=torch.device('cuda'))
+                checkpoint = torch.load(f"../../../TAV_Train/{path[i]}", map_location=torch.device('cuda'))
                 model.load_state_dict(checkpoint['model_state_dict'])
             for param in model.base_model.parameters():
                 param.requires_grad = False
