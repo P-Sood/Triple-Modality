@@ -414,7 +414,7 @@ def arg_parse(description):
         "--sota", "-so", help="Should we use SOTA or not", default=False, type=bool
     )
     parser.add_argument(
-        "--batch_size", "-b", help="Set the batch_size", default=1, type=int
+        "--batch_size", "-b", help="Set the batch_size", default=2, type=int
     )
     parser.add_argument(
         "--weight_decay", "-w", help="Set the weight_decay", default=0.0001, type=float
@@ -428,6 +428,27 @@ def arg_parse(description):
         help="Set the epoch to switch from iterative to weightedRandomSampler",
         default=2,
         type=int,
+    )
+    parser.add_argument(
+        "--sampler",
+        "-sam",
+        help="Set Sampler",
+        default="Weighted",
+        type=str,
+    )
+    parser.add_argument(
+        "--BertModel",
+        "-bm",
+        help="Set Model for bert",
+        default="roberta-large",
+        type=str,
+    )
+    parser.add_argument(
+        "--text_column",
+        "-tc",
+        help="Set text to use for features",
+        default="text",
+        type=str,
     )
     parser.add_argument(
         "--patience", "-p", help="Set the patience", default=10.0, type=float
@@ -467,7 +488,7 @@ def arg_parse(description):
         "--dataset",
         "-d",
         help="The dataset we are using currently, or the folder the dataset is inside",
-        default="../data/text_audio_video_emotion_data",
+        default="../../data/meld",
     )
     parser.add_argument(
         "--model", "-m", help="The model we are using currently", default="MAE_encoder"
@@ -490,7 +511,7 @@ def arg_parse(description):
         "--lstm_layers", "-ll", help="set number of LSTM layers", default=1, type=int
     )
     parser.add_argument(
-        "--hidden_layers",
+        "--hidden_size",
         "-o",
         help="values corresponding to each hidden layer",
         default=768,
