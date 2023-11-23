@@ -36,6 +36,7 @@ class TextAudioVideoDataset(Dataset):
 
         if timings != None:
             try:
+                df['timings'] = df['timings'].replace({np.nan:None})
                 self.timings = df[timings].values.tolist()
             except:
                 self.timings = [None] * len(self.audio_path)
@@ -89,9 +90,11 @@ class TextAudioVideoDataset(Dataset):
         return len(self.labels)
 
     def __getitem__(self, idx):
-        timings = (
-            list(self.timings[idx]) if self.timings[idx] != None else self.timings[idx]
-        )
+        timings = self.timings[idx]
+        # timings = (
+        #     list(self.timings[idx]) if (self.timings[idx] != None or self.timings[idx] != np.nan) else self.timings[idx]
+        # )
+        timings = self.timings[idx]
         text = self.Data.textFeatures(self.video_path[idx], timings, self.check)
         audio, audio_context = self.Data.audioFeatures(
             self.video_path[idx], timings, self.check

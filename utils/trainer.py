@@ -1,4 +1,3 @@
-
 import os
 import wandb
 import torch
@@ -15,7 +14,6 @@ from torch import is_tensor
 
 logging.set_verbosity_error()
 warnings.filterwarnings("ignore")
-# from transformers.optimization import AdamW
 
 class Trainer:
     """ big_batch: if batch > big_batch then we will use checkpointing to save memory.
@@ -34,13 +32,15 @@ class Trainer:
     ):
         batch_loss = None
         label = label.to(self.device)
+        
         input = {k:v.to(self.device) if is_tensor(v) else v for k, v in input.items()}
         
         output = model(**input, check=check)
 
-        for k, v in input.items():
-            input[k] = v.cpu() if is_tensor(v) else v
+        for k in list(input.keys()):
+            input[k] = input[k].cpu() if is_tensor(input[k]) else input[k]
             del input[k]
+        
 
         Metric.update_metrics(torch.argmax(output, dim=1), label)
         if criterion is not None:
@@ -60,7 +60,6 @@ class Trainer:
     ):
         batch_loss = None
         label = label.to(self.device)
-        
         input = {k:v.to(self.device) if is_tensor(v) else v for k, v in input.items()}
         
         output = checkpoint(
@@ -69,8 +68,8 @@ class Trainer:
             check=check,
             use_reentrant=False,
         )
-        for k, v in input.items():
-            input[k] = v.cpu() if is_tensor(v) else v
+        for k in list(input.keys()):
+            input[k] = input[k].cpu() if is_tensor(input[k]) else input[k]
             del input[k]
 
         Metric.update_metrics(torch.argmax(output, dim=1), label)
