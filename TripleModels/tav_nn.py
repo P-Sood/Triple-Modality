@@ -299,7 +299,7 @@ def main():
     print(
         f" in main \n param_dict = {param_dict} \n model_param = {model_param} \n df {config.dataset} , with df = {len(df)} \n "
     )
-    runModel("cuda", df_train, df_val, df_test, param_dict, model_param)
+    runModel("cuda" if torch.cuda.is_available() else "cpu", df_train, df_val, df_test, param_dict, model_param)
 
 
 if __name__ == "__main__":
