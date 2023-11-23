@@ -162,6 +162,7 @@ class Data:
             return audio, audio_context
 
     def textFeatures(self, path, timings, check):
+        breakpoint()
         text = torch.tensor(
             self.FILE[f"{check}/{path.split('/')[-1][:-4]}_{timings}/text"][()]
         )
