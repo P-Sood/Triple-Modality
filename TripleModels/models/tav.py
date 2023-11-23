@@ -165,9 +165,11 @@ class TAVForMAE_HDF5(nn.Module):
                 model.load_state_dict(new_state_dict)
         for param in model.base_model.parameters():
             param.requires_grad = False
+        
                 
         self.dropout = nn.Dropout(self.dropout)
         self.linear1 = nn.Linear(1024*3, self.output_dim)
+        pdb.set_trace()
 
     def forward(
         self,
