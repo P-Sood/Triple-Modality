@@ -150,7 +150,7 @@ def runModel(accelerator, df_train, df_val, df_test, param_dict, model_param):
     print(loss, flush=True)
     Metric = Metrics(num_classes=num_labels, id2label=id2label, rank=device)
     df_train_accum = prepare_dataloader(
-        df_train, dataset, 1, label_task, epoch_switch, check="train", accum=True, sampler=sampler
+        df_train, dataset, batch_size, label_task, epoch_switch, check="train", accum=True, sampler=sampler
     )
     df_train_no_accum = prepare_dataloader(
         df_train,

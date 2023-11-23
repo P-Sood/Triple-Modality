@@ -141,7 +141,7 @@ class TAVForMAE_HDF5(nn.Module):
         ]
         
         for i, model in enumerate([self.bert, self.whisper, self.videomae]):
-            
+            pdb.set_trace()
             print(f"Loading from {path[i]}, got some error on hard path on {i}" , flush = True)
             if i == 0:
                 bert_state_dict = torch.load(f"../../../TAV_Train/{path[i]}" , map_location=torch.device('cuda'))['model_state_dict']
