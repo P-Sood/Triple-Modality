@@ -20,7 +20,7 @@ parameters:
   weight_decay:
     values: [1e-5 , 1e-4, 1e-3, 1e-2]
   batch_size:
-    values: [24, 32]
+    values: [8 , 16 , 24]
   seed:
     values: [32, 64, 96]
   mask:
