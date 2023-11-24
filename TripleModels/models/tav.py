@@ -17,12 +17,6 @@ def collate_batch(batch):
     video_context = []
     labels = []
 
-    # text = batch[0]["text_features"]#.squeeze()
-    # audio = batch[0]["audio_features"]#.squeeze()
-    # audio_context = batch[0]["audio_context"]#.squeeze()
-    # video = batch[0]["video_features"]#.squeeze()
-    # video_context = batch[0]["video_context"]#.squeeze()
-
     for input, label in batch:
         text.append(input["text_features"].squeeze())
         audio.append(input["audio_features"].squeeze())
@@ -59,11 +53,31 @@ class TAVForMAE(nn.Module):
         self.dropout = args["dropout"]
         self.learn_PosEmbeddings = args["learn_PosEmbeddings"]
         self.num_layers = args["num_layers"]
+        self.num_encoders = args["num_encoders"]
         self.dataset = args["dataset"]
         self.fusion = args["fusion"]
         self.hidden_size = args["hidden_size"]
 
         print(f"Using {self.num_layers} layers \nUsing fusion : {self.fusion}", flush=True)
+        
+        self.text_encoder_layers = nn.ModuleList(
+            [
+                nn.TransformerEncoderLayer(d_model=1024, nhead=8, dropout=self.dropout , batch_first=True)
+                for _ in range(self.num_encoders)
+            ]
+        )
+        self.audio_encoder_layers = nn.ModuleList(
+            [
+                nn.TransformerEncoderLayer(d_model=1024, nhead=8, dropout=self.dropout , batch_first=True)
+                for _ in range(self.num_encoders)
+            ]
+        )
+        self.video_encoder_layers = nn.ModuleList(
+            [
+                nn.TransformerEncoderLayer(d_model=1024, nhead=8, dropout=self.dropout , batch_first=True)
+                for _ in range(self.num_encoders)
+            ]
+        )
 
         self.must = True if "must" in str(self.dataset).lower() else False
         self.p = 0.6  # This is to decide how much to weight the context vs the actual features for Mustard
@@ -112,6 +126,12 @@ class TAVForMAE(nn.Module):
             del audio_context
             video_features = (video_features * self.p + video_context * (1 - self.p)) / 2
             del video_context
+            
+        # Encoder layers
+        for i in range(self.num_encoders):
+            text_outputs = self.text_encoder_layers[i](text_outputs)
+            aud_outputs  = self.audio_encoder_layers[i](aud_outputs)
+            vid_outputs  = self.video_encoder_layers[i](vid_outputs)
 
         # Model Head
         if self.fusion == "sota":

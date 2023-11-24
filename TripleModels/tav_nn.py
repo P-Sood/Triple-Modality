@@ -287,6 +287,7 @@ def main():
         "dropout": config.dropout,
         "early_div": config.early_div,
         "num_layers": config.num_layers,
+        "num_encoders": config.num_encoders,
         "learn_PosEmbeddings": config.learn_PosEmbeddings,
         "dataset": config.dataset,
         "fusion": config.fusion,

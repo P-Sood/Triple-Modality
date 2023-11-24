@@ -538,6 +538,13 @@ def arg_parse(description):
         type=int,
     )
     parser.add_argument(
+        "--num_encoders",
+        "-nl",
+        help="the number of encoders in our transformers model",
+        default=3,
+        type=int,
+    )
+    parser.add_argument(
         "--learn_PosEmbeddings",
         "-lpe",
         help="If we should learn our positional embeddings",
