@@ -139,9 +139,8 @@ class TAVForMAE_HDF5(nn.Module):
             "WhisperStart/qgl7153h/toasty-sweep-9/best.pt",
             "VideoDA/4g2igbuv/dry-sweep-7/best.pt",
         ]
-        
+
         for i, model in enumerate([self.bert, self.whisper, self.videomae]):
-            pdb.set_trace()
             print(f"Loading from {path[i]}, got some error on hard path on {i}" , flush = True)
             if i == 0:
                 bert_state_dict = torch.load(f"../../../TAV_Train/{path[i]}" , map_location=torch.device('cuda'))['model_state_dict']
@@ -160,13 +159,14 @@ class TAVForMAE_HDF5(nn.Module):
                 new_state_dict = {k.replace('whisper.', ''): v for k, v in checkpoint.items() if k.replace('whisper.', '') in model.state_dict()}
                 model.load_state_dict(new_state_dict)
             else:
+                pdb.set_trace()
                 checkpoint = torch.load(f"../../../TAV_Train/{path[i]}", map_location=torch.device('cuda'))['model_state_dict']
                 new_state_dict = {k.replace('videomae.', ''): v for k, v in checkpoint.items() if k.replace('videomae.', '') in model.state_dict()}
                 model.load_state_dict(new_state_dict)
         for param in model.base_model.parameters():
             param.requires_grad = False
-        
-                
+
+
         self.dropout = nn.Dropout(self.dropout)
         self.linear1 = nn.Linear(1024*3, self.output_dim)
         pdb.set_trace()
