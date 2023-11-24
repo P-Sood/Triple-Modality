@@ -12,7 +12,7 @@ metric:
   name: val/weighted-f1-score
 parameters:
   epoch:
-    max: 12
+    max: 7
     min: 6
     distribution: int_uniform
   learning_rate:
@@ -31,6 +31,8 @@ parameters:
     values: [False]
   num_layers:
     values: [3, 4, 5, 6, 7, 8]
+  num_encoders:
+    values: [1 , 2 , 3, 4, 5]
   patience:
     values: [14]
   clip:
