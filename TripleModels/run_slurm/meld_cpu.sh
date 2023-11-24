@@ -11,4 +11,4 @@
 #SBATCH --output=../outputs/meld_triple_test.txt
 
 #wandb agent ddi/MeldTriple/jtzs474d
-wandb agent ddi/MeldOneLoss/unx4sx7l
+
