@@ -539,7 +539,7 @@ def arg_parse(description):
     )
     parser.add_argument(
         "--num_encoders",
-        "-nl",
+        "-ne",
         help="the number of encoders in our transformers model",
         default=3,
         type=int,
