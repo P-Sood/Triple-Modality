@@ -159,7 +159,7 @@ class TAVForMAE_HDF5(nn.Module):
                 new_state_dict = {k.replace('whisper.', ''): v for k, v in checkpoint.items() if k.replace('whisper.', '') in model.state_dict()}
                 model.load_state_dict(new_state_dict)
             else:
-                pdb.set_trace()
+    
                 checkpoint = torch.load(f"../../../TAV_Train/{path[i]}", map_location=torch.device('cuda'))['model_state_dict']
                 new_state_dict = {k.replace('videomae.', ''): v for k, v in checkpoint.items() if k.replace('videomae.', '') in model.state_dict()}
                 model.load_state_dict(new_state_dict)
@@ -169,7 +169,10 @@ class TAVForMAE_HDF5(nn.Module):
 
         self.dropout = nn.Dropout(self.dropout)
         self.linear1 = nn.Linear(1024*3, self.output_dim)
-        pdb.set_trace()
+        
+        self.bert.eval()
+        self.whisper.eval()
+        self.videomae.eval()
 
     def forward(
         self,
@@ -216,7 +219,7 @@ class TAVForMAE_HDF5(nn.Module):
             self.f.create_dataset(f"{check}/{video_path[0][0].split('/')[-1][:-4]}_{timings[0][0]}/video", data=vid_outputs.cpu().detach().numpy())
         else:
             self.f.create_dataset(f"{check}/{video_path[0].split('/')[-1][:-4]}_{timings[0]}/video", data=vid_outputs.cpu().detach().numpy())
-        assert last_hidden_text_state.shape == aud_outputs.shape == vid_outputs.shape, f"Seq length are not equal text: {last_hidden_text_state.shape} audio: {aud_outputs.shape} video: {vid_outputs.shape}"
+        
         tav = torch.concatenate((text_outputs, aud_outputs.mean(dim = 1), vid_outputs[:,0]), dim=1)
         if check == "train":
             tav = self.dropout(tav)
