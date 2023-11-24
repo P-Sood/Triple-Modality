@@ -135,7 +135,7 @@ class TAVForMAE_HDF5(nn.Module):
         self.videomae = VideoMAEModel.from_pretrained("MCG-NJU/videomae-large")
         
         path = [
-            "meld_iemo_finetuning/lq79a7fs/legendary-sweep-11/best.pt",
+            "meld_iemo_text/de3djeoo/good-sweep-17/best.pt",
             "WhisperStart/qgl7153h/toasty-sweep-9/best.pt",
             "VideoDA/4g2igbuv/dry-sweep-7/best.pt",
         ]
@@ -188,6 +188,14 @@ class TAVForMAE_HDF5(nn.Module):
         check="train",
     ):
         # Transformer Time
+        # last_hidden_text_state: torch.Tensor
+        # text_outputs : torch.Tensor
+        # aud_outputs: torch.Tensor
+        # aud_context : torch.Tensor
+        # vid_outputs: torch.Tensor
+        # vid_context : torch.Tensor
+        
+        
         last_hidden_text_state, text_outputs = self.bert(
             input_ids=input_ids, attention_mask=text_attention_mask, return_dict=False
         )
