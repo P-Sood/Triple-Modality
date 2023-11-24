@@ -129,9 +129,9 @@ class TAVForMAE(nn.Module):
             
         # Encoder layers
         for i in range(self.num_encoders):
-            text_outputs = self.text_encoder_layers[i](text_outputs)
-            aud_outputs  = self.audio_encoder_layers[i](aud_outputs)
-            vid_outputs  = self.video_encoder_layers[i](vid_outputs)
+            text_features = self.text_encoder_layers[i](text_features)
+            audio_features  = self.audio_encoder_layers[i](audio_features)
+            video_features  = self.video_encoder_layers[i](video_features)
 
         # Model Head
         if self.fusion == "sota":
