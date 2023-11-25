@@ -135,7 +135,7 @@ class TAVForMAE_HDF5(nn.Module):
         self.videomae = VideoMAEModel.from_pretrained("MCG-NJU/videomae-large")
         
         path = [
-            "meld_iemo_finetuning/lq79a7fs/legendary-sweep-11/best.pt",
+            "meld_iemo_text/de3djeoo/good-sweep-17/best.pt",
             "WhisperStart/qgl7153h/toasty-sweep-9/best.pt",
             "VideoDA/4g2igbuv/dry-sweep-7/best.pt",
         ]
@@ -159,7 +159,7 @@ class TAVForMAE_HDF5(nn.Module):
                 new_state_dict = {k.replace('whisper.', ''): v for k, v in checkpoint.items() if k.replace('whisper.', '') in model.state_dict()}
                 model.load_state_dict(new_state_dict)
             else:
-                pdb.set_trace()
+    
                 checkpoint = torch.load(f"../../../TAV_Train/{path[i]}", map_location=torch.device('cuda'))['model_state_dict']
                 new_state_dict = {k.replace('videomae.', ''): v for k, v in checkpoint.items() if k.replace('videomae.', '') in model.state_dict()}
                 model.load_state_dict(new_state_dict)
@@ -169,7 +169,10 @@ class TAVForMAE_HDF5(nn.Module):
 
         self.dropout = nn.Dropout(self.dropout)
         self.linear1 = nn.Linear(1024*3, self.output_dim)
-        pdb.set_trace()
+        
+        self.bert.eval()
+        self.whisper.eval()
+        self.videomae.eval()
 
     def forward(
         self,
@@ -185,6 +188,14 @@ class TAVForMAE_HDF5(nn.Module):
         check="train",
     ):
         # Transformer Time
+        # last_hidden_text_state: torch.Tensor
+        # text_outputs : torch.Tensor
+        # aud_outputs: torch.Tensor
+        # aud_context : torch.Tensor
+        # vid_outputs: torch.Tensor
+        # vid_context : torch.Tensor
+        
+        
         last_hidden_text_state, text_outputs = self.bert(
             input_ids=input_ids, attention_mask=text_attention_mask, return_dict=False
         )
@@ -216,7 +227,7 @@ class TAVForMAE_HDF5(nn.Module):
             self.f.create_dataset(f"{check}/{video_path[0][0].split('/')[-1][:-4]}_{timings[0][0]}/video", data=vid_outputs.cpu().detach().numpy())
         else:
             self.f.create_dataset(f"{check}/{video_path[0].split('/')[-1][:-4]}_{timings[0]}/video", data=vid_outputs.cpu().detach().numpy())
-        assert last_hidden_text_state.shape == aud_outputs.shape == vid_outputs.shape, f"Seq length are not equal text: {last_hidden_text_state.shape} audio: {aud_outputs.shape} video: {vid_outputs.shape}"
+        
         tav = torch.concatenate((text_outputs, aud_outputs.mean(dim = 1), vid_outputs[:,0]), dim=1)
         if check == "train":
             tav = self.dropout(tav)
