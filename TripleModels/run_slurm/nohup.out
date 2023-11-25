@@ -1,0 +1,113 @@
+Saved working directory and index state WIP on FeatureGeneration: ea3f9d0 final change in exception
+Switched to branch 'NewFeatures'
+Your branch and 'origin/NewFeatures' have diverged,
+and have 3 and 8 different commits each, respectively.
+  (use "git pull" to merge the remote branch into yours)
+From github.com:P-Sood/Triple-Modality
+   ea3f9d0..a062006  FeatureGeneration -> origin/FeatureGeneration
+Removing utils/train.py
+Removing setup.cfg
+Removing run_text_only_NN.sh
+Removing run_scripts/save_files_from_run/tes_pkl_files.ipynb
+Removing run_scripts/pre_process_for_audio.py
+Removing run_scripts/make_videos_hdf5.py
+Removing run_scripts/make_audios_hdf5.py
+Removing run_scripts/get_timings.py
+Removing run_scripts/convert_features.py
+Removing run_scripts/__init__.py
+Removing req.txt
+Removing notebooks/vis_bert.ipynb
+Removing notebooks/videos.ipynb
+Removing notebooks/test_pytorch.ipynb
+Removing notebooks/test_models.ipynb
+Removing notebooks/test_dataset_TEST.ipynb
+Removing notebooks/test.ipynb
+Removing notebooks/sentiment_not_emotion.ipynb
+Removing notebooks/multiGPUClassificationtest.ipynb
+Removing notebooks/merge_Dataframs.ipynb
+Removing notebooks/lookingInsideDataFrames.ipynb
+Removing notebooks/get_metadata_stats.ipynb
+Removing notebooks/getMemes.ipynb
+Removing notebooks/getMaxLenAudio.ipynb
+Removing notebooks/data_meld.ipynb
+Removing notebooks/check_timings_dfs.ipynb
+Removing notebooks/check_datasets.ipynb
+Removing notebooks/audio.ipynb
+Removing notebooks/Wav2Vec_Reduction.ipynb
+Removing notebooks/TikTok_Beginning.ipynb
+Removing notebooks/SarcasmVideo.ipynb
+Removing notebooks/NSERC_Example.ipynb
+Removing notebooks/NLP.ipynb
+Removing TripleModels/train_model/tav_train.py
+Removing TripleModels/train_model/__init__.py
+Auto-merging TripleModels/run_slurm/meld.sh
+CONFLICT (content): Merge conflict in TripleModels/run_slurm/meld.sh
+Removing SingleModels/train_model/visual_training.py
+Removing SingleModels/train_model/text_training.py
+Removing SingleModels/train_model/image_training.py
+Removing SingleModels/train_model/audio_training.py
+Removing ResultsFromTest/visbertTest.txt
+Removing ResultsFromTest/imageTest.txt
+Removing ResultsFromTest/bertTest.txt
+Removing README_and_Requirements/requirements.txt
+Removing README_and_Requirements/README.VaibhavSaini
+Removing README_and_Requirements/README.PranavSood
+Removing README_and_Requirements/README.OpkarGhadu
+Removing GeneralNotebook_ForHow_CodeWorks/CMPT413_runScript.ipynb
+Removing FinetuneFacialRecognition/torchvisionCelebA.py
+Removing EvaluationScripts/VisBert_eval.ipynb
+Removing EvaluationScripts/Image_eval.ipynb
+Removing EvaluationScripts/Bert_eval.ipynb
+Removing DoubleModels/train_model/visual_bert_train.py
+Removing DoubleModels/train_model/text_video_train.py
+Removing DoubleModels/train_model/text_audio_train.py
+Removing DoubleModels/train_model/audio_video_train.py
+Removing DoubleModels/train_model/__init__.py
+Removing .gitattributes
+Automatic merge failed; fix conflicts and then commit the result.
+Submitted batch job 273797
+Submitted batch job 273798
+Submitted batch job 273799
+Submitted batch job 273800
+iemo.sh
+make_features.iemo.sh
+make_features.meld.sh
+make_features.mustard.sh
+make_features.tiktok.sh
+meld.sh
+meld_multi.txt
+mustard.sh
+nohup.out
+tiktok.sh
+wandb
+lol
+No local changes to save
+Switched to branch 'NewFeatures'
+Your branch and 'origin/NewFeatures' have diverged,
+and have 4 and 1 different commits each, respectively.
+  (use "git pull" to merge the remote branch into yours)
+Merge made by the 'recursive' strategy.
+ TripleModels/tav_nn.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+Submitted batch job 274227
+Submitted batch job 274228
+Submitted batch job 274229
+Submitted batch job 274230
+No local changes to save
+Already on 'NewFeatures'
+Your branch is ahead of 'origin/NewFeatures' by 5 commits.
+  (use "git push" to publish your local commits)
+Already up to date.
+Submitted batch job 274258
+Submitted batch job 274259
+Submitted batch job 274260
+Submitted batch job 274261
+No local changes to save
+Already on 'NewFeatures'
+Your branch is ahead of 'origin/NewFeatures' by 5 commits.
+  (use "git push" to publish your local commits)
+Already up to date.
+Submitted batch job 274264
+Submitted batch job 274265
+Submitted batch job 274266
+Submitted batch job 274267

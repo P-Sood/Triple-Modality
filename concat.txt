@@ -1,0 +1,2 @@
+/l/users/zeerak.talat/Triple-Modality/concat.py:22: UserWarning: swmr=True only affects read ('r') mode. For swmr write mode, set f.swmr_mode = True after opening the file.
+  with h5py.File(vf1, 'r' , libver="latest", swmr=True) as f1, h5py.File(vf2, 'r' , libver="latest", swmr=True) as f2, h5py.File(output_vf, 'w' , libver="latest", swmr=True) as fo:

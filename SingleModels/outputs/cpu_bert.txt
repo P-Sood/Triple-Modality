@@ -1,0 +1,29 @@
+wandb: Currently logged in as: zeerak (ddi). Use `wandb login --relogin` to force relogin
+wandb: Tracking run with wandb version 0.16.0
+wandb: Run data is saved locally in /l/users/zeerak.talat/Triple-Modality/SingleModels/outputs/wandb/run-20231114_010753-3uzx12pp
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run devout-wave-13
+wandb: ⭐️ View project at https://wandb.ai/ddi/Triple-Modality-SingleModels
+wandb: 🚀 View run at https://wandb.ai/ddi/Triple-Modality-SingleModels/runs/3uzx12pp
+ in main 
+ param_dict = {'epoch': 3, 'patience': 10.0, 'lr': 1e-06, 'clip': 1.0, 'batch_size': 1, 'weight_decay': 0.0001, 'model': 'MAE_encoder', 'T_max': 2, 'seed': 32, 'label_task': 'emotion', 'mask': False, 'loss': 'NewCrossEntropy', 'beta': 1, 'epoch_switch': 2, 'sampler': 'Weighted', 'text_column': 'concatenated', 'weights': tensor([0.0566, 0.0946, 0.1123, 0.1134, 0.1435, 0.2395, 0.2401]), 'label2id': {'surprise': 2, 'anger': 3, 'neutral': 0, 'joy': 1, 'sadness': 4, 'fear': 5, 'disgust': 6}, 'id2label': {2: 'surprise', 3: 'anger', 0: 'neutral', 1: 'joy', 4: 'sadness', 5: 'fear', 6: 'disgust'}} 
+ model_param = {'output_dim': 7, 'dropout': 0.5, 'early_div': False, 'num_layers': 12, 'learn_PosEmbeddings': True, 'dataset': '../../data/meld', 'sota': False, 'hidden_size': 768, 'BertModel': 'j-hartmann/emotion-english-roberta-large'} 
+ df ../../data/meld , with df = 13704 
+ 
+NewCrossEntropy
+9988
+9988
+we are in multinomial dataloader
+epochs:   0%|          | 0/3 [00:00<?, ?it/s]
+steps:   0%|          | 0/1 [00:00<?, ?it/s][A
+
+We are in normal unweighted CEL
+iter:   0%|          | 0/9988 [00:00<?, ?it/s][A[A
+
+iter:   0%|          | 1/9988 [00:14<39:28:56, 14.23s/it][A[A
+
+iter:   0%|          | 2/9988 [00:27<37:36:24, 13.56s/it][A[A
+
+iter:   0%|          | 3/9988 [00:38<34:19:11, 12.37s/it][A[A
+
+iter:   0%|          | 4/9988 [00:48<31:40:30, 11.42s/it][A[Aslurmstepd-cn-12: error: *** STEP 267652.0 ON cn-12 CANCELLED AT 2023-11-14T01:09:07 ***
