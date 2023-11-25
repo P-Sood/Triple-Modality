@@ -1,3 +1,4 @@
+import pandas as pd
 import h5py
 def audio():
     af1 = 'data/whisper_meld_audio.hdf5'
@@ -30,6 +31,11 @@ def video():
             # Copy each dataset to the output file
             f2.copy(name, fo)
 
+def meld():
+    df = pd.read_pickle("data/meld_iemo.pkl")
+    new_df = df.head(13704)
+    new_df.to_pickle("data/meld.pkl")
+
 
 if __name__ == "__main__":
-    video()
+    meld()
