@@ -212,9 +212,6 @@ def main():
     elif param_dict['sampler'] == "Iterative" and param_dict['loss'] == "CrossEntropy":
         print(f"We are not going to learn anything with sampler == {param_dict['sampler'] } and loss == {param_dict['loss']}. \nKill it" , flush=True)
         return 0
-    if param_dict['sampler'] == "Both" and (param_dict['loss'] == "WeightedCrossEntropy" or param_dict['loss'] == "CrossEntropy"):
-        print(f"We are not going to learn anything with sampler == {param_dict['sampler'] } and loss == {param_dict['loss']}. \nKill it" , flush=True)
-        return 0
     elif (param_dict['sampler'] == "Iterative" or param_dict['sampler'] == "Weighted") and param_dict['loss'] == "NewCrossEntropy":
         print(f"We are not going to learn anything with sampler == {param_dict['sampler'] } and loss == {param_dict['loss']}. \nKill it" , flush=True)
         return 0
