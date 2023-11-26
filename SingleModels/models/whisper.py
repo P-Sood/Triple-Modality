@@ -70,7 +70,7 @@ class WhisperForEmotionClassification(nn.Module):
         if self.must:
             aud_context = self.whisper.encoder(context_audio)[0]
             del context_audio
-            new_aud_context = aud_context[:,:512,:] # Cut it to be this, now assign it
+            new_aud_context = torch.zeros_like(aud_context[:,:512,:]) # Cut it to be this, now assign it
             for i , row in enumerate(aud_context):
    
                 if context_timings_list[i][1] - context_timings_list[i][0] < 10.24:
