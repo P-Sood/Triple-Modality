@@ -44,7 +44,7 @@ parameters:
   hidden_size:
     values: [64, 128, 256, 384, 768, 1536]
   label_task:
-    values: ['emotion']
+    values: ['sentiment']
   sota:
     values: [True, False]
   model:
