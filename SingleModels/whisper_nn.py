@@ -223,7 +223,7 @@ def main():
     elif param_dict["label_task"] == "sarcasm":
         number_index = "sarcasm"
         label_index = "sarcasm_label"
-        df = df[df["context"] == False]
+        df = df[df["context"] == False] # I do this after i split them into train/test/val
     elif param_dict["label_task"] == "content": # Needs this to be content too not tiktok
         number_index = "content"
         label_index = "content_label"
