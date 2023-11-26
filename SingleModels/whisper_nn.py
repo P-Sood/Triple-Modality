@@ -2,7 +2,7 @@ import os
 import sys
 
 sys.path.insert(0, "/".join(os.getcwd().split("/")[:-2]))
-__package__ = "TripleModels"
+__package__ = "SingleModels"
 
 from transformers import logging
 
@@ -11,18 +11,17 @@ import warnings
 
 warnings.filterwarnings("ignore")
 
-from models.whisper import collate_batch , WhisperForEmotionClassification 
+from .models.whisper import collate_batch , WhisperForEmotionClassification 
 import wandb
 from utils.data_loaders import WhisperDataset
 import pandas as pd
 import torch
 import numpy as np
-from utils.global_functions import arg_parse, Metrics, MySampler, NewCrossEntropyLoss
+from utils.global_functions import arg_parse, Metrics, MySampler, NewCrossEntropyLoss, set_seed
 from torch.utils.data import DataLoader
 from torch.utils.data.sampler import WeightedRandomSampler
 from utils.trainer import Trainer
-
-
+    
 class BatchCollation:
     def __init__(self, must) -> None:
         self.must = must
@@ -191,6 +190,7 @@ def main():
 
     np.random.seed(config.seed)
     torch.random.manual_seed(config.seed)
+    set_seed(config.seed)
     param_dict = {
         "epoch": config.epoch,
         "patience": config.patience,

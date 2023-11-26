@@ -29,7 +29,6 @@ class BertClassifier(nn.Module):
         self.output_dim = args["output_dim"]
         self.dataset = args["dataset"]
         self.BertModel = args["BertModel"]
-        self.hidden_size = args["hidden_size"]
         
         self.bert = AutoModel.from_pretrained(self.BertModel)
 

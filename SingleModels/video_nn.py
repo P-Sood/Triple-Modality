@@ -12,16 +12,14 @@ import numpy as np
 import pandas as pd
 
 
-from utils.global_functions import arg_parse, Metrics, MySampler, NewCrossEntropyLoss
+from utils.global_functions import arg_parse, Metrics, MySampler, NewCrossEntropyLoss, set_seed
 
 
 # NEW IMPORTS
 from torch.utils.data import DataLoader
 from .models.video import collate_batch
 from utils.trainer import Trainer
-
-##
-
+    
 class BatchCollation:
     def __init__(self, must) -> None:
         self.must = must
@@ -50,7 +48,7 @@ def prepare_dataloader(
     must = True if "must" in str(dataset).lower() else False
     print(f"Are we running on mustard? {must}", flush=True) 
     dataset = VideoDataset(
-        df, dataset, batch_size = 1 if sampler == "Both" else batch_size, feature_col="audio_path", label_col=label_task , accum=accum ,check=check
+        df, dataset, batch_size = 1 if sampler == "Both" else batch_size, feature_col="video_path", label_col=label_task , accum=accum ,check=check
     )
 
     if check == "train":
@@ -190,6 +188,7 @@ def main():
 
     np.random.seed(config.seed)
     torch.random.manual_seed(config.seed)
+    set_seed(config.seed)
     param_dict = {
         "epoch": config.epoch,
         "patience": config.patience,
