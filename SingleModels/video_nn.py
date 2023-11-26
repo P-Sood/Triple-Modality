@@ -207,7 +207,16 @@ def main():
         "sampler": config.sampler,
     }
     if param_dict['sampler'] == "Weighted" and param_dict['loss'] == "WeightedCrossEntropy":
-        print("We are not going to learn anything with sampler == Weighted and loss == WeightedCrossEntropy. \nKill it" , flush=True)
+        print(f"We are not going to learn anything with sampler == {param_dict['sampler'] } and loss == {param_dict['loss']}. \nKill it" , flush=True)
+        return 0
+    elif param_dict['sampler'] == "Iterative" and param_dict['loss'] == "CrossEntropy":
+        print(f"We are not going to learn anything with sampler == {param_dict['sampler'] } and loss == {param_dict['loss']}. \nKill it" , flush=True)
+        return 0
+    if param_dict['sampler'] == "Both" and param_dict['loss'] == "WeightedCrossEntropy":
+        print(f"We are not going to learn anything with sampler == {param_dict['sampler'] } and loss == {param_dict['loss']}. \nKill it" , flush=True)
+        return 0
+    elif param_dict['sampler'] == "Both" and param_dict['loss'] == "CrossEntropy":
+        print(f"We are not going to learn anything with sampler == {param_dict['sampler'] } and loss == {param_dict['loss']}. \nKill it" , flush=True)
         return 0
 
     df = pd.read_pickle(f"{config.dataset}.pkl")
