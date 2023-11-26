@@ -6,7 +6,7 @@ import whisper
 import math
 from tqdm import tqdm
 import ast
-
+import numpy as np
 
 def speech_file_to_array_fn(path, timings, target_sampling_rate=16000):
     speech_array = whisper.load_audio(path , target_sampling_rate) # Loads it in as a numpy array
@@ -68,10 +68,13 @@ def arg_parse():
 def main():
     args = arg_parse()
     df = pd.read_pickle(args.dataset)
+    df['timings'] = df['timings'].replace({np.nan:None})
     if "meld" in args.dataset.lower():
         name = "meld"
-    else:
+    elif "iemo" in args.dataset.lower():
         name = "iemo"
+    else:
+        name = "must"
     f = h5py.File(f"../data/whisper_{name}_audio.hdf5", "a", libver="latest", swmr=True)
     f.swmr_mode = True
     tqdm.pandas()

@@ -16,11 +16,13 @@ def collate_batch(batch, must):  # batch is a pseudo pandas array of two columns
     speech_list_context = []
     label_list = []
     speech_list_context_input_values = torch.empty((1))
+    context_timings_list = []
     #breakpoint()
     for input, label in batch:
         if not must:
             speech_list.append(FEAT(input[1] , sampling_rate=16000).input_features[0])
         else:
+            context_timings_list.append(input[-1][0]) # The 0 is always context
             speech_list.append(FEAT(input[1], sampling_rate=16000).input_features[0])
             speech_list_context.append(FEAT(input[2], sampling_rate=16000).input_features[0])
 
@@ -32,6 +34,7 @@ def collate_batch(batch, must):  # batch is a pseudo pandas array of two columns
     audio_features = {
         "audio_features": torch.Tensor(np.array(speech_list)),
         "context_audio": speech_list_context_input_values,
+        "context_timings_list": context_timings_list,
     }
 
     return audio_features, torch.Tensor(np.array(label_list)).long()
@@ -60,16 +63,26 @@ class WhisperForEmotionClassification(nn.Module):
         self.dropout = nn.Dropout(self.dropout)
         self.linear1 = nn.Linear(1024, self.output_dim)
 
-    def forward(self, audio_features, context_audio, check):
+    def forward(self, audio_features, context_audio , context_timings_list, check):
         aud_outputs = self.whisper.encoder(audio_features)[0][:,:512,:]
         aud_outputs = aud_outputs.mean(dim=1)
         del audio_features
         if self.must:
-            aud_context = self.whisper.encoder(context_audio)[0][:,:512,:]
-            aud_context = aud_context.mean(dim=1)
+            aud_context = self.whisper.encoder(context_audio)[0]
             del context_audio
-            aud_outputs = (aud_outputs * self.p + aud_context * (1 - self.p)) / 2
+            new_aud_context = aud_context[:,:512,:] # Cut it to be this, now assign it
+            for i , row in enumerate(aud_context):
+   
+                if context_timings_list[i][1] - context_timings_list[i][0] < 10.24:
+                    new_aud_context[i] = row[:512] # If less then 10.24 seconds then take first 10.24 seconds
+                    
+                else: # Take the last 10.24 seconds
+                    new_aud_context[i] = row[-512:]
             del aud_context
+                
+            new_aud_context = new_aud_context.mean(dim=1)
+            aud_outputs = (aud_outputs * self.p + new_aud_context * (1 - self.p)) / 2
+            del new_aud_context
 
         if check == "train":
             aud_outputs = self.dropout(aud_outputs)

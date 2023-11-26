@@ -12,7 +12,7 @@ from torchvision.transforms import (
     RandomHorizontalFlip,
     RandomVerticalFlip,
 )
-
+import pdb
 
 # ------------------------------------------------------------TRIPLE MODELS BELOW--------------------------------------------------------------------
 class TextAudioVideoDataset(Dataset):
@@ -65,7 +65,7 @@ class TextAudioVideoDataset(Dataset):
         elif "tiktok" in dataset:
             dataset = "tiktok"
         else:
-            dataset = "mustard"
+            dataset = "must"
             self.timings = df["timings"].values.reshape(-1, 2).tolist()
             self.audio_path = df[feature_col1].values.reshape(-1, 2).tolist()
             df = df[df["context"] == False]
@@ -154,7 +154,7 @@ class VideoDataset(Dataset):
         elif "tiktok" in dataset:
             dataset = "tiktok"
         else:
-            dataset = "mustard"
+            dataset = "must"
             self.timings = df["timings"].values.reshape(-1, 2).tolist()
             self.video_path = df[feature_col].values.reshape(-1, 2).tolist()
             df = df[df["context"] == False]
@@ -221,9 +221,10 @@ class WhisperDataset(Dataset):
         elif "tiktok" in dataset:
             dataset = "tiktok"
         else:
-            dataset = "mustard"
+            dataset = "must"
             self.timings = df["timings"].values.reshape(-1, 2).tolist()
             self.audio_path = df[feature_col].values.reshape(-1, 2).tolist()
+            # 0 is context, 1 is utterance
             df = df[df["context"] == False]
         
         self.Data = Data(video=None, audio=f"../../data/whisper_{dataset}_audio.hdf5")
@@ -316,16 +317,30 @@ class BertDataset(Dataset):
 
 class Data:
     def __init__(self, video, audio) -> None:
-        self.VIDEOS = (
-            h5py.File(video, "r", libver="latest", swmr=True)
-            if video is not None
-            else None
-        )
-        self.AUDIOS = (
-            h5py.File(audio, "r", libver="latest", swmr=True)
-            if audio is not None
-            else None
-        )
+        try:
+            self.VIDEOS = (
+                h5py.File(video, "r", libver="latest", swmr=True)
+                if video is not None
+                else None
+            )
+        except:
+            self.VIDEOS = (
+                h5py.File(video[3:], "r", libver="latest", swmr=True)
+                if video is not None
+                else None
+            )
+        try:    
+            self.AUDIOS = (
+                h5py.File(audio, "r", libver="latest", swmr=True)
+                if audio is not None
+                else None
+            )
+        except:
+            self.AUDIOS = (
+                h5py.File(audio[3:], "r", libver="latest", swmr=True)
+                if audio is not None
+                else None
+            )
         self.must = False
 
         if video is not None:

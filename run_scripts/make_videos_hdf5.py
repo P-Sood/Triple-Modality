@@ -167,10 +167,14 @@ def main():
     # 405 IS MESSED UP ../data/tiktok_videos/train/educative/sadboy_circus_7177431016494222638.mp4
     args = arg_parse()
     df = pd.read_pickle(args.dataset)
+    df['timings'] = df['timings'].replace({np.nan:None})
+    df['speaker'] = df['speaker'].replace({np.nan:None})
     if "meld" in args.dataset.lower():
         name = "meld"
-    else:
+    elif "iemo" in args.dataset.lower():
         name = "iemo"
+    else:
+        name = "must"
     f = h5py.File(f"../data/{name}_videos_blackground.hdf5", "a", libver="latest", swmr=True)
     f.swmr_mode = True
     tqdm.pandas()
