@@ -1,10 +1,10 @@
-program: ../text_nn.py
+program: ../video_nn.py
 command:
   - ${env}
   - python3
   - ${program}
   - "--dataset"
-  - "../../data/meld"
+  - "../../data/must"
 method: bayes
 
 metric:
@@ -20,7 +20,7 @@ parameters:
   weight_decay:
     values: [1e-5 , 1e-4, 1e-3, 1e-2]
   batch_size:
-    values: [8 , 16 , 24]
+    values: [8 , 16]
   seed:
     values: [64]
   mask:
@@ -54,8 +54,8 @@ parameters:
   sampler:
     values: ['Both' , 'Iterative' , 'Weighted']
   BertModel:
-    values: ['roberta-large']
+    values: ["MCG-NJU/videomae-base"]
   text_column:
-    values: ['text']
+    values: ['video_path']
   beta:
     values: [1]

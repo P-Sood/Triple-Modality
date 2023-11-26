@@ -1,10 +1,10 @@
-program: ../text_nn.py
+program: ../whisper_nn.py
 command:
   - ${env}
   - python3
   - ${program}
   - "--dataset"
-  - "../../data/meld"
+  - "../../data/iemo"
 method: bayes
 
 metric:
@@ -20,7 +20,7 @@ parameters:
   weight_decay:
     values: [1e-5 , 1e-4, 1e-3, 1e-2]
   batch_size:
-    values: [8 , 16 , 24]
+    values: [1, 2 , 4]
   seed:
     values: [64]
   mask:
@@ -54,8 +54,8 @@ parameters:
   sampler:
     values: ['Both' , 'Iterative' , 'Weighted']
   BertModel:
-    values: ['roberta-large']
+    values: ['openai/whisper-large']
   text_column:
-    values: ['text']
+    values: ['audio_path']
   beta:
     values: [1]

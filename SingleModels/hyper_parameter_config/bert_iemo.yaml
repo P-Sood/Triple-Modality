@@ -4,7 +4,7 @@ command:
   - python3
   - ${program}
   - "--dataset"
-  - "../../data/meld"
+  - "../../data/iemo"
 method: bayes
 
 metric:

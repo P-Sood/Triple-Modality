@@ -1,10 +1,10 @@
-program: ../text_nn.py
+program: ../whisper_nn.py
 command:
   - ${env}
   - python3
   - ${program}
   - "--dataset"
-  - "../../data/meld"
+  - "../../data/must"
 method: bayes
 
 metric:
@@ -12,17 +12,17 @@ metric:
   name: val/weighted-f1-score
 parameters:
   epoch:
-    max: 12
+    max: 8
     min: 6
     distribution: int_uniform
   learning_rate:
     values: [1e-6 , 1e-5 , 1e-4  , 5e-5 , 5e-6]
   weight_decay:
-    values: [1e-4, 1e-3, 1e-2]
+    values: [1e-5 , 1e-4, 1e-3, 1e-2]
   batch_size:
-    values: [8 , 16 , 32 , 64,]
+    values: [1, 2 , 4]
   seed:
-    values: [32, 64, 96]
+    values: [64]
   mask:
     values: [False]
   early_div:
@@ -54,8 +54,8 @@ parameters:
   sampler:
     values: ['Both' , 'Iterative' , 'Weighted']
   BertModel:
-    values: ['j-hartmann/emotion-english-roberta-large' , 'tasinhoque/roberta-large-go-emotions-2' , 'roberta-large']
+    values: ['openai/whisper-large']
   text_column:
-    values: ['concatenated_with_auth', 'concatenated']
+    values: ['audio_path']
   beta:
     values: [1]

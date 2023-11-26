@@ -4,7 +4,7 @@ command:
   - python3
   - ${program}
   - "--dataset"
-  - "../../data/meld_iemo"
+  - "../../data/meld"
 method: bayes
 
 metric:
@@ -12,7 +12,7 @@ metric:
   name: val/weighted-f1-score
 parameters:
   epoch:
-    max: 12
+    max: 8
     min: 6
     distribution: int_uniform
   learning_rate:
@@ -22,7 +22,7 @@ parameters:
   batch_size:
     values: [8 , 16]
   seed:
-    values: [32, 64, 96]
+    values: [64]
   mask:
     values: [False]
   early_div:
