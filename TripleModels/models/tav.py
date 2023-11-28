@@ -60,7 +60,7 @@ def collate_batch(batch, must):  # batch is a pseudo pandas array of two columns
             video_list.append(vid_features[1])
         else:
             path_video.append(vid_features[0])
-            target_timings.append(vid_features[3])
+            target_timings.append(vid_features[-1])
             
             context_timings_list.append(audio_path[-1][0]) # The 0 is always context
             speech_list.append(FEAT(audio_path[1], sampling_rate=16000).input_features[0])
@@ -140,7 +140,7 @@ class TAVForMAE_HDF5(nn.Module):
             f"{dataset_name}_video/myt3iav2/rose-sweep-69/best.pt",
             ]
         else:
-            dataset_name = "mustard"
+            dataset_name = "must"
             self.must = True
             path = [
             f"{dataset_name}_bert/aoago6hk/woven-sweep-62/best.pt",
@@ -149,6 +149,8 @@ class TAVForMAE_HDF5(nn.Module):
             
             f"{dataset_name}_video/apl9ufpx/crisp-sweep-51/best.pt",
             ]
+            
+        print(path , flush = True)
             
         # self.f = h5py.File(f"../../data/{dataset_name}.final.seq_len.features.hdf5", "a", libver="latest", swmr=True)
         # try:
@@ -167,7 +169,7 @@ class TAVForMAE_HDF5(nn.Module):
         # Load in our finetuned models, exactly as they should be
         
         for i, model in enumerate([ self.bert , self.whisper, self.videomae]):
-            print(f"Loading from {path[i]}, " , flush = True)
+            print(f"Loading from {path[i]}, " , flush = True)                           # GO BACK TO CUDA
             ckpt =  torch.load(f"../../../TAV_Train/{path[i]}" , map_location=torch.device('cuda'))['model_state_dict']
             model.load_state_dict(ckpt)
         
@@ -181,9 +183,6 @@ class TAVForMAE_HDF5(nn.Module):
         self.bert.eval()
         self.whisper.eval()
         self.videomae.eval()
-
-        self.dropout = nn.Dropout(self.dropout)
-        self.linear1 = nn.Linear(1024, self.output_dim)
 
     def forward(
         self,
@@ -208,59 +207,62 @@ class TAVForMAE_HDF5(nn.Module):
         # vid_context : torch.Tensor
         
         
+        
         last_hidden_text_state, text_outputs = self.bert.bert(
             input_ids=input_ids, attention_mask=text_attention_mask, return_dict=False
         )
         
-        # if self.must:
-        #     self.f.create_dataset(f"{check}/{video_path[0][0].split('/')[-1][:-4]}_{timings[0]}/text", data=last_hidden_text_state.cpu().detach().numpy())
-        # else:
-        #     self.f.create_dataset(f"{check}/{video_path[0].split('/')[-1][:-4]}_{timings[0]}/text", data=last_hidden_text_state.cpu().detach().numpy())
+        if self.must:
+            delete = 3
+            # self.f.create_dataset(f"{check}/{video_path[0][1].split('/')[-1][:-4]}_{timings[0][1]}/text", data=last_hidden_text_state.cpu().detach().numpy())
+        else:
+            delete = 3
+            # self.f.create_dataset(f"{check}/{video_path[0].split('/')[-1][:-4]}_{timings[0]}/text", data=last_hidden_text_state.cpu().detach().numpy())
         
 
-        # aud_outputs = self.whisper.whisper.encoder(audio_features)[0][:,:512,:]
+        aud_outputs = self.whisper.whisper.encoder(audio_features)[0][:,:512,:]
         
-        
-        # if self.must:
-        #     aud_context = self.whisper.whisper.encoder(context_audio)[0][:,:512,:]
-        #     del context_audio
-        #     new_aud_context = torch.zeros_like(aud_context[:,:512,:]) # Cut it to be this, now assign it
-        #     for i , row in enumerate(aud_context):
-        #         if context_timings_list[i] == None:
-        #             new_aud_context[i] = row[:512] # If less then 10.24 seconds then take first 10.24 seconds
+        if self.must:
+            aud_context = self.whisper.whisper.encoder(context_audio)[0][:,:512,:]
+            del context_audio
+            new_aud_context = torch.zeros_like(aud_context[:,:512,:]) # Cut it to be this, now assign it
+            for i , row in enumerate(aud_context):
+                if context_timings_list[i] == None:
+                    new_aud_context[i] = row[:512] # If less then 10.24 seconds then take first 10.24 seconds
                     
-        #         elif context_timings_list[i][1] - context_timings_list[i][0] < 10.24:
-        #             new_aud_context[i] = row[:512] # If less then 10.24 seconds then take first 10.24 seconds
+                elif context_timings_list[i][1] - context_timings_list[i][0] < 10.24:
+                    new_aud_context[i] = row[:512] # If less then 10.24 seconds then take first 10.24 seconds
                     
-        #         else: # Take the last 10.24 seconds
-        #             new_aud_context[i] = row[-512:]
-        #     del aud_context
+                else: # Take the last 10.24 seconds
+                    new_aud_context[i] = row[-512:]
+            del aud_context
                 
-        #     self.f.create_dataset(f"{check}/{video_path[0][1].split('/')[-1][:-4]}_{timings[0][1]}/audio_context", data=aud_context.cpu().detach().numpy())
-        #     self.f.create_dataset(f"{check}/{video_path[0][0].split('/')[-1][:-4]}_{timings[0][0]}/audio", data=aud_outputs.cpu().detach().numpy())
-        #     aud_outputs = (aud_outputs * self.p + new_aud_context * (1 - self.p)) / 2
+            # self.f.create_dataset(f"{check}/{video_path[0][0].split('/')[-1][:-4]}_{timings[0][0]}/audio_context", data=aud_context.cpu().detach().numpy())
+            # self.f.create_dataset(f"{check}/{video_path[0][1].split('/')[-1][:-4]}_{timings[0][1]}/audio", data=aud_outputs.cpu().detach().numpy())
+            aud_outputs = (aud_outputs.mean(dim=1) * self.p + new_aud_context.mean(dim=1) * (1 - self.p)) / 2
             
-        # else:
-        #     self.f.create_dataset(f"{check}/{video_path[0].split('/')[-1][:-4]}_{timings[0]}/audio", data=aud_outputs.cpu().detach().numpy())
-            
+        else:
+            # self.f.create_dataset(f"{check}/{video_path[0].split('/')[-1][:-4]}_{timings[0]}/audio", data=aud_outputs.cpu().detach().numpy())
+            aud_outputs = aud_outputs.mean(dim=1)
 
-        # vid_outputs = self.videomae(video_embeds, bool_masked_pos = video_mask)[0]  
-        
+        vid_outputs = self.videomae.videomae(video_embeds, bool_masked_pos = video_mask)[0]  
 
-        # if self.must:
-        #     vid_context = self.videomae(video_context, bool_masked_pos = video_mask)[0]
+        if self.must:
+            vid_context = self.videomae.videomae(video_context, bool_masked_pos = video_mask)[0]
             
-        #     self.f.create_dataset(f"{check}/{video_path[0][1].split('/')[-1][:-4]}_{timings[0][1]}/video_context", data=vid_context.cpu().detach().numpy())
-        #     self.f.create_dataset(f"{check}/{video_path[0][0].split('/')[-1][:-4]}_{timings[0][0]}/video", data=vid_outputs.cpu().detach().numpy())
-        # else:
-        #     self.f.create_dataset(f"{check}/{video_path[0].split('/')[-1][:-4]}_{timings[0]}/video", data=vid_outputs.cpu().detach().numpy())
+            # self.f.create_dataset(f"{check}/{video_path[0][0].split('/')[-1][:-4]}_{timings[0][0]}/video_context", data=vid_context.cpu().detach().numpy())
+            # self.f.create_dataset(f"{check}/{video_path[0][1].split('/')[-1][:-4]}_{timings[0][1]}/video", data=vid_outputs.cpu().detach().numpy())
+            vid_outputs = (vid_outputs[:,0] * self.p + vid_context[:,0] * (1 - self.p)) / 2
+        else:
+            # self.f.create_dataset(f"{check}/{video_path[0].split('/')[-1][:-4]}_{timings[0]}/video", data=vid_outputs.cpu().detach().numpy())
+            vid_outputs = vid_outputs[:,0]
+        text_outputs = self.bert.linear1(text_outputs)
         
-        tav = self.bert.linear1(text_outputs)
-        # aud_outputs = self.whisper.linear1(aud_outputs.mean(dim=1))
+        aud_outputs = self.whisper.linear1(aud_outputs)
         
-        # vid_outputs = self.videomae.linear1(vid_outputs[:,0])
+        vid_outputs = self.videomae.linear1(vid_outputs)
         
-        # tav = (text_outputs + aud_outputs + vid_outputs) / 3
+        tav = (text_outputs + aud_outputs + vid_outputs) / 3
         
         return tav
 

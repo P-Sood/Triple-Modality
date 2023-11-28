@@ -30,8 +30,6 @@ class BertClassifier(nn.Module):
         self.output_dim = args["output_dim"]
         self.dataset = args["dataset"]
         self.BertModel = args["BertModel"]
-        self.label2id = args["label2id"]
-        self.id2label = args["id2label"]
         
         self.must = True if "must" in str(self.dataset).lower() else False
         self.p = 0.75

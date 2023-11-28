@@ -68,6 +68,23 @@ class TextAudioVideoDataset(Dataset):
             dataset = "must"
             self.timings = df["timings"].values.reshape(-1, 2).tolist()
             self.audio_path = df[feature_col1].values.reshape(-1, 2).tolist()
+            self.video_path = df[feature_col2].values.reshape(-1, 2).tolist()
+            self.texts = []
+            self.text_str = []
+            for i in range(0, len(df[feature_col3]), 2):
+
+                text = df[feature_col3].iloc[i][:-1] + "</s> " + df[feature_col3].iloc[i + 1]
+                self.text_str.append(text)
+                # tokenize the concatenated text
+                tokens = tokenizer(
+                    text,
+                    padding="max_length",
+                    max_length=max_len,
+                    truncation=True,
+                    return_tensors="pt",
+                )
+                self.texts.append(tokens)
+                
             df = df[df["context"] == False]
         
         
@@ -269,6 +286,8 @@ class BertDataset(Dataset):
 
     def __init__(self, df, dataset, batch_size, feature_col, label_col, accum=False , bert = "roberta-large"):
         
+        
+        
         max_len = 512# max([len(text.split()) for text in df[feature_col]]) + 2 # For CLS and SEP tokens
         tokenizer = AutoTokenizer.from_pretrained(bert)
         self.texts = [
@@ -281,6 +300,37 @@ class BertDataset(Dataset):
             )
             for text in df[feature_col]
         ]
+        
+       
+        if "meld" in dataset and "iemo" in dataset:
+            dataset = "meld_iemo"
+        elif "meld" in dataset:
+            dataset = "meld"
+        elif "iemo" in dataset:
+            dataset = "iemo"
+        elif "tiktok" in dataset:
+            dataset = "tiktok"
+        else:
+            dataset = "must"
+            
+            self.texts = []
+            self.text_str = []
+            for i in range(0, len(df[feature_col]), 2):
+
+                text = df[feature_col].iloc[i][:-1] + "</s> " + df[feature_col].iloc[i + 1]
+                self.text_str.append(text)
+                # tokenize the concatenated text
+                tokens = tokenizer(
+                    text,
+                    padding="max_length",
+                    max_length=max_len,
+                    truncation=True,
+                    return_tensors="pt",
+                )
+                self.texts.append(tokens)
+            print(self.text_str[60] , flush = True)
+            df = df[df["context"] == False]
+            
         
         self.labels = df[label_col].values.tolist()
         
@@ -389,9 +439,18 @@ class Data:
             )
 
         if not self.must:
-            video = torch.Tensor(
-                self.VIDEOS[f"{check}_{path.split('/')[-1][:-4]}_{timings}"][()]
-            )  # H5PY, how to remove data after loading it into memory
+            
+            try:
+    
+                video = torch.Tensor(self.VIDEOS[f"train_{path.split('/')[-1][:-4]}_{timings}"][()])  # H5PY, how to remove data after loading it into memory
+            except:
+                try:
+                    video = torch.Tensor(self.VIDEOS[f"test_{path.split('/')[-1][:-4]}_{timings}"][()])  # H5PY, how to remove data after loading it into memory
+                    
+                except:
+                    video = torch.Tensor(self.VIDEOS[f"val_{path.split('/')[-1][:-4]}_{timings}"][()])  # H5PY, how to remove data after loading it into memory
+       
+            
             video = transform(video)
             return path , video, timings
         else:
@@ -412,8 +471,16 @@ class Data:
         singular_func_ = random.choices(population=func_, weights=[0.5, 0.5], k=1)[0]
 
         if not self.must:
-            
-            speech_array = torch.Tensor(self.AUDIOS[f"{check}_{path.split('/')[-1][:-4]}_{timings}"][()])
+            try: # Need these 3 cases since im switching the splits for iemocap
+    
+                speech_array = torch.Tensor(self.AUDIOS[f"train_{path.split('/')[-1][:-4]}_{timings}"][()])
+            except:
+                try:
+                    speech_array = torch.Tensor(self.AUDIOS[f"test_{path.split('/')[-1][:-4]}_{timings}"][()])
+                    
+                except:
+                    speech_array = torch.Tensor(self.AUDIOS[f"val_{path.split('/')[-1][:-4]}_{timings}"][()])
+       
 
             if check == "train":
                 speech_array += singular_func_(speech_array, SNR=100 , path = path)

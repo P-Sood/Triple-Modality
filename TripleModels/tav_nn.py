@@ -93,7 +93,7 @@ def prepare_dataloader(
             num_workers=num_workers,
             drop_last=False,
             # shuffle=True,
-            collate_fn = BatchCollation(False),
+            collate_fn = BatchCollation(must),
             sampler=sampler,
         )
     else:
@@ -104,7 +104,7 @@ def prepare_dataloader(
             num_workers=num_workers,
             drop_last=False,
             shuffle=True,
-            collate_fn = BatchCollation(False),
+            collate_fn = BatchCollation(must),
         )
 
     return dataloader

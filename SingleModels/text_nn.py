@@ -17,6 +17,13 @@ from utils.global_functions import arg_parse, Metrics, MySampler, NewCrossEntrop
 
 TESTING_PIPELINE = False
 
+class BatchCollation:
+    def __init__(self, must) -> None:
+        self.must = must
+
+    def __call__(self, batch):
+        return collate_batch(batch, self.must)
+
 def prepare_dataloader(
     df,
     dataset,
@@ -25,7 +32,7 @@ def prepare_dataloader(
     epoch_switch,
     feature_col="text",
     pin_memory=True,
-    num_workers=4,
+    num_workers=0,
     check="train",
     accum=False,
     bert = None,
@@ -75,7 +82,7 @@ def prepare_dataloader(
             num_workers=num_workers,
             drop_last=False,
             # shuffle=True,
-            collate_fn = collate_batch,
+            collate_fn = BatchCollation(must),
             sampler=sampler,
         )
     else:
@@ -86,7 +93,7 @@ def prepare_dataloader(
             num_workers=num_workers,
             drop_last=False,
             shuffle=True,
-            collate_fn = collate_batch,
+            collate_fn = BatchCollation(must),
         )
 
     return dataloader
@@ -290,6 +297,8 @@ def main():
     print(
         f" in main \n param_dict = {param_dict} \n model_param = {model_param} \n df {config.dataset} , with df = {len(df)} \n "
     )
+    
+    print(df['text'].iloc[60] , flush = True)
     runModel("cuda", df_train, df_val, df_test, param_dict, model_param)
 
 
