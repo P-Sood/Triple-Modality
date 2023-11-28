@@ -50,7 +50,7 @@ class TextAudioVideoDataset(Dataset):
         elif "tiktok" in dataset:
             dataset = "tiktok"
         else:
-            dataset = "mustard"
+            dataset = "must"
             self.timings = df["timings"].values.reshape(-1, 2).tolist()
             self.audio_path = df[feature_col1].values.reshape(-1, 2).tolist()
             self.video_path = df[feature_col2].values.reshape(-1, 2).tolist()
@@ -134,16 +134,30 @@ class Data:
             return video, torch.Tensor([])
         else:
             breakpoint()
-            video = torch.tensor(
-                self.FILE[f"{check}/{path[0].split('/')[-1][:-4]}_{timings[0]}/video"][
-                    ()
-                ]
-            )
-            video_context = torch.tensor(
-                self.FILE[
-                    f"{check}/{path[1].split('/')[-1][:-4]}_{timings[1]}/video_context"
-                ][()]
-            )
+            try:
+                video_context = torch.tensor(
+                    self.FILE[f"{check}/{path[0].split('/')[-1][:-4]}_{list(timings[0])}/video_context"][
+                        ()
+                    ]
+                )
+            except:
+                video_context = torch.tensor(
+                    self.FILE[f"{check}/{path[0].split('/')[-1][:-4]}_{timings[0]}/video_context"][
+                        ()
+                    ]
+                )
+            try:
+                video = torch.tensor(
+                    self.FILE[
+                        f"{check}/{path[1].split('/')[-1][:-4]}_{list(timings[1])}/video"
+                    ][()]
+                )
+            except:
+                video = torch.tensor(
+                    self.FILE[
+                        f"{check}/{path[1].split('/')[-1][:-4]}_{timings[1]}/video"
+                    ][()]
+                )
             return video, video_context
 
     def audioFeatures(self, path, timings, check):
@@ -154,21 +168,46 @@ class Data:
             return audio, torch.Tensor([])
         else:
             breakpoint()
-            audio = torch.tensor(
-                self.FILE[f"{check}/{path[0].split('/')[-1][:-4]}_{timings[0]}/audio"][
-                    ()
-                ]
-            )
-            audio_context = torch.tensor(
-                self.FILE[
-                    f"{check}/{path[1].split('/')[-1][:-4]}_{timings[1]}/audio_context"
-                ][()]
-            )
+            try:
+                audio_context = torch.tensor(
+                    self.FILE[f"{check}/{path[0].split('/')[-1][:-4]}_{list(timings[0])}/audio_context"][
+                        ()
+                    ]
+                )
+            except:
+                audio_context = torch.tensor(
+                    self.FILE[f"{check}/{path[0].split('/')[-1][:-4]}_{timings[0]}/audio_context"][
+                        ()
+                    ]
+                )
+            try:
+                audio = torch.tensor(
+                    self.FILE[
+                        f"{check}/{path[1].split('/')[-1][:-4]}_{list(timings[1])}/audio"
+                    ][()]
+                )
+            except:
+                audio = torch.tensor(
+                    self.FILE[
+                        f"{check}/{path[1].split('/')[-1][:-4]}_{timings[1]}/audio"
+                    ][()]
+                )
             return audio, audio_context
 
     def textFeatures(self, path, timings, check):
         breakpoint()
-        text = torch.tensor(
-            self.FILE[f"{check}/{path.split('/')[-1][:-4]}_{timings}/text"][()]
-        )
+        if not self.must:
+            text = torch.tensor(
+                self.FILE[f"{check}/{path.split('/')[-1][:-4]}_{timings}/text"][()]
+            )
+                
+        else:
+            try:
+                text = torch.tensor(
+                    self.FILE[f"{check}/{path[1].split('/')[-1][:-4]}_{timings[1]}/text"][()]
+                )
+            except:
+                text = torch.tensor(
+                    self.FILE[f"{check}/{path[1].split('/')[-1][:-4]}_{list(timings[1])}/text"][()]
+                )
         return text
