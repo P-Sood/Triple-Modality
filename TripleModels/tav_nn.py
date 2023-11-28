@@ -11,7 +11,7 @@ import warnings
 
 warnings.filterwarnings("ignore")
 
-from models.tav import TAVForMAE_HDF5, collate_batch
+from .models.tav import TAVForMAE_HDF5, collate_batch
 import wandb
 from utils.data_loaders import TextAudioVideoDataset
 import pandas as pd
@@ -68,6 +68,7 @@ def prepare_dataloader(
         drop_last=False,
         shuffle=True,
         collate_fn = BatchCollation(must),
+        
     )
 
     return dataloader
@@ -100,18 +101,10 @@ def runModel(accelerator, df_train, df_val, df_test, param_dict, model_param):
     dataset = model_param["dataset"]
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    if loss == "CrossEntropy":
-        criterion = torch.nn.CrossEntropyLoss().to(device)
-    elif loss == "NewCrossEntropy":
-        criterion = NewCrossEntropyLoss(
-            class_weights=weights.to(device), epoch_switch=epoch_switch
-        ).to(device)
-    elif loss == "WeightedCrossEntropy":
-        criterion = torch.nn.CrossEntropyLoss(weight=weights.to(device)
-        ).to(device)
 
-    print(loss, flush=True)
+
     Metric = Metrics(num_classes=num_labels, id2label=id2label, rank=device)
+    
     df_train = prepare_dataloader(
         df_train, dataset, batch_size, label_task, epoch_switch, check="train"
     )
@@ -129,9 +122,9 @@ def runModel(accelerator, df_train, df_val, df_test, param_dict, model_param):
     trainer = Trainer(big_batch=3 , num_steps=1)
     
     
+    trainer.evaluate(model, df_train, Metric , name = "train")
     trainer.evaluate(model, df_val, Metric , name = "val")
     trainer.evaluate(model, df_test, Metric , name = "test")
-    trainer.evaluate(model, df_train, Metric , name = "train")
 
 
 def main():
@@ -220,7 +213,7 @@ def main():
     print(
         f" in main \n param_dict = {param_dict} \n model_param = {model_param} \n df {config.dataset} , with df = {len(df)} \n "
     )
-    runModel("cuda", df_train, df_val, df_test, param_dict, model_param)
+    runModel("cuda" if torch.cuda.is_available() else "cpu", df_train, df_val, df_test, param_dict, model_param)
 
 
 if __name__ == "__main__":
