@@ -36,7 +36,7 @@ def prepare_dataloader(
     label_task,
     epoch_switch,
     pin_memory=True,
-    num_workers=0,
+    num_workers=4,
     check="train",
     accum=False,
     sampler = None,
@@ -60,52 +60,15 @@ def prepare_dataloader(
         check=check,
     )
     
-    if check == "train":
-        labels = df[label_task].value_counts()
-        class_counts = torch.Tensor(
-            list(dict(sorted((dict((labels)).items()))).values())
-        ).to(int)
-
-        samples_weight = torch.tensor([1 / class_counts[t] for t in dataset.labels])
-        print(len(samples_weight))
-
-        if accum:
-            sampler = MySampler(
-                list(samples_weight),
-                len(samples_weight),
-                replacement=True,
-                epoch=epoch_switch - 1,
-                epoch_switch=epoch_switch,
-            )
-        else:
-            sampler = MySampler(
-                list(samples_weight),
-                len(samples_weight),
-                replacement=True,
-                epoch=0,
-                epoch_switch=epoch_switch,
-            )
-
-        dataloader = DataLoader(
-            dataset,    
-            batch_size=batch_size,
-            pin_memory=pin_memory,
-            num_workers=num_workers,
-            drop_last=False,
-            # shuffle=True,
-            collate_fn = BatchCollation(must),
-            sampler=sampler,
-        )
-    else:
-        dataloader = DataLoader(
-            dataset,
-            batch_size=batch_size,
-            pin_memory=pin_memory,
-            num_workers=num_workers,
-            drop_last=False,
-            shuffle=True,
-            collate_fn = BatchCollation(must),
-        )
+    dataloader = DataLoader(
+        dataset,
+        batch_size=batch_size,
+        pin_memory=pin_memory,
+        num_workers=num_workers,
+        drop_last=False,
+        shuffle=True,
+        collate_fn = BatchCollation(must),
+    )
 
     return dataloader
 
@@ -149,17 +112,8 @@ def runModel(accelerator, df_train, df_val, df_test, param_dict, model_param):
 
     print(loss, flush=True)
     Metric = Metrics(num_classes=num_labels, id2label=id2label, rank=device)
-    df_train_accum = prepare_dataloader(
-        df_train, dataset, batch_size, label_task, epoch_switch, check="train", accum=True, sampler=sampler
-    )
-    df_train_no_accum = prepare_dataloader(
-        df_train,
-        dataset,
-        batch_size,
-        label_task,
-        epoch_switch,
-        check="train",
-        accum=False,
+    df_train = prepare_dataloader(
+        df_train, dataset, batch_size, label_task, epoch_switch, check="train"
     )
     df_val = prepare_dataloader(
         df_val, dataset, batch_size, label_task, epoch_switch, check="val"
@@ -171,29 +125,13 @@ def runModel(accelerator, df_train, df_val, df_test, param_dict, model_param):
     model = TAVForMAE_HDF5(model_param).to(device)
     wandb.watch(model, log="all")
     
-    checkpoint = None  # torch.load(f"/home/prsood/projects/ctb-whkchun/prsood/TAV_Train/MAEncoder/aht69be1/lively-sweep-11/7.pt")
-    # model.load_state_dict(checkpoint['model_state_dict'])
-    # criterion = checkpoint['loss']
-    # PREFormer = checkpoint['PREFormer']
 
     trainer = Trainer(big_batch=3 , num_steps=1)
     
-    model = trainer.train_network(
-        model,
-        [df_train_no_accum, df_train_accum , sampler],
-        df_val,
-        criterion,
-        lr,
-        epoch,
-        weight_decay,
-        T_max,
-        Metric,
-        patience,
-        clip,
-        epoch_switch,
-        checkpoint,
-    )
-    trainer.evaluate(model, df_test, Metric)
+    
+    trainer.evaluate(model, df_val, Metric , name = "val")
+    trainer.evaluate(model, df_test, Metric , name = "test")
+    trainer.evaluate(model, df_train, Metric , name = "train")
 
 
 def main():

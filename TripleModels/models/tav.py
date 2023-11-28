@@ -143,7 +143,7 @@ class TAVForMAE_HDF5(nn.Module):
             dataset_name = "must"
             self.must = True
             path = [
-            f"{dataset_name}_bert/aoago6hk/woven-sweep-62/best.pt",
+            f"{dataset_name}_bert/aoago6hk/flowing-sweep-99/best.pt",
             
             f"{dataset_name}_whisper/qzyfm99j/astral-sweep-24/best.pt",
             
@@ -152,11 +152,11 @@ class TAVForMAE_HDF5(nn.Module):
             
         print(path , flush = True)
             
-        # self.f = h5py.File(f"../../data/{dataset_name}.final.seq_len.features.hdf5", "a", libver="latest", swmr=True)
-        # try:
-        #     self.f.swmr_mode = True
-        # except:
-        #     pass
+        self.f = h5py.File(f"../../data/{dataset_name}.final.seq_len.features.hdf5", "a", libver="latest", swmr=True)
+        try:
+            self.f.swmr_mode = True
+        except:
+            pass
 
         self.p = 0.75
 
@@ -175,9 +175,9 @@ class TAVForMAE_HDF5(nn.Module):
         
         
         # Zero out all gradients. Might not need this anymore though
-        # for i, model in enumerate([self.bert, self.whisper, self.videomae]):
-        #     for param in model.base_model.parameters():
-        #         param.requires_grad = False
+        for i, model in enumerate([self.bert, self.whisper, self.videomae]):
+            for param in model.parameters():
+                param.requires_grad = False
 
         # Put the models onto eval mode
         self.bert.eval()
@@ -214,10 +214,10 @@ class TAVForMAE_HDF5(nn.Module):
         
         if self.must:
             delete = 3
-            # self.f.create_dataset(f"{check}/{video_path[0][1].split('/')[-1][:-4]}_{timings[0][1]}/text", data=last_hidden_text_state.cpu().detach().numpy())
+            self.f.create_dataset(f"{check}/{video_path[0][1].split('/')[-1][:-4]}_{timings[0][1]}/text", data=last_hidden_text_state.cpu().detach().numpy())
         else:
             delete = 3
-            # self.f.create_dataset(f"{check}/{video_path[0].split('/')[-1][:-4]}_{timings[0]}/text", data=last_hidden_text_state.cpu().detach().numpy())
+            self.f.create_dataset(f"{check}/{video_path[0].split('/')[-1][:-4]}_{timings[0]}/text", data=last_hidden_text_state.cpu().detach().numpy())
         
 
         aud_outputs = self.whisper.whisper.encoder(audio_features)[0][:,:512,:]
@@ -237,12 +237,12 @@ class TAVForMAE_HDF5(nn.Module):
                     new_aud_context[i] = row[-512:]
             del aud_context
                 
-            # self.f.create_dataset(f"{check}/{video_path[0][0].split('/')[-1][:-4]}_{timings[0][0]}/audio_context", data=aud_context.cpu().detach().numpy())
-            # self.f.create_dataset(f"{check}/{video_path[0][1].split('/')[-1][:-4]}_{timings[0][1]}/audio", data=aud_outputs.cpu().detach().numpy())
+            self.f.create_dataset(f"{check}/{video_path[0][0].split('/')[-1][:-4]}_{timings[0][0]}/audio_context", data=new_aud_context.cpu().detach().numpy())
+            self.f.create_dataset(f"{check}/{video_path[0][1].split('/')[-1][:-4]}_{timings[0][1]}/audio", data=aud_outputs.cpu().detach().numpy())
             aud_outputs = (aud_outputs.mean(dim=1) * self.p + new_aud_context.mean(dim=1) * (1 - self.p)) / 2
             
         else:
-            # self.f.create_dataset(f"{check}/{video_path[0].split('/')[-1][:-4]}_{timings[0]}/audio", data=aud_outputs.cpu().detach().numpy())
+            self.f.create_dataset(f"{check}/{video_path[0].split('/')[-1][:-4]}_{timings[0]}/audio", data=aud_outputs.cpu().detach().numpy())
             aud_outputs = aud_outputs.mean(dim=1)
 
         vid_outputs = self.videomae.videomae(video_embeds, bool_masked_pos = video_mask)[0]  
@@ -250,11 +250,11 @@ class TAVForMAE_HDF5(nn.Module):
         if self.must:
             vid_context = self.videomae.videomae(video_context, bool_masked_pos = video_mask)[0]
             
-            # self.f.create_dataset(f"{check}/{video_path[0][0].split('/')[-1][:-4]}_{timings[0][0]}/video_context", data=vid_context.cpu().detach().numpy())
-            # self.f.create_dataset(f"{check}/{video_path[0][1].split('/')[-1][:-4]}_{timings[0][1]}/video", data=vid_outputs.cpu().detach().numpy())
+            self.f.create_dataset(f"{check}/{video_path[0][0].split('/')[-1][:-4]}_{timings[0][0]}/video_context", data=vid_context.cpu().detach().numpy())
+            self.f.create_dataset(f"{check}/{video_path[0][1].split('/')[-1][:-4]}_{timings[0][1]}/video", data=vid_outputs.cpu().detach().numpy())
             vid_outputs = (vid_outputs[:,0] * self.p + vid_context[:,0] * (1 - self.p)) / 2
         else:
-            # self.f.create_dataset(f"{check}/{video_path[0].split('/')[-1][:-4]}_{timings[0]}/video", data=vid_outputs.cpu().detach().numpy())
+            self.f.create_dataset(f"{check}/{video_path[0].split('/')[-1][:-4]}_{timings[0]}/video", data=vid_outputs.cpu().detach().numpy())
             vid_outputs = vid_outputs[:,0]
         text_outputs = self.bert.linear1(text_outputs)
         
