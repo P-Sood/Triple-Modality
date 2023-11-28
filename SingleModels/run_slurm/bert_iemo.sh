@@ -9,6 +9,6 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=6 # maximum CPU cores per GPU request: 6 on Cedar, 16 on Graham.
 
-#SBATCH --output=../outputs/big_batch.txt
+#SBATCH --output=../outputs/iemo.txt
 
-wandb agent ddi/iemo_bert/n8y1qe0m
+wandb agent ddi/iemo_bert/ylhfsh3s

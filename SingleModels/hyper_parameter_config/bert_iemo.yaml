@@ -38,7 +38,7 @@ parameters:
   epoch_switch:
     values: [2 , 3]
   dropout:
-    values: [ 0.2 , 0.3 , 0.4 , 0.5 ]
+    values: [ 0.1 , 0.2 , 0.3 , 0.4]
   T_max:
    values: [2 , 3]
   hidden_size:
