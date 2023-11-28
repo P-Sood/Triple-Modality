@@ -46,7 +46,7 @@ parameters:
   label_task:
     values: ['emotion']
   fusion:
-    values: ["sota", "concat", "guiseppe"]
+    values: ["sota", "concat"]
   model:
     values: ['MAE_encoder']
   loss:

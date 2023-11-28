@@ -46,9 +46,9 @@ parameters:
   hidden_size:
     values: [64, 128, 256, 384, 512, 768, 1536]
   label_task:
-    values: ['emotion']
+    values: ['sentiment']
   fusion:
-    values: ["sota", "concat", "guiseppe"]
+    values: ["sota", "concat"]
   model:
     values: ['MAE_encoder']
   loss:

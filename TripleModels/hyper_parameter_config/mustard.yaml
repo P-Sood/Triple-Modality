@@ -1,4 +1,4 @@
-p"Val"rogram: ../tav_nn.py
+program: ../tav_nn.py
 command:
   - ${env}
   - python3
@@ -11,47 +11,47 @@ metric:
   goal: maximize
   name: val/weighted-f1-score
 parameters:
-  epoch: 
-    values: [6]
+  epoch:
+    max: 7
+    min: 6
+    distribution: int_uniform
   learning_rate:
-    distribution: uniform
-    max: 1e-4
-    min: 1e-6
-  batch_size:
-    values: [2, 4, 8, 16]
+    values: [1e-6 , 1e-5 , 1e-4  , 5e-5 , 5e-6]
   weight_decay:
-    distribution: uniform
-    max: 1e-3
-    min: 1e-5
+    values: [1e-5 , 1e-4, 1e-3, 1e-2]
+  batch_size:
+    values: [8 , 16, 32]
   seed:
     values: [32, 64, 96]
-  dropout:
-    values: [ 0.3 , 0.4 , 0.5 ]
   mask:
     values: [False]
   early_div:
-    values: [True]
+    values: [False]
   learn_PosEmbeddings:
-    values: [True,False]
+    values: [False]
   num_layers:
-    values: [3, 4, 5, 6, 7,8]
+    values: [3, 4, 5, 6, 7, 8]
+  num_encoders:
+    values: [1 , 2 , 3, 4, 5]
   patience:
-    values: [10]
+    values: [14]
   clip:
-    values: [1 , 5]
+    values: [0.1 , 1 , 5]
   epoch_switch:
     values: [2 , 3]
+  dropout:
+    values: [ 0.2 , 0.3 , 0.4 , 0.5 ]
   T_max:
    values: [2 , 3]
-  hidden_layers:
-    values: ["300"]
+  hidden_size:
+    values: [64, 128, 256, 384, 512, 768, 1536]
   label_task:
     values: ['sarcasm']
-  sota:
-    values: [True, False]
+  fusion:
+    values: ["sota", "concat"]
   model:
     values: ['MAE_encoder']
   loss:
-    values: ['NewCrossEntropy']
-  beta:
-    values: [1]
+    values: ['NewCrossEntropy' , 'CrossEntropy' , 'WeightedCrossEntropy']
+  sampler:
+    values: ['Both' , 'Iterative' , 'Weighted']
