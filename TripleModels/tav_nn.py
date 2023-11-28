@@ -24,7 +24,12 @@ from torch.utils.data.sampler import WeightedRandomSampler
 
 
 TESTING_PIPELINE = False
+class BatchCollation:
+    def __init__(self, must) -> None:
+        self.must = must
 
+    def __call__(self, batch):
+        return collate_batch(batch, self.must)
 
 def prepare_dataloader(
     df,
@@ -45,7 +50,7 @@ def prepare_dataloader(
 
     Otherwise we just create a regular dataloader for val/test that just do shuffle
     """
-    
+    must = True if "must" in str(dataset).lower() else False
     dataset = TextAudioVideoDataset(
         df,
         dataset,
@@ -93,7 +98,7 @@ def prepare_dataloader(
             drop_last=False,
             shuffle=False,
             sampler=sampler,
-            collate_fn=collate_batch,
+            collate_fn=BatchCollation(must),
         )
     else:
         dataloader = DataLoader(
@@ -103,7 +108,7 @@ def prepare_dataloader(
             num_workers=num_workers,
             drop_last=False,
             shuffle=False,
-            collate_fn=collate_batch,
+            collate_fn=BatchCollation(must),
         )
 
     return dataloader

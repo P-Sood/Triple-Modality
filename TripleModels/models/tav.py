@@ -6,10 +6,10 @@ from transformers import logging
 
 logging.set_verbosity_error()
 warnings.filterwarnings("ignore")
-from torch.nn.utils.rnn import pad_sequence
 
 
-def collate_batch(batch):
+
+def collate_batch(batch , must):
     text = []
     audio = []
     audio_context = []
@@ -20,23 +20,23 @@ def collate_batch(batch):
     for input, label in batch:
         text.append(input["text_features"].squeeze())
         audio.append(input["audio_features"].squeeze())
-        # audio_context.append(input["audio_context"].squeeze())
         video.append(input["video_features"].squeeze())
-        # video_context.append(input["video_context"].squeeze())
+        if must:
+            audio_context.append(input["audio_context"].squeeze())
+            video_context.append(input["video_context"].squeeze())
         labels.append(label)
 
     text = torch.stack(text, dim=0).squeeze(dim=1)
     audio = torch.stack(audio, dim=0).squeeze(dim=1)
-    # audio_context = pad_sequence(audio_context, batch_first=True)
     video = torch.stack(video, dim=0).squeeze(dim=1)
-    # video_context = pad_sequence(video_context, batch_first=True)
+    
 
     return {
         "text_features": text,
         "audio_features": audio,
-        "audio_context": torch.Tensor([]),
+        "audio_context": torch.stack(audio_context, dim=0).squeeze(dim=1) if must else torch.Tensor([]),
         "video_features": video,
-        "video_context": torch.Tensor([]),
+        "video_context": torch.stack(video_context, dim=0).squeeze(dim=1) if must else torch.Tensor([]),
     }, torch.Tensor(np.array(labels)).long()
 
 
@@ -80,7 +80,7 @@ class TAVForMAE(nn.Module):
         )
 
         self.must = True if "must" in str(self.dataset).lower() else False
-        self.p = 0.6  # This is to decide how much to weight the context vs the actual features for Mustard
+        self.p = 0.75  # This is to decide how much to weight the context vs the actual features for Mustard
 
         # Everything before this line is unlearnable, everything after is what we are focused on
 

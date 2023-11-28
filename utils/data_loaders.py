@@ -133,6 +133,7 @@ class Data:
             )
             return video, torch.Tensor([])
         else:
+            breakpoint()
             video = torch.tensor(
                 self.FILE[f"{check}/{path[0].split('/')[-1][:-4]}_{timings[0]}/video"][
                     ()
@@ -152,6 +153,7 @@ class Data:
             )
             return audio, torch.Tensor([])
         else:
+            breakpoint()
             audio = torch.tensor(
                 self.FILE[f"{check}/{path[0].split('/')[-1][:-4]}_{timings[0]}/audio"][
                     ()
@@ -165,6 +167,7 @@ class Data:
             return audio, audio_context
 
     def textFeatures(self, path, timings, check):
+        breakpoint()
         text = torch.tensor(
             self.FILE[f"{check}/{path.split('/')[-1][:-4]}_{timings}/text"][()]
         )
