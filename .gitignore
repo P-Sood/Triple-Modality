@@ -40,7 +40,7 @@ trimodal/*
 data/*
 # /project/6051551/multi-modal-emotion/data/*
 *project/*
-
+*.txt*
 SingleModels/train_model/__init__.py
 SingleModels/run_slurm/core*
 data_symlink
