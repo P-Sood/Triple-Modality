@@ -11,4 +11,5 @@
 #SBATCH --output=../outputs/mustfusion.txt
 
 # wandb agent ddi/Fusion/ph1w0vvg
-wandb agent ddi/MustFusion/im41427r
+# wandb agent ddi/MustFusion/im41427r
+wandb agent ddi/MustFusion/haq66ypn

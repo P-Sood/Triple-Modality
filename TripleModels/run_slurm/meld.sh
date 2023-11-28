@@ -11,4 +11,5 @@
 #SBATCH --output=../outputs/meld_fusion.txt
 
 # wandb agent ddi/Fusion/ph1w0vvg
-wandb agent ddi/MeldFusion/7h8gawgv
+# wandb agent ddi/MeldFusion/7h8gawgv
+wandb agent ddi/MeldFusion/6drr4mpm
