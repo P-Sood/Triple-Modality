@@ -11,4 +11,6 @@
 
 #SBATCH --output=../outputs/videoMAE_fullseq.txt
 
-wandb agent ddi/VideoDA/4g2igbuv
+wandb agent ddi/must_video/apl9ufpx
+# wandb agent ddi/VideoDA/4g2igbuv
+# wandb sweep -p must_video -e ddi ../hyper_parameter_config/video_must.yaml

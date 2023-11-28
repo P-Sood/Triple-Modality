@@ -34,7 +34,7 @@ parameters:
   patience:
     values: [14]
   clip:
-    values: [0.1 , 1 , 5]
+    values: [1]
   epoch_switch:
     values: [2 , 3]
   dropout:

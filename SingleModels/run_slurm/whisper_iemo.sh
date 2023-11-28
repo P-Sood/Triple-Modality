@@ -11,4 +11,4 @@
 
 #SBATCH --output=../outputs/whisper_start.txt
 
-wandb agent ddi/WhisperStart/qgl7153h
+wandb agent ddi/iemo_whisper/xaz13i9h

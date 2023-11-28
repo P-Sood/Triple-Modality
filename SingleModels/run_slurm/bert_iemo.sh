@@ -11,4 +11,4 @@
 
 #SBATCH --output=../outputs/big_batch.txt
 
-wandb agent ddi/meld_iemo_text/de3djeoo
+wandb agent ddi/iemo_bert/n8y1qe0m

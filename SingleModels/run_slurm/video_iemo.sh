@@ -11,4 +11,4 @@
 
 #SBATCH --output=../outputs/videoMAE_fullseq.txt
 
-wandb agent ddi/VideoDA/4g2igbuv
+wandb agent ddi/iemo_video/myt3iav2
