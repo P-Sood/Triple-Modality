@@ -44,3 +44,4 @@ SingleModels/run_slurm/core*
 data_symlink
 FinetuneData/*
 TripleModels/outputs/*
+TripleModels/outputs/meld_fusion.txt
