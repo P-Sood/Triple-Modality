@@ -5,53 +5,69 @@ command:
   - ${program}
   - "--dataset"
   - "../../data/meld"
-method: bayes
+method: grid
 
 metric:
   goal: maximize
   name: val/weighted-f1-score
 parameters:
-  epoch:
-    max: 7
-    min: 6
-    distribution: int_uniform
-  learning_rate:
-    values: [1e-6 , 1e-5 , 1e-4  , 5e-5 , 5e-6]
-  weight_decay:
-    values: [1e-5 , 1e-4, 1e-3, 1e-2]
+  T_max:
+    values: [3]
   batch_size:
-    values: [8 , 16, 32]
-  seed:
-    values: [32, 64, 96]
-  mask:
-    values: [False]
+    values: [32]
+  clip:
+    values: [5]
+  dropout:
+    values: [0.5]
   early_div:
-    values: [False]
+    values: [false]
+  epoch:
+    values: [7]
+  epoch_switch:
+    values: [3]
+  fusion:
+    values: [sota]
+  hidden_size:
+    values: [64]
+  label_task:
+    values: [sentiment]
   learn_PosEmbeddings:
-    values: [False]
-  num_layers:
-    values: [3, 4, 5, 6, 7, 8]
+    values: [false]
+  learning_rate:
+    values: [5.0e-06]
+  loss:
+    values: [WeightedCrossEntropy]
+  mask:
+    values: [false]
+  model:
+    values: [MAE_encoder]
   num_encoders:
-    values: [1 , 2 , 3, 4, 5]
+    values: [2]
+  num_layers:
+    values: [5]
   patience:
     values: [14]
-  clip:
-    values: [0.1 , 1 , 5]
-  epoch_switch:
-    values: [2 , 3]
-  dropout:
-    values: [ 0.2 , 0.3 , 0.4 , 0.5 ]
-  T_max:
-   values: [2 , 3]
-  hidden_size:
-    values: [64, 128, 256, 384, 512, 768, 1536]
-  label_task:
-    values: ['sentiment']
-  fusion:
-    values: ["sota", "concat"]
-  model:
-    values: ['MAE_encoder']
-  loss:
-    values: ['NewCrossEntropy' , 'CrossEntropy' , 'WeightedCrossEntropy']
   sampler:
-    values: ['Both' , 'Iterative' , 'Weighted']
+    values: [Both]
+  seed:
+    values: [100 , 101 , 102 , 103 , 104 , 105]
+  weight_decay:
+    values: [0.01]
+  sota:
+    values: [false]
+  BertModel:
+    values: [roberta-large]
+  text_column:
+    values: [text]
+  beta:
+    values: [1]
+  dataset:
+    values: [../../data/meld]
+  input_dim:
+    values: [2]
+  output_dim:
+    values: [7]
+  lstm_layers:
+    values: [1]
+  hidden_layers:
+    values: [512]
