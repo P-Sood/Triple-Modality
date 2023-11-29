@@ -1,83 +1,0 @@
-wandb: Starting wandb agent 🕵️
-2023-11-29 22:49:34,749 - wandb.wandb_agent - INFO - Running runs: []
-2023-11-29 22:49:35,348 - wandb.wandb_agent - INFO - Agent received command: run
-2023-11-29 22:49:35,348 - wandb.wandb_agent - INFO - Agent starting run with config:
-	BertModel: roberta-large
-	T_max: 3
-	batch_size: 32
-	beta: 1
-	clip: 5
-	dataset: ../../data/meld
-	dropout: 0.5
-	early_div: False
-	epoch: 7
-	epoch_switch: 3
-	fusion: sota
-	hidden_layers: 512
-	hidden_size: 64
-	input_dim: 2
-	label_task: sentiment
-	learn_PosEmbeddings: False
-	learning_rate: 5e-06
-	loss: WeightedCrossEntropy
-	lstm_layers: 1
-	mask: False
-	model: MAE_encoder
-	num_encoders: 2
-	num_layers: 5
-	output_dim: 7
-	patience: 14
-	sampler: Both
-	seed: 100
-	sota: False
-	text_column: text
-	weight_decay: 0.01
-2023-11-29 22:49:35,400 - wandb.wandb_agent - INFO - About to run command: /usr/bin/env python3 ../tav_nn.py --dataset ../../data/meld
-2023-11-29 22:49:40,411 - wandb.wandb_agent - INFO - Running runs: ['51iujaxl']
-wandb: Currently logged in as: zeerak (ddi). Use `wandb login --relogin` to force relogin
-wandb: WARNING Ignored wandb.init() arg entity when running a sweep.
-wandb: Tracking run with wandb version 0.16.0
-wandb: Run data is saved locally in /l/users/zeerak.talat/Triple-Modality/TripleModels/run_slurm/wandb/run-20231129_224944-51iujaxl
-wandb: Run `wandb offline` to turn off syncing.
-wandb: Syncing run glamorous-sweep-1
-wandb: ⭐️ View project at https://wandb.ai/ddi/MeldFusion
-wandb: 🧹 View sweep at https://wandb.ai/ddi/MeldFusion/sweeps/c33js83w
-wandb: 🚀 View run at https://wandb.ai/ddi/MeldFusion/runs/51iujaxl
-512
- in main 
- param_dict = {'epoch': 7, 'patience': 14, 'lr': 5e-06, 'clip': 5, 'batch_size': 32, 'weight_decay': 0.01, 'model': 'MAE_encoder', 'T_max': 3, 'seed': 100, 'label_task': 'sentiment', 'mask': False, 'loss': 'WeightedCrossEntropy', 'epoch_switch': 3, 'sampler': 'Both', 'weights': tensor([0.2715, 0.3367, 0.3918]), 'label2id': {'positive': 2, 'negative': 1, 'neutral': 0}, 'id2label': {2: 'positive', 1: 'negative', 0: 'neutral'}} 
- model_param = {'output_dim': 3, 'dropout': 0.5, 'early_div': False, 'num_layers': 5, 'num_encoders': 2, 'learn_PosEmbeddings': False, 'dataset': '../../data/meld', 'fusion': 'sota', 'hidden_size': 512} 
- df ../../data/meld , with df = 13704 
- 
-WeightedCrossEntropy
-9988
-9988
-Using 5 layers 
-Using fusion : sota
-epochs:   0%|          | 0/7 [00:00<?, ?it/s]
-steps:   0%|          | 0/5 [00:00<?, ?it/s][A
-
-iter:   0%|          | 0/78 [00:00<?, ?it/s][A[Awe are in multinomial dataloader
-
-
-iter:   1%|▏         | 1/78 [00:08<10:32,  8.21s/it][A[A
-
-iter:   3%|▎         | 2/78 [00:16<10:25,  8.23s/it][A[A
-
-iter:   4%|▍         | 3/78 [00:25<11:00,  8.81s/it][A[A
-
-iter:   5%|▌         | 4/78 [00:32<09:41,  7.86s/it][A[A
-
-iter:   6%|▋         | 5/78 [00:38<08:47,  7.22s/it][A[A
-
-iter:   8%|▊         | 6/78 [00:45<08:26,  7.03s/it][A[A
-
-iter:   9%|▉         | 7/78 [00:50<07:44,  6.54s/it][A[A
-
-iter:  10%|█         | 8/78 [00:56<07:19,  6.28s/it][A[A
-
-iter:  12%|█▏        | 9/78 [01:02<07:17,  6.34s/it][A[A
-
-iter:  13%|█▎        | 10/78 [01:08<06:56,  6.12s/it][A[A
-
-iter:  14%|█▍        | 11/78 [01:14<06:49,  6.12s/it][A[A
