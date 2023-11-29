@@ -5,57 +5,63 @@ command:
   - ${program}
   - "--dataset"
   - "../../data/meld"
-method: bayes
+method: grid
 
 metric:
   goal: maximize
   name: val/weighted-f1-score
 parameters:
-  epoch:
-    max: 8
-    min: 6
-    distribution: int_uniform
-  learning_rate:
-    values: [1e-6 , 1e-5 , 1e-4  , 5e-5 , 5e-6]
-  weight_decay:
-    values: [1e-5 , 1e-4, 1e-3, 1e-2]
-  batch_size:
-    values: [8 , 16]
-  seed:
-    values: [64]
-  mask:
-    values: [False]
-  early_div:
-    values: [False]
-  learn_PosEmbeddings:
-    values: [False]
-  num_layers:
-    values: [3, 4, 5, 6, 7, 8]
-  patience:
-    values: [14]
-  clip:
-    values: [0.1 , 1 , 5]
-  epoch_switch:
-    values: [2 , 3]
-  dropout:
-    values: [ 0.2 , 0.3 , 0.4 , 0.5 ]
-  T_max:
-   values: [2 , 3]
-  hidden_size:
-    values: [64, 128, 256, 384, 768, 1536]
-  label_task:
-    values: ['sentiment']
-  sota:
-    values: [True, False]
-  model:
-    values: ['MAE_encoder']
-  loss:
-    values: ['NewCrossEntropy' , 'CrossEntropy' , 'WeightedCrossEntropy']
-  sampler:
-    values: ['Both' , 'Iterative' , 'Weighted']
   BertModel:
-    values: ["MCG-NJU/videomae-base"]
-  text_column:
-    values: ['video_path']
+    value: [MCG-NJU/videomae-base]
+  T_max:
+    value: [2]
+  batch_size:
+    value: [16]
   beta:
-    values: [1]
+    value: [1]
+  clip:
+    value: [0.1]
+  dropout:
+    value: [0.4]
+  early_div:
+    value: [false]
+  epoch:
+    value: [7]
+  epoch_switch:
+    value: [3]
+  hidden_size:
+    value: [128]
+  label_task:
+    value: [sentiment]
+  learn_PosEmbeddings:
+    value: [false]
+  learning_rate:
+    value: [1.0e-06]
+  loss:
+    value: [WeightedCrossEntropy]
+  mask:
+    value: [false]
+  model:
+    value: [MAE_encoder]
+  num_layers:
+    value: [5]
+  patience:
+    value: [14]
+  sampler:
+    value: [Iterative]
+  seed:
+    value: [100 , 101 , 102 , 103 , 104]
+  sota:
+    value: [true]
+  text_column:
+    value: [video_path]
+  weight_decay:
+    value: [1.0e-05]
+  dataset:
+    value: [../../data/meld]
+  input_dim:
+    value: [2]
+  output_dim:
+    value: [7]
+  lstm_layers:
+    value: [1]
