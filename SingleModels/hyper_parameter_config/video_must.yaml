@@ -12,56 +12,56 @@ metric:
   name: val/weighted-f1-score
 parameters:
   BertModel:
-    value: [MCG-NJU/videomae-base]
+    values: [MCG-NJU/videomae-base]
   T_max:
-    value: [3]
+    values: [3]
   batch_size:
-    value: [4]
+    values: [4]
   beta:
-    value: [1]
+    values: [1]
   clip:
-    value: [1]
+    values: [1]
   dropout:
-    value: [0.5]
+    values: [0.5]
   early_div:
-    value: [false]
+    values: [false]
   epoch:
-    value: [7]
+    values: [7]
   epoch_switch:
-    value: [3]
+    values: [3]
   hidden_size:
-    value: [128]
+    values: [128]
   label_task:
-    value: [sarcasm]
+    values: [sarcasm]
   learn_PosEmbeddings:
-    value: [false]
+    values: [false]
   learning_rate:
-    value: [5.0e-06]
+    values: [5.0e-06]
   loss:
-    value: [CrossEntropy]
+    values: [CrossEntropy]
   mask:
-    value: [false]
+    values: [false]
   model:
-    value: [MAE_encoder]
+    values: [MAE_encoder]
   num_layers:
-    value: [4]
+    values: [4]
   patience:
-    value: [14]
+    values: [14]
   sampler:
-    value: [Weighted]
+    values: [Weighted]
   seed:
-    value: [100 , 101 , 102 , 103 , 104]
+    values: [100 , 101 , 102 , 103 , 104]
   sota:
-    value: [true]
+    values: [true]
   text_column:
-    value: [video_path]
+    values: [video_path]
   weight_decay:
-    value: [0.01]
+    values: [0.01]
   dataset:
-    value: [../../data/must]
+    values: [../../data/must]
   input_dim:
-    value: [2]
+    values: [2]
   output_dim:
-    value: [7]
+    values: [7]
   lstm_layers:
-    value: [1]
+    values: [1]

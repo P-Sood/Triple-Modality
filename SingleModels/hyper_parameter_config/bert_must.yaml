@@ -12,56 +12,56 @@ metric:
   name: val/weighted-f1-score
 parameters:
   BertModel:
-    value: [roberta-large]
+    values: [roberta-large]
   T_max:
-    value: [3]
+    values: [3]
   batch_size:
-    value: [8]
+    values: [8]
   beta:
-    value: [1]
+    values: [1]
   clip:
-    value: [1]
+    values: [1]
   dropout:
-    value: [0.3]
+    values: [0.3]
   early_div:
-    value: [false]
+    values: [false]
   epoch:
-    value: [7]
+    values: [7]
   epoch_switch:
-    value: [2]
+    values: [2]
   hidden_size:
-    value: [256]
+    values: [256]
   label_task:
-    value: [sarcasm]
+    values: [sarcasm]
   learn_PosEmbeddings:
-    value: [false]
+    values: [false]
   learning_rate:
-    value: [1.0e-05]
+    values: [1.0e-05]
   loss:
-    value: [NewCrossEntropy]
+    values: [NewCrossEntropy]
   mask:
-    value: [false]
+    values: [false]
   model:
-    value: [MAE_encoder]
+    values: [MAE_encoder]
   num_layers:
-    value: [5]
+    values: [5]
   patience:
-    value: [14]
+    values: [14]
   sampler:
-    value: [Both]
+    values: [Both]
   seed:
-    value: [100 , 101 , 102 , 103 , 104]
+    values: [100 , 101 , 102 , 103 , 104]
   sota:
-    value: [false]
+    values: [false]
   text_column:
-    value: [text]
+    values: [text]
   weight_decay:
-    value: [1.0e-05]
+    values: [1.0e-05]
   dataset:
-    value: [../../data/must]
+    values: [../../data/must]
   input_dim:
-    value: [2]
+    values: [2]
   output_dim:
-    value: [7]
+    values: [7]
   lstm_layers:
-    value: [1]
+    values: [1]
