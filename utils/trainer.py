@@ -471,12 +471,12 @@ class Trainer:
             f"{check}/weighted-f1-score": F1Weighted,
             f"{check}/macro-f1-score": F1Macro,
         }
-        # print(f"\n in {check} \n Confusion Matrix = \n{_} \n", flush=True)
-        # print(f"\n in {check} \n Acc = \n{Acc} \n", flush=True)
-        # print(f"\n in {check} \n Prec = \n{Prec} \n", flush=True)
-        # print(f"\n in {check} \n Rec = \n{Rec} \n", flush=True)
-        # print(f"\n in {check} \n F1Weighted = \n{F1Weighted} \n", flush=True)
-        # print(f"\n in {check} \n F1Macro = \n{F1Macro} \n", flush=True)
+        print(f"\n in {check} \n Confusion Matrix = \n{_} \n", flush=True)
+        print(f"\n in {check} \n Acc = \n{Acc} \n", flush=True)
+        print(f"\n in {check} \n Prec = \n{Prec} \n", flush=True)
+        print(f"\n in {check} \n Rec = \n{Rec} \n", flush=True)
+        print(f"\n in {check} \n F1Weighted = \n{F1Weighted} \n", flush=True)
+        print(f"\n in {check} \n F1Macro = \n{F1Macro} \n", flush=True)
 
         wandb.log({**d1, **multiF1, **multiRec, **multiPrec, **multiAcc})
         Metric.reset_metrics()
