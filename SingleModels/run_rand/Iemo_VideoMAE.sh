@@ -11,6 +11,6 @@
 
 #SBATCH --output=../outputs/random.txt
 
-wandb agent ddi/iemo_bert/uan3utky --count 4
-wandb agent ddi/iemo_whisper/fqkokoud --coun4 4
+
+
 wandb agent ddi/iemo_video/otwd4b5q --count 4

@@ -9,6 +9,8 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=6 # maximum CPU cores per GPU request: 6 on Cedar, 16 on Graham.
 
-#SBATCH --output=../outputs/random.txt
+#SBATCH --output=../outputs/meld_bert_random.txt
 
-wandb agent ddi/meld_bert/g12om978 --count 4; wandb agent ddi/meld_whisper/eazriup3 --count 4; wandb agent ddi/meld_video/ajzxhk4t --count 4
+# wandb agent ddi/meld_bert/g12om978 --count 4;  
+
+wandb agent ddi/meld_bert/up55t6fv #--count 4
