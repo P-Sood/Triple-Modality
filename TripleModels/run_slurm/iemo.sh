@@ -11,6 +11,7 @@
 #SBATCH --output=../outputs/iemo_fusion.txt
 
 # wandb agent ddi/IemoTriple/uufy7lov
-wandb agent ddi/IemoFusion/uuj7hfce
+# wandb agent ddi/IemoFusion/uuj7hfce
+wandb agent ddi/PepeIemo/9cd5j1b2
 # wandb agent ddi/IemoFusion/wynl2e0t
 

@@ -45,3 +45,4 @@ data_symlink
 FinetuneData/*
 TripleModels/outputs/*
 TripleModels/outputs/meld_fusion.txt
+/home/zeerak.talat/trimodal/download

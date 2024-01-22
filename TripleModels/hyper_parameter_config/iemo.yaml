@@ -5,69 +5,51 @@ command:
   - ${program}
   - "--dataset"
   - "../../data/iemo"
-method: grid
+method: bayes
 
 metric:
   goal: maximize
   name: val/weighted-f1-score
 parameters:
-  T_max:
-    values: [3]
-  batch_size:
-    values: [24]
-  clip:
-    values: [5]
-  dropout:
-    values: [0.2]
-  early_div:
-    values: [false]
   epoch:
-    values: [6]
-  epoch_switch:
-    values: [2]
-  fusion:
-    values: [concat]
-  hidden_size:
-    values: [256]
-  label_task:
-    values: [emotion]
-  learn_PosEmbeddings:
-    values: [false]
+    max: 12
+    min: 6
+    distribution: int_uniform
   learning_rate:
-    values: [5.0e-05]
-  loss:
-    values: [CrossEntropy]
+    values: [1e-6 , 1e-5 , 1e-4  , 5e-5 , 5e-6]
+  weight_decay:
+    values: [1e-5 , 1e-4, 1e-3, 1e-2]
+  batch_size:
+    values: [24, 32]
+  seed:
+    values: [32, 64, 96]
   mask:
-    values: [false]
-  model:
-    values: [MAE_encoder]
+    values: [False]
+  early_div:
+    values: [False]
+  learn_PosEmbeddings:
+    values: [False]
   num_layers:
-    values: [8]
+    values: [3, 4, 5, 6, 7, 8]
   patience:
     values: [14]
+  clip:
+    values: [0.1 , 1 , 5]
+  epoch_switch:
+    values: [2 , 3]
+  dropout:
+    values: [ 0.2 , 0.3 , 0.4 , 0.5 ]
+  T_max:
+   values: [2 , 3]
+  hidden_size:
+    values: [64, 128, 256, 384, 768, 1536]
+  label_task:
+    values: ['emotion']
+  fusion:
+    values: ["guiseppe"]
+  model:
+    values: ['MAE_encoder']
+  loss:
+    values: ['NewCrossEntropy' , 'CrossEntropy' , 'WeightedCrossEntropy']
   sampler:
-    values: [Both]
-  seed:
-    values: [100 , 101 , 102 , 103 , 104 , 105]
-  weight_decay:
-    values: [0.0001]
-  sota:
-    values: [false]
-  BertModel:
-    values: [roberta-large]
-  text_column:
-    values: [text]
-  beta:
-    values: [1]
-  dataset:
-    values: [../../data/iemo]
-  input_dim:
-    values: [2]
-  output_dim:
-    values: [7]
-  lstm_layers:
-    values: [1]
-  num_encoders:
-    values: [3]
-  hidden_layers:
-    values: [512]
+    values: ['Both' , 'Iterative' , 'Weighted']

@@ -169,6 +169,7 @@ class TAVForMAE(nn.Module):
                 Ffusion2, _ = vid_text_layer(
                     Ffusion2, video_features, video_features
                 )
+                # What about updating Ffusion1/2 with a  linear layer like above?
             tav = torch.cat([Ffusion1, Ffusion2, audio_features, video_features], dim=-1)
         elif self.fusion == "concat":
             tav = torch.cat([text_features, audio_features, video_features], dim=-1)
