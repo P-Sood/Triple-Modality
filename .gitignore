@@ -46,3 +46,5 @@ FinetuneData/*
 TripleModels/outputs/*
 TripleModels/outputs/meld_fusion.txt
 /home/zeerak.talat/trimodal/download
+trimodal/download
+download
