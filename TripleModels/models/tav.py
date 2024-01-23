@@ -1,8 +1,10 @@
 from copy import deepcopy
 from glob import glob
+from typing import OrderedDict
 from transformers import logging
 import h5py
 import pdb
+from transformers import AutoModel, AutoModelForSequenceClassification 
 
 logging.set_verbosity_error()
 import warnings
@@ -136,7 +138,7 @@ class TAVForMAE_HDF5(nn.Module):
             
         print(path , flush = True)
             
-        self.f = h5py.File(f"../../data/{dataset_name}.final.seq_len.features.hdf5", "a", libver="latest", swmr=True)
+        self.f = h5py.File(f"../../data/iemo.TAE.features.hdf5", "r+", libver="latest", swmr=True)
         try:
             self.f.swmr_mode = True
         except:
@@ -144,29 +146,63 @@ class TAVForMAE_HDF5(nn.Module):
 
         self.p = 0.75
 
-        self.bert = BertClassifier(args)
-        self.whisper = WhisperForEmotionClassification(args)
-        self.videomae = VideoClassification(args)
+        # self.bert = BertClassifier(args)
+        # self.whisper = WhisperForEmotionClassification(args)
+        # self.videomae = VideoClassification(args)
         
         
 
         # Load in our finetuned models, exactly as they should be
         
-        for i, model in enumerate([ self.bert , self.whisper, self.videomae]):
-            print(f"Loading from {path[i]}, " , flush = True)                           # GO BACK TO CUDA
-            ckpt =  torch.load(f"../../../TAV_Train/{path[i]}" , map_location=torch.device("cuda" if torch.cuda.is_available() else "cpu"))['model_state_dict']
-            model.load_state_dict(ckpt)
+        # for i, model in enumerate([ self.bert , self.whisper, self.videomae]):
+        #     print(f"Loading from {path[i]}, " , flush = True)                           # GO BACK TO CUDA
+        #     ckpt =  torch.load(f"../../../TAV_Train/{path[i]}" , map_location=torch.device("cuda" if torch.cuda.is_available() else "cpu"))['model_state_dict']
+        #     model.load_state_dict(ckpt)
+        
+            
+        ckpt = torch.load("../../results/IEMOCAP/roberta-large/final/2021-05-09-12-19-54-speaker_mode-upper-num_past_utterances-1000-num_future_utterances-0-batch_size-4-seed-4/checkpoint-5975/pytorch_model.bin",map_location=torch.device("cuda" if torch.cuda.is_available() else "cpu"))
+        self.bert = AutoModel.from_pretrained("roberta-large")
+        new_state_dict = OrderedDict()
+        for k, v in ckpt.items():
+            name = k.replace("roberta." , "")  # remove 'roberta.' prefix
+            
+            new_state_dict[name] = v
+
+        # Load the new state dictionary into your model
+        self.bert.load_state_dict(new_state_dict , strict = False)
+        # self.bert.load_state_dict(ckpt)
+        # print(self.bert.classifier.out_proj.bias , flush = True)
         
         
         # Zero out all gradients. Might not need this anymore though
-        for i, model in enumerate([self.bert, self.whisper, self.videomae]):
+        # for i, model in enumerate([self.bert, self.whisper, self.videomae]):
+        for i, model in enumerate([self.bert]):
             for param in model.parameters():
                 param.requires_grad = False
 
         # Put the models onto eval mode
         self.bert.eval()
-        self.whisper.eval()
-        self.videomae.eval()
+        
+        ckpt = torch.load("../../results/IEMOCAP/roberta-large/final/2021-05-09-12-19-54-speaker_mode-upper-num_past_utterances-1000-num_future_utterances-0-batch_size-4-seed-4/checkpoint-5975/pytorch_model.bin",map_location=torch.device("cuda" if torch.cuda.is_available() else "cpu"))
+        self.bert2 = AutoModelForSequenceClassification.from_pretrained("roberta-large" , num_labels = 6)
+        
+        # Load the new state dictionary into your model
+        self.bert2.load_state_dict(ckpt , strict = False)
+        # self.bert2.load_state_dict(ckpt)
+        # print(self.bert2.classifier.out_proj.bias , flush = True)
+
+
+        # Zero out all gradients. Might not need this anymore though
+        # for i, model in enumerate([self.bert2, whisper, videomae]):
+        for i, model in enumerate([self.bert2]):
+            for param in model.parameters():
+                param.requires_grad = False
+
+        # Put the models onto eval mode
+        self.bert2.eval()
+        
+        # self.whisper.eval()
+        # self.videomae.eval()
 
     def forward(
         self,
@@ -192,19 +228,29 @@ class TAVForMAE_HDF5(nn.Module):
         
         
         
-        last_hidden_text_state, text_outputs = self.bert.bert(
+        # last_hidden_text_state, text_outputs = self.bert.bert(
+        #     input_ids=input_ids, attention_mask=text_attention_mask, return_dict=False
+        # )
+        last_hidden_text_state, text_outputs = self.bert(
             input_ids=input_ids, attention_mask=text_attention_mask, return_dict=False
         )
+        logits = self.bert2(input_ids=input_ids, attention_mask=text_attention_mask,).logits
+        # print("Calculation worked" , flush = True)
         
         # if self.must:
         #     delete = 3
         #     self.f.create_dataset(f"{check}/{video_path[0][1].split('/')[-1][:-4]}_{timings[0][1]}/text", data=last_hidden_text_state.cpu().detach().numpy())
         # else:
         #     delete = 3
-        self.f.create_dataset(f"{check}/{video_path[0].split('/')[-1][:-4]}_{timings[0]}/text", data=last_hidden_text_state.cpu().detach().numpy())
+        # self.f.create_dataset(f"{check}/{video_path[0].split('/')[-1][:-4]}_{timings[0]}/text", data=last_hidden_text_state.cpu().detach().numpy())
+        data = self.f[f"{check}/{video_path[0].split('/')[-1][:-4]}_{timings[0]}/text"][()]
+        data[...] = last_hidden_text_state.cpu().detach().numpy()
         
+        return logits
+        
+        # print(f"{text_outputs} \n Shape of text_ouptuts is {text_outputs.shape} \n Shape of last_hidden_text_state is {last_hidden_text_state.shape} " , flush = True)
 
-        aud_outputs = self.whisper.whisper.encoder(audio_features)[0][:,:512,:]
+        # aud_outputs = self.whisper.whisper.encoder(audio_features)[0][:,:512,:]
         
         # if self.must:
         #     aud_context = self.whisper.whisper.encoder(context_audio)[0][:,:512,:]
@@ -226,10 +272,10 @@ class TAVForMAE_HDF5(nn.Module):
         #     aud_outputs = (aud_outputs.mean(dim=1) * self.p + new_aud_context.mean(dim=1) * (1 - self.p)) / 2
             
         # else:
-        self.f.create_dataset(f"{check}/{video_path[0].split('/')[-1][:-4]}_{timings[0]}/audio", data=aud_outputs.cpu().detach().numpy())
-        aud_outputs = aud_outputs.mean(dim=1)
+        # self.f.create_dataset(f"{check}/{video_path[0].split('/')[-1][:-4]}_{timings[0]}/audio", data=aud_outputs.cpu().detach().numpy())
+        # aud_outputs = aud_outputs.mean(dim=1)
 
-        vid_outputs = self.videomae.videomae(video_embeds, bool_masked_pos = video_mask)[0]  
+        # vid_outputs = self.videomae.videomae(video_embeds, bool_masked_pos = video_mask)[0]  
 
         # if self.must:
         #     vid_context = self.videomae.videomae(video_context, bool_masked_pos = video_mask)[0]
@@ -238,15 +284,17 @@ class TAVForMAE_HDF5(nn.Module):
         #     self.f.create_dataset(f"{check}/{video_path[0][1].split('/')[-1][:-4]}_{timings[0][1]}/video", data=vid_outputs.cpu().detach().numpy())
         #     vid_outputs = (vid_outputs[:,0] * self.p + vid_context[:,0] * (1 - self.p)) / 2
         # else:
-        self.f.create_dataset(f"{check}/{video_path[0].split('/')[-1][:-4]}_{timings[0]}/video", data=vid_outputs.cpu().detach().numpy())
-        vid_outputs = vid_outputs[:,0]
-        text_outputs = self.bert.linear1(text_outputs)
+        # self.f.create_dataset(f"{check}/{video_path[0].split('/')[-1][:-4]}_{timings[0]}/video", data=vid_outputs.cpu().detach().numpy())
+        # vid_outputs = vid_outputs[:,0]
+        # text_outputs = self.bert.linear1(text_outputs)
         
-        aud_outputs = self.whisper.linear1(aud_outputs)
+        # aud_outputs = self.whisper.linear1(aud_outputs)
         
-        vid_outputs = self.videomae.linear1(vid_outputs)
+        # vid_outputs = self.videomae.linear1(vid_outputs)
         
-        tav = (text_outputs + aud_outputs + vid_outputs) / 3
+        # tav = (text_outputs + aud_outputs + vid_outputs) / 3
+        # tav = torch.rand((1 , self.output_dim ),dtype = torch.float32) 
+        tav = torch.rand((1 , self.output_dim ),dtype = torch.float32) 
         
         return tav
 

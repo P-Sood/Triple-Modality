@@ -46,3 +46,7 @@ SingleModels/run_slurm/core*
 data_symlink
 FinetuneData/*
 TripleModels/outputs/feature_extractor_meld.txt
+/home/zeerak.talat/trimodal/download
+trimodal/download
+download
+results/*

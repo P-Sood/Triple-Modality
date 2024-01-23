@@ -1,15 +1,10 @@
 wandb: Currently logged in as: zeerak (ddi). Use `wandb login --relogin` to force relogin
-wandb: - Waiting for wandb.init()...wandb: \ Waiting for wandb.init()...wandb: Tracking run with wandb version 0.16.0
-wandb: Run data is saved locally in /l/users/zeerak.talat/Triple-Modality/TripleModels/run_slurm/wandb/run-20231128_141359-hncnaoxz
+wandb: wandb version 0.16.2 is available!  To upgrade, please run:
+wandb:  $ pip install wandb --upgrade
+wandb: Tracking run with wandb version 0.16.0
+wandb: Run data is saved locally in /l/users/zeerak.talat/Triple-Modality/TripleModels/run_slurm/wandb/run-20240123_104701-5phkkirx
 wandb: Run `wandb offline` to turn off syncing.
-wandb: Syncing run eager-capybara-177
+wandb: Syncing run skilled-lion-230
 wandb: ⭐️ View project at https://wandb.ai/ddi/Triple-Modality-TripleModels
-wandb: 🚀 View run at https://wandb.ai/ddi/Triple-Modality-TripleModels/runs/hncnaoxz
- in main 
- param_dict = {'epoch': 1, 'patience': 10.0, 'lr': 1e-06, 'clip': 1.0, 'batch_size': 1, 'weight_decay': 0.0001, 'model': 'MAE_encoder', 'T_max': 2, 'seed': 64, 'label_task': 'emotion', 'mask': False, 'loss': 'NewCrossEntropy', 'beta': 1, 'epoch_switch': 2, 'sampler': 'Iterative', 'weights': tensor([0.1293, 0.1345, 0.1673, 0.1688, 0.1723, 0.2279]), 'label2id': {'frustrated': 0, 'neutral': 1, 'angry': 2, 'happy': 5, 'sad': 3, 'excited': 4}, 'id2label': {0: 'frustrated', 1: 'neutral', 2: 'angry', 5: 'happy', 3: 'sad', 4: 'excited'}} 
- model_param = {'output_dim': 6, 'dropout': 0.5, 'early_div': False, 'num_layers': 12, 'learn_PosEmbeddings': True, 'dataset': '../../data/iemo', 'sota': False} 
- df ../../data/iemo , with df = 7380 
- 
-['iemo_bert/ylhfsh3s/fresh-sweep-16/best.pt', 'iemo_whisper/xaz13i9h/proud-sweep-34/best.pt', 'iemo_video/myt3iav2/rose-sweep-69/best.pt']
-Loading from iemo_bert/ylhfsh3s/fresh-sweep-16/best.pt, 
-Loading from iemo_whisper/xaz13i9h/proud-sweep-34/best.pt, 
+wandb: 🚀 View run at https://wandb.ai/ddi/Triple-Modality-TripleModels/runs/5phkkirx
+slurmstepd-cn-08: error: *** JOB 317341 ON cn-08 CANCELLED AT 2024-01-23T10:47:16 ***

@@ -38,8 +38,21 @@ class Trainer:
         
         output = model(**input, check=check)
 
-        Metric.update_metrics(torch.argmax(output, dim=1), label)
+        for k in list(input.keys()):
+            input[k] = input[k].cpu() if is_tensor(input[k]) else input[k]
+            del input[k]
+        
 
+        Metric.update_metrics(torch.argmax(output, dim=1), label)
+        if criterion is not None:
+            if criterion.__class__.__name__ == "NewCrossEntropyLoss":
+                batch_loss = criterion(
+                    output, label, epoch=epoch if epoch is not None else 0
+                )  # TODO: Turn this on with Sampler
+            else:
+                batch_loss = criterion(output, label)
+        del output
+        del label
         return batch_loss
 
 
@@ -125,7 +138,7 @@ class Trainer:
                         [
                             param
                             for param in model.parameters()
-                            # if param.requires_grad == True
+                            if param.requires_grad == True
                         ],
                         clip,
                     )
@@ -205,7 +218,7 @@ class Trainer:
                         [
                             param
                             for param in model.parameters()
-                            # if param.requires_grad == True
+                            if param.requires_grad == True
                         ],
                         clip,
                     )
@@ -274,13 +287,16 @@ class Trainer:
         total_loss_val = 0
         with torch.no_grad():
             for val_input, val_label in tqdm(val_dataloader, desc=name):
-                self.get_statistics(
+                val_batch_loss = self.get_statistics(
                     val_input, val_label, model, criterion, Metric, name, epoch=None
                 )
-                
+                if criterion is not None:
+                    total_loss_val += val_batch_loss.item()
+                del val_input
+                del val_label
             weightedF1 = self.log(
                 Metric,
-                0,
+                total_loss_val / len(val_dataloader) if criterion is not None else 0,
                 name,
             )
         return total_loss_val / len(val_dataloader), weightedF1
@@ -391,10 +407,7 @@ class Trainer:
         checkpoint=None,
     ):
         optimizer = AdamW(
-            [
-                param for param in model.parameters() 
-                # if param.requires_grad == True
-            ],
+            [param for param in model.parameters() if param.requires_grad == True],
             lr=learning_rate,
             weight_decay=weight_decay,
         )
@@ -433,8 +446,8 @@ class Trainer:
         return model
 
 
-    def evaluate(self , model, test_dataloader, Metric , name="test"):
-        self.validate(test_dataloader, model, None, Metric, name)
+    def evaluate(self , model, test_dataloader, Metric):
+        self.validate(test_dataloader, model, None, Metric, name="test")
 
 
     def log(self , Metric, loss, check="train"):
@@ -458,12 +471,12 @@ class Trainer:
             f"{check}/weighted-f1-score": F1Weighted,
             f"{check}/macro-f1-score": F1Macro,
         }
-        # print(f"\n in {check} \n Confusion Matrix = \n{_} \n", flush=True)
-        # print(f"\n in {check} \n Acc = \n{Acc} \n", flush=True)
-        # print(f"\n in {check} \n Prec = \n{Prec} \n", flush=True)
-        # print(f"\n in {check} \n Rec = \n{Rec} \n", flush=True)
-        # print(f"\n in {check} \n F1Weighted = \n{F1Weighted} \n", flush=True)
-        # print(f"\n in {check} \n F1Macro = \n{F1Macro} \n", flush=True)
+        print(f"\n in {check} \n Confusion Matrix = \n{_} \n", flush=True)
+        print(f"\n in {check} \n Acc = \n{Acc} \n", flush=True)
+        print(f"\n in {check} \n Prec = \n{Prec} \n", flush=True)
+        print(f"\n in {check} \n Rec = \n{Rec} \n", flush=True)
+        print(f"\n in {check} \n F1Weighted = \n{F1Weighted} \n", flush=True)
+        print(f"\n in {check} \n F1Macro = \n{F1Macro} \n", flush=True)
 
         wandb.log({**d1, **multiF1, **multiRec, **multiPrec, **multiAcc})
         Metric.reset_metrics()
