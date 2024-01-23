@@ -101,7 +101,24 @@ class TAVForMAE(nn.Module):
                 [nn.Linear(1024 * 3, 1024) for _ in range(self.num_layers)]
             )
             self.linear1 = nn.Linear(1024 * 3, self.hidden_size)
+        elif self.fusion == "sota_dual":
+            self.fusion_layers = nn.ModuleList(
+                [nn.Linear(1024 * 3, 1024) for _ in range(self.num_layers)]
+            )
+            self.linear1 = nn.Linear(1024 * 2, self.hidden_size)
+        
         elif self.fusion == "guiseppe":
+            
+            self.linear1 = nn.Linear(1024 * 4, self.hidden_size)
+        elif self.fusion == "new_guiseppe":
+            self.fusion_layers = nn.ModuleList(
+                [nn.Linear(1024 * 3, 1024) for _ in range(self.num_layers)]
+            )
+            self.linear1 = nn.Linear(1024 * 4, self.hidden_size)
+        elif self.fusion == "dual_guiseppe":
+            self.fusion_layers = nn.ModuleList(
+                [nn.Linear(1024 * 3, 1024) for _ in range(self.num_layers)]
+            )
             self.linear1 = nn.Linear(1024 * 4, self.hidden_size)
         elif self.fusion == "concat":
             self.linear1 = nn.Linear(1024 * 3, self.hidden_size)
@@ -154,6 +171,26 @@ class TAVForMAE(nn.Module):
                 text_features = fusion_layer(torch.cat([Ffusion1, Ffusion2 , text_features], dim=-1))
             # Concatenate the text features interlaced with audio and video context, with the audio and video features
             tav = torch.cat([text_features, audio_features, video_features], dim=-1)
+        elif self.fusion == "sota_dual":
+            
+            for i in range(self.num_layers):
+                Ffusion1 = text_features
+                Ffusion2 = text_features
+                aud_text_layer = self.aud_text_layers[i]
+                vid_text_layer = self.vid_text_layers[i]
+                fusion_layer = self.fusion_layers[i]
+                # Q, K , V inputs
+                # Fuse audio/video to the textual dimension
+                Ffusion1, _ = aud_text_layer(
+                    Ffusion1, audio_features, Ffusion1
+                )
+                Ffusion2, _ = vid_text_layer(
+                    audio_features, Ffusion2, audio_features
+                )
+                # run a linear layer over audio_text, video_text and text to become the new text features
+                text_features = fusion_layer(torch.cat([Ffusion1, Ffusion2 , text_features], dim=-1))
+            # Concatenate the text features interlaced with audio and video context, with the audio and video features
+            tav = torch.cat([text_features, audio_features], dim=-1)
             
         elif self.fusion == "guiseppe":
             # Dont need the fixed MHA encoder here because QV, only need to be the same size
@@ -171,6 +208,39 @@ class TAVForMAE(nn.Module):
                 )
                 # What about updating Ffusion1/2 with a  linear layer like above?
             tav = torch.cat([Ffusion1, Ffusion2, audio_features, video_features], dim=-1)
+        elif self.fusion == "new_guiseppe":
+            # Dont need the fixed MHA encoder here because QV, only need to be the same size
+            for i in range(self.num_layers):
+                Ffusion1 = text_features
+                Ffusion2 = text_features
+                aud_text_layer = self.aud_text_layers[i]
+                vid_text_layer = self.vid_text_layers[i]
+                fusion_layer = self.fusion_layers[i]
+                # Query the same, Key and Value are the other modality
+                Ffusion1, _ = aud_text_layer(
+                    Ffusion1, audio_features, audio_features
+                )
+                Ffusion2, _ = vid_text_layer(
+                    Ffusion2, video_features, video_features
+                )
+                text_features = fusion_layer(torch.cat([Ffusion1, Ffusion2 , text_features], dim=-1))
+                # What about updating Ffusion1/2 with a  linear layer like above?
+            tav = torch.cat([Ffusion1, Ffusion2, audio_features, video_features], dim=-1)
+        elif self.fusion == "dual_guiseppe":
+            Ffusion1 = text_features
+            Ffusion2 = text_features
+            for i in range(self.num_layers):
+                aud_text_layer = self.aud_text_layers[i]
+                vid_text_layer = self.vid_text_layers[i]
+                # Query the same, Key and Value are the other modality
+                Ffusion1, _ = aud_text_layer(
+                    Ffusion1, audio_features, audio_features
+                )
+                Ffusion2, _ = vid_text_layer(
+                    audio_features, Ffusion2, Ffusion2
+                )
+                # What about updating Ffusion1/2 with a  linear layer like above?
+            tav = torch.cat([Ffusion1, Ffusion2 , text_features, audio_features], dim=-1)
         elif self.fusion == "concat":
             tav = torch.cat([text_features, audio_features, video_features], dim=-1)
             
