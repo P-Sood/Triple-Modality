@@ -50,3 +50,4 @@ TripleModels/outputs/feature_extractor_meld.txt
 trimodal/download
 download
 results/*
+emoberta/*
