@@ -10,4 +10,4 @@
 #SBATCH --cpus-per-task=8 # maximum CPU cores per GPU request: 6 on Cedar, 16 on Graham.
 #SBATCH --output=../outputs/feature_extractor_iemo.txt
 
-python ../tav_nn.py -e 1 -b 1 -d ../../data/iemo -lt emotion --sampler Iterative --seed 64
+python ../tav_nn.py -e 1 -b 1 -d ../../data/more_text_IEMO -lt emotion --sampler Iterative --seed 4

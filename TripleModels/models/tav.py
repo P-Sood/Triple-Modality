@@ -160,28 +160,28 @@ class TAVForMAE_HDF5(nn.Module):
         #     model.load_state_dict(ckpt)
         
             
-        ckpt = torch.load("../../results/IEMOCAP/roberta-large/final/2021-05-09-12-19-54-speaker_mode-upper-num_past_utterances-1000-num_future_utterances-0-batch_size-4-seed-4/checkpoint-5975/pytorch_model.bin",map_location=torch.device("cuda" if torch.cuda.is_available() else "cpu"))
-        self.bert = AutoModel.from_pretrained("roberta-large")
-        new_state_dict = OrderedDict()
-        for k, v in ckpt.items():
-            name = k.replace("roberta." , "")  # remove 'roberta.' prefix
+        # ckpt = torch.load("../../results/IEMOCAP/roberta-large/final/2021-05-09-12-19-54-speaker_mode-upper-num_past_utterances-1000-num_future_utterances-0-batch_size-4-seed-4/checkpoint-5975/pytorch_model.bin",map_location=torch.device("cuda" if torch.cuda.is_available() else "cpu"))
+        # self.bert = AutoModel.from_pretrained("roberta-large")
+        # new_state_dict = OrderedDict()
+        # for k, v in ckpt.items():
+        #     name = k.replace("roberta." , "")  # remove 'roberta.' prefix
             
-            new_state_dict[name] = v
+        #     new_state_dict[name] = v
 
-        # Load the new state dictionary into your model
-        self.bert.load_state_dict(new_state_dict , strict = False)
-        # self.bert.load_state_dict(ckpt)
-        # print(self.bert.classifier.out_proj.bias , flush = True)
+        # # Load the new state dictionary into your model
+        # self.bert.load_state_dict(new_state_dict , strict = False)
+        # # self.bert.load_state_dict(ckpt)
+        # # print(self.bert.classifier.out_proj.bias , flush = True)
         
         
-        # Zero out all gradients. Might not need this anymore though
-        # for i, model in enumerate([self.bert, self.whisper, self.videomae]):
-        for i, model in enumerate([self.bert]):
-            for param in model.parameters():
-                param.requires_grad = False
+        # # Zero out all gradients. Might not need this anymore though
+        # # for i, model in enumerate([self.bert, self.whisper, self.videomae]):
+        # for i, model in enumerate([self.bert]):
+        #     for param in model.parameters():
+        #         param.requires_grad = False
 
-        # Put the models onto eval mode
-        self.bert.eval()
+        # # Put the models onto eval mode
+        # self.bert.eval()
         
         ckpt = torch.load("../../results/IEMOCAP/roberta-large/final/2021-05-09-12-19-54-speaker_mode-upper-num_past_utterances-1000-num_future_utterances-0-batch_size-4-seed-4/checkpoint-5975/pytorch_model.bin",map_location=torch.device("cuda" if torch.cuda.is_available() else "cpu"))
         self.bert2 = AutoModelForSequenceClassification.from_pretrained("roberta-large" , num_labels = 6)
@@ -231,10 +231,9 @@ class TAVForMAE_HDF5(nn.Module):
         # last_hidden_text_state, text_outputs = self.bert.bert(
         #     input_ids=input_ids, attention_mask=text_attention_mask, return_dict=False
         # )
-        last_hidden_text_state, text_outputs = self.bert(
-            input_ids=input_ids, attention_mask=text_attention_mask, return_dict=False
-        )
-        logits = self.bert2(input_ids=input_ids, attention_mask=text_attention_mask,).logits
+
+        outputs = self.bert2(input_ids=input_ids, attention_mask=text_attention_mask)
+        logits , last_hidden_text_state = outputs.logits, outputs.hidden_states
         # print("Calculation worked" , flush = True)
         
         # if self.must:
