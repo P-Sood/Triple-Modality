@@ -58,11 +58,11 @@ class TextAudioVideoDataset(Dataset):
         except:
             self.timings = [None] * len(self.audio_path)
 
-        if "meld" in dataset:
+        if "meld" in dataset.lower():
             dataset = "meld"
-        elif "iemo" in dataset:
+        elif "iemo" in dataset.lower():
             dataset = "iemo"
-        elif "tiktok" in dataset:
+        elif "tiktok" in dataset.lower():
             dataset = "tiktok"
         else:
             dataset = "must"
@@ -88,10 +88,10 @@ class TextAudioVideoDataset(Dataset):
             df = df[df["context"] == False]
         
         
-        
         self.Data = Data(video=f"../../data/{dataset}_videos_blackground.hdf5",
                          audio=f"../../data/whisper_{dataset}_audio.hdf5")
         self.check = check
+        
         self.labels = df[label_col].values.tolist()
 
         assert (
@@ -133,6 +133,8 @@ class TextAudioVideoDataset(Dataset):
                 self.video_path[idx], self.timings[idx], self.check
             ),
         ], np.array(self.labels[idx])
+        
+
 
     
 class VideoDataset(Dataset):
@@ -178,7 +180,18 @@ class VideoDataset(Dataset):
         
         self.Data = Data(video=f"../../data/{dataset}_videos_blackground.hdf5", audio=None)
         self.check = check
-        self.labels = df[label_col].values.tolist()
+        # Make the mappings the exact same
+        id_mapping = {
+                        0: 1,  # 'frustrated' to 'frustration'
+                        1: 0,  # 'neutral' to 'neutral'
+                        2: 3,  # 'angry' to 'anger'
+                        3: 2,  # 'sad' to 'sadness'
+                        4: 4,   # 'excited' to 'excited'
+                        5: 5,  # 'happy' to 'happiness'
+                    }
+        self.labels = df[label_col].apply(lambda x: id_mapping[x]).values.tolist()
+        
+
 
         if accum:
             self.grad = (

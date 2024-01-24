@@ -122,9 +122,9 @@ def runModel(accelerator, df_train, df_val, df_test, param_dict, model_param):
     trainer = Trainer(big_batch=3 , num_steps=1)
     
     
-    trainer.evaluate(model, df_train, Metric , name = "train")
     trainer.evaluate(model, df_val, Metric , name = "val")
     trainer.evaluate(model, df_test, Metric , name = "test")
+    trainer.evaluate(model, df_train, Metric , name = "train")
 
 
 def main():
@@ -192,10 +192,22 @@ def main():
         )
     ).values
     weights = weights / weights.sum()
-    label2id = (
-        df.drop_duplicates(label_index).set_index(label_index).to_dict()[number_index]
-    )
-    id2label = {v: k for k, v in label2id.items()}
+    # Hardcoded for iemocap
+    emotions = [
+            "neutral",
+            "frustration",
+            "sadness",
+            "anger",
+            "excited",
+            "happiness",
+        ]
+    label2id = {emotion: idx for idx, emotion in enumerate(emotions)}
+    id2label = {val: key for key, val in label2id.items()}
+    
+    # label2id = (
+    #     df.drop_duplicates(label_index).set_index(label_index).to_dict()[number_index]
+    # )
+    # id2label = {v: k for k, v in label2id.items()}
 
     model_param = {
         "output_dim": len(weights),
