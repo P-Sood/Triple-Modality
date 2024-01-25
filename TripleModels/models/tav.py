@@ -242,8 +242,9 @@ class TAVForMAE_HDF5(nn.Module):
         # else:
         #     delete = 3
         # self.f.create_dataset(f"{check}/{video_path[0].split('/')[-1][:-4]}_{timings[0]}/text", data=last_hidden_text_state.cpu().detach().numpy())
-        data = self.f[f"{check}/{video_path[0].split('/')[-1][:-4]}_{timings[0]}/text"][()]
-        data[...] = last_hidden_text_state.cpu().detach().numpy()
+        self.f.create_dataset(f"{check}/{video_path[0].split('/')[-1][:-4]}_{timings[0]}/new_text", data=last_hidden_text_state.cpu().detach().numpy())
+        # data = self.f[f"{check}/{video_path[0].split('/')[-1][:-4]}_{timings[0]}/text"][()]
+        # data[...] = last_hidden_text_state.cpu().detach().numpy()
         
         return logits
         
