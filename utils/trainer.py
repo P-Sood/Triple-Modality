@@ -385,7 +385,7 @@ class Trainer:
                     log_val1,
                     path,
                 )
-        else:
+        elif sampler == "Both_NoAccum":
             if epoch % epoch_switch == 0:
                 model, optimizer, criterion, prev_val_loss, prev_f1 = self.not_grad_accum(
                     epoch,
@@ -424,67 +424,25 @@ class Trainer:
                     log_val2,
                     path,
                 )
-        # if sampler == 'Both':
-        #     # Do both 
-        #     if epoch % epoch_switch == 0:
-        #         model, optimizer, criterion, prev_val_loss, prev_f1 = self.not_grad_accum(
-        #             epoch,
-        #             train_dataloader[0],
-        #             val_dataloader,
-        #             model,
-        #             criterion,
-        #             optimizer,
-        #             scheduler,
-        #             clip,
-        #             patience,
-        #             Metric,
-        #             prev_val_loss,
-        #             prev_f1,
-        #             total_loss_train,
-        #             iters1,
-        #             log_val1,
-        #             path,
-        #         )
-        #     else:
-        #         model, optimizer, criterion, prev_val_loss, prev_f1 = self.grad_accum(
-        #             epoch,
-        #             train_dataloader[1],
-        #             val_dataloader,
-        #             model,
-        #             criterion,
-        #             optimizer,
-        #             scheduler,
-        #             clip,
-        #             patience,
-        #             Metric,
-        #             prev_val_loss,
-        #             prev_f1,
-        #             total_loss_train,
-        #             iters2,
-        #             log_val2,
-        #             path,
-        #         )
-        # else:
-        #     # Do either weightedSampling or iterativeSampling
-        #     model, optimizer, criterion, prev_val_loss, prev_f1 = self.not_grad_accum(
-        #             epoch,
-        #             train_dataloader[0] if sampler == 'Weighted' else train_dataloader[1],
-        #             val_dataloader,
-        #             model,
-        #             criterion,
-        #             optimizer,
-        #             scheduler,
-        #             clip,
-        #             patience,
-        #             Metric,
-        #             prev_val_loss,
-        #             prev_f1,
-        #             total_loss_train,
-        #             iters1,
-        #             log_val1,
-        #             path,
-        #         )
-            
+        elif sampler == "Iter_Accum":
+            model, optimizer, criterion, prev_val_loss, prev_f1 = self.grad_accum(
+                    epoch,
+                    train_dataloader[1],
+                    val_dataloader,
+                    model,
+                    criterion,
+                    optimizer,
+                    scheduler,
+                    clip,
+                    patience,
+                    Metric,
+                    prev_val_loss,
+                    prev_f1,
+                    total_loss_train,
+                    iters2,
+                    log_val2,
+                    path,
+                )
 
         return model, optimizer, criterion, scheduler, prev_val_loss, prev_f1
 

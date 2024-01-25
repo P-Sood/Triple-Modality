@@ -46,7 +46,7 @@ parameters:
   label_task:
     values: ['emotion']
   fusion:
-    values: ["guiseppe"]
+    values: ["sota_dual"]
   model:
     values: ['MAE_encoder']
   loss:

@@ -235,15 +235,24 @@ def main():
         "epoch_switch": config.epoch_switch,
         "sampler": config.sampler,
     }
-    if param_dict['sampler'] == "Weighted" and param_dict['loss'] == "WeightedCrossEntropy":
-        print(f"We are not going to learn anything with sampler == {param_dict['sampler'] } and loss == {param_dict['loss']}. \nKill it" , flush=True)
+    s = param_dict['sampler']
+    l = param_dict['loss']
+    if s == "Weighted" and l == "WeightedCrossEntropy":
+        print(f"We are not going to learn anything with sampler == {s } and loss == {l}. \nKill it" , flush=True)
         return 0
-    elif param_dict['sampler'] == "Iterative" and param_dict['loss'] == "CrossEntropy":
-        print(f"We are not going to learn anything with sampler == {param_dict['sampler'] } and loss == {param_dict['loss']}. \nKill it" , flush=True)
+    elif s == "Iterative" and l == "CrossEntropy":
+        print(f"We are not going to learn anything with sampler == {s } and loss == {l}. \nKill it" , flush=True)
         return 0
-    elif (param_dict['sampler'] == "Iterative" or param_dict['sampler'] == "Weighted") and param_dict['loss'] == "NewCrossEntropy":
-        print(f"We are not going to learn anything with sampler == {param_dict['sampler'] } and loss == {param_dict['loss']}. \nKill it" , flush=True)
+    elif s == "Iter_Accum" and l == "CrossEntropy":
+        print(f"We are not going to learn anything with sampler == {s } and loss == {l}. \nKill it" , flush=True)
         return 0
+    elif (s == "Iterative" or s == "Weighted" or s == "Iter_Accum") and l == "NewCrossEntropy":
+        print(f"We are not going to learn anything with sampler == {s } and loss == {l}. \nKill it" , flush=True)
+        return 0
+    # elif (s == "Both_NoAccum" or s == "Both") and (l == "WeightedCrossEntropy" or l == "CrossEntropy"):
+    #     print(f"We are not going to learn anything with sampler == {s } and loss == {l}. \nKill it" , flush=True)
+    #     return 0
+        
 
     df = pd.read_pickle(f"{config.dataset}.pkl")
 

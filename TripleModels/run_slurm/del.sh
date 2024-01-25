@@ -8,16 +8,10 @@
 #SBATCH --gres=gpu:1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=6 # maximum CPU cores per GPU request: 6 on Cedar, 16 on Graham.
-#SBATCH --output=../outputs/iemo_fusion.txt
+#SBATCH --output=../outputs/new_iemo_fusion.txt
 
 # wandb agent ddi/IemoTriple/uufy7lov
 # wandb agent ddi/IemoFusion/uuj7hfce
+wandb agent ddi/PepeIemo/9cd5j1b2
+# wandb agent ddi/SotaIemo_N/gvkkhe68
 # wandb agent ddi/IemoFusion/wynl2e0t
-
-
-# wandb agent ddi/PepeIemo/9cd5j1b2
-wandb agent ddi/SotaIemo_N/gvkkhe68
-# wandb agent ddi/DualPepe_N/df3ufrth
-# wandb agent ddi/DualSota_N/8o58511c
-# wandb agent ddi/NewPepe_N/b5broifi
-
