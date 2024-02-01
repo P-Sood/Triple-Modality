@@ -69,11 +69,7 @@ class TAVForMAE(nn.Module):
         self.p = 0.75  # This is to decide how much to weight the context vs the actual features for Mustard
 
         print(f"Using {self.num_layers} layers \nUsing fusion : {self.fusion}", flush=True)
-        if self.mosei:
-            self.text_expansion = nn.Linear(300 , 1024)
-            self.audio_expansion = nn.Linear(64 , 1024)
-            self.video_expansion = nn.Linear(64 , 1024)
-            
+        if self.mosei:            
             self.text_expansion = nn.LSTM(input_size=300, hidden_size=1024//2, num_layers=1, batch_first=True , bidirectional=True)
             self.audio_expansion = nn.LSTM(input_size=64, hidden_size=1024//2, num_layers=1, batch_first=True , bidirectional=True)  
             self.video_expansion = nn.LSTM(input_size=64, hidden_size=1024//2, num_layers=1, batch_first=True , bidirectional=True)
@@ -98,8 +94,6 @@ class TAVForMAE(nn.Module):
         )
 
 
-        # Everything before this line is unlearnable, everything after is what we are focused on
-
         self.aud_text_layers = nn.ModuleList(
             [
                 nn.MultiheadAttention(embed_dim=1024, num_heads=8, batch_first=True)
@@ -113,6 +107,7 @@ class TAVForMAE(nn.Module):
             ]
         )
         
+        
             
             
         if self.fusion == "sota":
@@ -120,24 +115,40 @@ class TAVForMAE(nn.Module):
                 [nn.Linear(1024 * 3, 1024) for _ in range(self.num_layers)]
             )
             self.linear1 = nn.Linear(1024 * 3, self.hidden_size)
-        elif "dp" in self.fusion:
-            self.fusion_layers = nn.ModuleList(
-                [nn.Linear(1024 * 3, 1024) for _ in range(self.num_layers)]
+        
+        elif "t_p" in self.fusion:
+            self.layers1 = nn.ModuleList(
+                [
+                    nn.MultiheadAttention(embed_dim=1024, num_heads=8, batch_first=True)
+                    for _ in range(self.num_layers)
+                ]
             )
+            self.layers2 = nn.ModuleList(
+                [
+                    nn.MultiheadAttention(embed_dim=1024, num_heads=8, batch_first=True)
+                    for _ in range(self.num_layers)
+                ]
+            )
+            
+            self.linear1 = nn.Linear(1024 * 8 , self.hidden_size)
+            
+        elif "dp" in self.fusion:
             self.linear1 = nn.Linear(1024 * 4, self.hidden_size)
-        elif self.fusion == "concat":
+        elif self.fusion == "d_c": # double concat
             self.linear1 = nn.Linear(1024 * 2, self.hidden_size)
+        elif self.fusion == "t_c": # triple concat
+            self.linear1 = nn.Linear(1024 * 3, self.hidden_size)
 
         self.dropout = nn.Dropout(self.dropout)
         self.linear2 = nn.Linear(self.hidden_size, self.output_dim)
         self.relu = nn.ReLU()
     
-    def dual_peppe(self, feature1 , feature2):
+    def dual_peppe(self, feature1 , feature2, fusion_layer1 , fusion_layer2):
             Ffusion1 = feature1
             Ffusion2 = feature1
             for i in range(self.num_layers):
-                aud_text_layer = self.aud_text_layers[i]
-                vid_text_layer = self.vid_text_layers[i]
+                aud_text_layer = fusion_layer1[i]
+                vid_text_layer = fusion_layer2[i]
                 # Query the same, Key and Value are the other modality
                 Ffusion1, _ = aud_text_layer(
                     Ffusion1, feature2, feature2
@@ -148,7 +159,18 @@ class TAVForMAE(nn.Module):
             tav = torch.cat([Ffusion1.mean(dim=1), Ffusion2.mean(dim=1), 
                              feature1.mean(dim=1), feature2.mean(dim=1)], 
                              dim=-1)
-            return tav
+            del Ffusion1
+            del Ffusion2
+            return tav # Now it has only 2 dimensions
+        
+    def triple_peppe(self, text , audio, video):
+        ta = self.dual_peppe(text , audio, self.aud_text_layers , self.vid_text_layers)
+        tv = self.dual_peppe(text , video, self.layers1 , self.layers2)
+        
+        tav = torch.cat([ta, tv] , dim = -1)
+        del ta
+        del tv
+        return tav
 
     def forward(
         self,
@@ -197,23 +219,27 @@ class TAVForMAE(nn.Module):
                 # run a linear layer over audio_text, video_text and text to become the new text features
                 text_features = fusion_layer(torch.cat([Ffusion1, Ffusion2 , text_features], dim=-1))
             # Concatenate the text features interlaced with audio and video context, with the audio and video features
+            del Ffusion1
+            del Ffusion2
             tav = torch.cat([text_features, audio_features, video_features], dim=-1).mean(dim=1)  
             
-        elif self.fusion == "concat":
+        elif self.fusion == "d_c":
             tav = torch.cat([text_features, audio_features], dim=-1).mean(dim=1)  
+        elif self.fusion == "t_c":
+            tav = torch.cat([text_features, audio_features, video_features], dim=-1).mean(dim=1)  
         elif self.fusion == "dp_tv":
-            tav = self.dual_peppe(text_features , video_features)
+            tav = self.dual_peppe(text_features , video_features, self.aud_text_layers , self.vid_text_layers)
         elif self.fusion == "dp_av":
-            tav = self.dual_peppe(audio_features , video_features)
+            tav = self.dual_peppe(audio_features , video_features, self.aud_text_layers , self.vid_text_layers)
         elif self.fusion == "dp_ta":
-            tav = self.dual_peppe(text_features , audio_features)
+            tav = self.dual_peppe(text_features , audio_features, self.aud_text_layers , self.vid_text_layers)
+        elif self.fusion == "t_p":
+            tav = self.triple_peppe(text_features , audio_features, video_features)
         
 
         del text_features
         del audio_features
         del video_features
-        # del Ffusion1
-        # del Ffusion2
 
         # Classifier Head
         if check == "train":
@@ -225,4 +251,4 @@ class TAVForMAE(nn.Module):
         tav = self.linear2(tav)
 
         return tav  
-    # python3 ../tav_nn.py --fusion dp_ta --dataset ../../data/mosei --label_task sentiment --sampler Both
+    # python3 ../tav_nn.py --fusion t_p --dataset ../../data/iemo --label_task emotion --sampler Both_NoAccum

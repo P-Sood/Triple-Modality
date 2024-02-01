@@ -46,10 +46,10 @@ parameters:
   label_task:
     values: ['emotion']
   fusion:
-    values: ["dp_tv" , "dp_av" , "dp_ta"]
+    values: ["dp_tv" , "dp_av" , "dp_ta", "sota" , "t_c" , "d_c" , "t_p"]
   model:
     values: ['MAE_encoder']
   loss:
-    values: ['NewCrossEntropy' , 'CrossEntropy' , 'WeightedCrossEntropy']
+    values: ['NewCrossEntropy' , 'CrossEntropy' , 'WeightedCrossEntropy', 'Both_NoAccum' , 'Iter_Accum']
   sampler:
     values: ['Both' , 'Iterative' , 'Weighted']

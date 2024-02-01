@@ -106,7 +106,6 @@ class TextAudioVideoDataset(Dataset):
         video, video_context = self.Data.videoFeatures(
             self.video_path[idx], timings, self.check
         )
-        assert text.shape[-1] == 300, f"on index {idx} text has weird features"
         return {
             "text_features": text,
             "audio_features": audio,

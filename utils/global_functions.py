@@ -163,7 +163,7 @@ class Metrics:
             normalize="none",
             validate_args=self.validate_args,
         ).to(device=self.lol)
-        print(self.confusionMatrix , flush = True)
+        
         self.multiF1 = MulticlassF1Score(
             self.num_classes,
             self.top_k,

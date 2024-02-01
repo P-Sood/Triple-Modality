@@ -138,13 +138,11 @@ def runModel(accelerator, df_train, df_val, df_test, param_dict, model_param):
 
     num_labels = model_param["output_dim"]
     dataset = model_param["dataset"]
-    ignore = 2 if "mosei" in dataset else -1
+    ignore = 2 if "mosei" in dataset else (num_labels + 1)
     if loss == "CrossEntropy":
-        # criterion = NewCrossEntropyLoss(class_weights=weights.to(device)).to(device) # TODO: have to call epoch in forward function
         criterion = torch.nn.CrossEntropyLoss(ignore_index=ignore).to(device)
 
     elif loss == "NewCrossEntropy":
-        # criterion = PrecisionLoss(num_classes = num_labels,weights=weights.to(device)).to(device)
         criterion = NewCrossEntropyLoss(
             class_weights=weights.to(device), epoch_switch=epoch_switch, ignore_index=ignore
         ).to(device)
@@ -225,7 +223,7 @@ def main():
         "patience": config.patience,
         "lr": config.learning_rate,
         "clip": config.clip,
-        "batch_size": 256 if "mosei" in config.dataset else config.batch_size,
+        "batch_size": config.batch_size,
         "weight_decay": config.weight_decay,
         "model": config.model,
         "T_max": config.T_max,
