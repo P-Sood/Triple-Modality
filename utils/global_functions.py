@@ -70,12 +70,12 @@ class NewCrossEntropyLoss(nn.Module):
     NOTE: Computes per-element losses for a mini-batch (instead of the average loss over the entire mini-batch).
     """
 
-    def __init__(self, class_weights, epoch_switch=2):
+    def __init__(self, class_weights, epoch_switch=2, ignore_index = -1):
         super().__init__()
         self.class_weights = class_weights
         self.epoch_switch = epoch_switch
-        self.weightedCEL = torch.nn.CrossEntropyLoss(weight=class_weights)
-        self.normalCEL = torch.nn.CrossEntropyLoss()
+        self.weightedCEL = torch.nn.CrossEntropyLoss(weight=class_weights, ignore_index = ignore_index)
+        self.normalCEL = torch.nn.CrossEntropyLoss(ignore_index = ignore_index)
         self.iter1 = 1
         self.iter2 = 1
         self.iter3 = 1
@@ -163,6 +163,7 @@ class Metrics:
             normalize="none",
             validate_args=self.validate_args,
         ).to(device=self.lol)
+        print(self.confusionMatrix , flush = True)
         self.multiF1 = MulticlassF1Score(
             self.num_classes,
             self.top_k,
