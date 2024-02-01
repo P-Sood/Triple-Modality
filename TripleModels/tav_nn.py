@@ -138,23 +138,24 @@ def runModel(accelerator, df_train, df_val, df_test, param_dict, model_param):
 
     num_labels = model_param["output_dim"]
     dataset = model_param["dataset"]
-
+    ignore = 2 if "mosei" in dataset else -1
     if loss == "CrossEntropy":
         # criterion = NewCrossEntropyLoss(class_weights=weights.to(device)).to(device) # TODO: have to call epoch in forward function
-        criterion = torch.nn.CrossEntropyLoss().to(device)
+        criterion = torch.nn.CrossEntropyLoss(ignore_index=ignore).to(device)
 
     elif loss == "NewCrossEntropy":
         # criterion = PrecisionLoss(num_classes = num_labels,weights=weights.to(device)).to(device)
         criterion = NewCrossEntropyLoss(
-            class_weights=weights.to(device), epoch_switch=epoch_switch
+            class_weights=weights.to(device), epoch_switch=epoch_switch, ignore_index=ignore
         ).to(device)
     elif loss == "WeightedCrossEntropy":
-        criterion = torch.nn.CrossEntropyLoss(weight=weights.to(device)
+        criterion = torch.nn.CrossEntropyLoss(weight=weights.to(device), ignore_index=ignore
         ).to(device)
         
 
     print(loss, flush=True)
-    Metric = Metrics(num_classes=num_labels, id2label=id2label, rank=device)
+    print(f"num_classes is {num_labels} \n" , flush = True)
+    Metric = Metrics(num_classes=num_labels, id2label=id2label, rank=device, ignore_index = ignore)
     df_train_accum = prepare_dataloader(
         df_train, dataset, batch_size, label_task, epoch_switch, check="train", accum=True , sampler=sampler
     )
@@ -224,7 +225,7 @@ def main():
         "patience": config.patience,
         "lr": config.learning_rate,
         "clip": config.clip,
-        "batch_size": 256, #config.batch_size,
+        "batch_size": 256 if "mosei" in config.dataset else config.batch_size,
         "weight_decay": config.weight_decay,
         "model": config.model,
         "T_max": config.T_max,
@@ -268,6 +269,7 @@ def main():
     if param_dict["label_task"] == "sentiment":
         number_index = "sentiment"
         label_index = "sentiment_label"
+        # df = df[df["sentiment_label"] != "Neutral"] if "mosei" in config.dataset else df
     elif param_dict["label_task"] == "sarcasm":
         number_index = "sarcasm"
         label_index = "sarcasm_label"
