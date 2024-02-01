@@ -4,25 +4,32 @@ import sys
 sys.path.insert(0, "/".join(os.getcwd().split("/")[:-2]))
 __package__ = "DoubleModels"
 
-from .train_model.text_audio_train import train_ta_network, evaluate_ta
-from .models.text_audio import BertAudioClassifier, collate_batch
+from transformers import logging
+
+logging.set_verbosity_error()
+import warnings
+
+warnings.filterwarnings("ignore")
+
+from utils.trainer import Trainer
+from models.tav import TAVForMAE, collate_batch
 import wandb
-from utils.data_loaders import TextAudioDataset
-from utils.global_functions import arg_parse, Metrics, MySampler, NewCrossEntropyLoss
-import torch
+from utils.data_loaders import TextAudioVideoDataset
 import pandas as pd
-from transformers import AutoConfig
+import torch
 import numpy as np
+from utils.global_functions import arg_parse, Metrics, MySampler, NewCrossEntropyLoss
 from torch.utils.data import DataLoader
+from torch.utils.data.sampler import WeightedRandomSampler
 
 
+TESTING_PIPELINE = False
 class BatchCollation:
     def __init__(self, must) -> None:
         self.must = must
 
     def __call__(self, batch):
         return collate_batch(batch, self.must)
-
 
 def prepare_dataloader(
     df,
@@ -31,44 +38,31 @@ def prepare_dataloader(
     label_task,
     epoch_switch,
     pin_memory=True,
-    num_workers=2,
+    num_workers=0,
     check="train",
     accum=False,
+    sampler = None,
 ):
     """
-    we load in our dataset, and we just make a random distributed sampler to evenly partition our
-    dataset on each GPU
-    say we have 32 data points, if batch size = 8 then it will make 4 dataloaders of size 8 each
+    Take in pandas dataframe, name of dataset, batch size, label task, whether we are training or testing, or if we are accumulating gradients or not
+
+    If we are training then we create two dataloaders, one for accumulating gradients with iterative sampler and one for regular with weighted sampling
+
+    Otherwise we just create a regular dataloader for val/test that just do shuffle
     """
-    num_workers = 32 // batch_size
     must = True if "must" in str(dataset).lower() else False
-    # TODO: DATASET SPECIFIC
-    if accum:
-        batch_size = 1
-        # df , dataset , batch_size , feature_col1 , feature_col2  , label_col , timings = None , accum = False , check = "test"
-        dataset = TextAudioDataset(
-            df,
-            dataset,
-            batch_size,
-            feature_col1="audio_path",
-            feature_col2="text",
-            label_col=label_task,
-            timings="timings",
-            accum=accum,
-            check=check,
-        )
-    else:
-        dataset = TextAudioDataset(
-            df,
-            dataset,
-            batch_size,
-            feature_col1="audio_path",
-            feature_col2="text",
-            label_col=label_task,
-            timings="timings",
-            accum=accum,
-            check=check,
-        )
+    dataset = TextAudioVideoDataset(
+        df,
+        dataset,
+        batch_size = 1 if sampler == "Both" else batch_size,
+        feature_col1="audio_path",
+        feature_col2="video_path",
+        feature_col3="text",
+        label_col=label_task,
+        timings="timings",
+        accum=accum,
+        check=check,
+    )
 
     if check == "train":
         labels = df[label_task].value_counts()
@@ -123,7 +117,7 @@ def prepare_dataloader(
 def runModel(accelerator, df_train, df_val, df_test, param_dict, model_param):
     """
     Start by getting all the required values from our dictionary
-    Then when all the stuff is done, we start to apply our multi-processing to our model and start it up
+    Start and init all classes required for training
     """
     device = accelerator
     epoch = param_dict["epoch"]
@@ -133,7 +127,6 @@ def runModel(accelerator, df_train, df_val, df_test, param_dict, model_param):
     T_max = param_dict["T_max"]
     batch_size = param_dict["batch_size"]
     loss = param_dict["loss"]
-    beta = param_dict["beta"]
     weight_decay = param_dict["weight_decay"]
     weights = param_dict["weights"]
     id2label = param_dict["id2label"]
@@ -141,6 +134,7 @@ def runModel(accelerator, df_train, df_val, df_test, param_dict, model_param):
     model_name = param_dict["model"]
     mask = param_dict["mask"]
     epoch_switch = param_dict["epoch_switch"]
+    sampler = param_dict["sampler"]
 
     num_labels = model_param["output_dim"]
     dataset = model_param["dataset"]
@@ -154,11 +148,15 @@ def runModel(accelerator, df_train, df_val, df_test, param_dict, model_param):
         criterion = NewCrossEntropyLoss(
             class_weights=weights.to(device), epoch_switch=epoch_switch
         ).to(device)
+    elif loss == "WeightedCrossEntropy":
+        criterion = torch.nn.CrossEntropyLoss(weight=weights.to(device)
+        ).to(device)
+        
 
     print(loss, flush=True)
     Metric = Metrics(num_classes=num_labels, id2label=id2label, rank=device)
     df_train_accum = prepare_dataloader(
-        df_train, dataset, 1, label_task, epoch_switch, check="train", accum=True
+        df_train, dataset, batch_size, label_task, epoch_switch, check="train", accum=True , sampler=sampler
     )
     df_train_no_accum = prepare_dataloader(
         df_train,
@@ -170,26 +168,31 @@ def runModel(accelerator, df_train, df_val, df_test, param_dict, model_param):
         accum=False,
     )
     df_val = prepare_dataloader(
-        df_val, dataset, batch_size, label_task, epoch_switch, check="val"
+        df_val,
+        dataset,
+        batch_size,
+        label_task,
+        epoch_switch,
+        check="val" if TESTING_PIPELINE == False else "train",
     )
     df_test = prepare_dataloader(
-        df_test, dataset, batch_size, label_task, epoch_switch, check="test"
+        df_test,
+        dataset,
+        batch_size,
+        label_task,
+        epoch_switch,
+        check="test" if TESTING_PIPELINE == False else "train",
     )
 
-    model = BertAudioClassifier(model_param).to(device)
-
-    # PREFormer = PreFormer().to(f"cpu")
+    model = TAVForMAE(model_param).to(device)
 
     wandb.watch(model, log="all")
-    # wandb.watch(PREFormer, log = "all")
-    checkpoint = None  # torch.load(f"/home/prsood/projects/ctb-whkchun/prsood/TAV_Train/MAEncoder/aht69be1/lively-sweep-11/7.pt")
-    # model.load_state_dict(checkpoint['model_state_dict'])
-    # criterion = checkpoint['loss']
-    # PREFormer = checkpoint['PREFormer']
+    
+    trainer = Trainer(2**5 , 4)
 
-    model = train_ta_network(
+    model = trainer.train_network(
         model,
-        [df_train_no_accum, df_train_accum],
+        [df_train_no_accum, df_train_accum , sampler],
         df_val,
         criterion,
         lr,
@@ -200,9 +203,10 @@ def runModel(accelerator, df_train, df_val, df_test, param_dict, model_param):
         patience,
         clip,
         epoch_switch,
-        checkpoint,
+        checkpoint = None,
     )
-    evaluate_ta(model, df_test, Metric)
+    
+    trainer.evaluate(model, df_test, Metric)
 
 
 def main():
@@ -228,14 +232,38 @@ def main():
         "label_task": config.label_task,
         "mask": config.mask,
         "loss": config.loss,
-        "beta": config.beta,
         "epoch_switch": config.epoch_switch,
+        "sampler": config.sampler,
     }
+    s = param_dict['sampler']
+    l = param_dict['loss']
+    if s == "Weighted" and l == "WeightedCrossEntropy":
+        print(f"We are not going to learn anything with sampler == {s } and loss == {l}. \nKill it" , flush=True)
+        return 0
+    elif s == "Iterative" and l == "CrossEntropy":
+        print(f"We are not going to learn anything with sampler == {s } and loss == {l}. \nKill it" , flush=True)
+        return 0
+    elif s == "Iter_Accum" and l == "CrossEntropy":
+        print(f"We are not going to learn anything with sampler == {s } and loss == {l}. \nKill it" , flush=True)
+        return 0
+    elif (s == "Iterative" or s == "Weighted" or s == "Iter_Accum") and l == "NewCrossEntropy":
+        print(f"We are not going to learn anything with sampler == {s } and loss == {l}. \nKill it" , flush=True)
+        return 0
+    # elif (s == "Both_NoAccum" or s == "Both") and (l == "WeightedCrossEntropy" or l == "CrossEntropy"):
+    #     print(f"We are not going to learn anything with sampler == {s } and loss == {l}. \nKill it" , flush=True)
+    #     return 0
+        
 
     df = pd.read_pickle(f"{config.dataset}.pkl")
-    df_train = df[df["split"] == "train"]
-    df_test = df[df["split"] == "test"]
-    df_val = df[df["split"] == "val"]
+
+    if TESTING_PIPELINE:
+        df_train = df[df["split"] == "train"].head(100)
+        df_test = df[df["split"] == "train"].head(100)
+        df_val = df[df["split"] == "train"].head(100)
+    else:
+        df_train = df[df["split"] == "train"]
+        df_test = df[df["split"] == "test"]
+        df_val = df[df["split"] == "val"]
 
     if param_dict["label_task"] == "sentiment":
         number_index = "sentiment"
@@ -244,6 +272,11 @@ def main():
         number_index = "sarcasm"
         label_index = "sarcasm_label"
         df = df[df["context"] == False]
+    elif (
+        param_dict["label_task"] == "content"
+    ):  # Needs this to be content too not tiktok
+        number_index = "content"
+        label_index = "content_label"
     else:
         number_index = "emotion"
         label_index = "emotion_label"
@@ -271,13 +304,17 @@ def main():
     )
     id2label = {v: k for k, v in label2id.items()}
 
+    print(config.hidden_layers)
     model_param = {
         "output_dim": len(weights),
         "dropout": config.dropout,
         "early_div": config.early_div,
         "num_layers": config.num_layers,
+        "num_encoders": config.num_encoders,
         "learn_PosEmbeddings": config.learn_PosEmbeddings,
         "dataset": config.dataset,
+        "fusion": config.fusion,
+        "hidden_size": int(config.hidden_layers),
     }
     param_dict["weights"] = weights
     param_dict["label2id"] = label2id
@@ -286,7 +323,7 @@ def main():
     print(
         f" in main \n param_dict = {param_dict} \n model_param = {model_param} \n df {config.dataset} , with df = {len(df)} \n "
     )
-    runModel("cuda", df_train, df_val, df_test, param_dict, model_param)
+    runModel("cuda" if torch.cuda.is_available() else "cpu", df_train, df_val, df_test, param_dict, model_param)
 
 
 if __name__ == "__main__":

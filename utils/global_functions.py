@@ -432,7 +432,7 @@ def arg_parse(description):
         "--sampler",
         "-sam",
         help="Set Sampler",
-        default="Weighted",
+        default="Both",
         type=str,
     )
     parser.add_argument(

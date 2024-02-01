@@ -3,11 +3,11 @@ import torch
 import warnings
 from torch import nn
 from transformers import logging
-from torch.nn.utils.rnn import pad_sequence
 
 logging.set_verbosity_error()
 warnings.filterwarnings("ignore")
-import pdb
+
+
 
 def collate_batch(batch , must):
     text = []
@@ -18,22 +18,17 @@ def collate_batch(batch , must):
     labels = []
 
     for input, label in batch:
-        itf = input["text_features"]
-        atf = input["audio_features"]
-        vtf = input["video_features"]
-        text.append(itf.squeeze()  if len(itf.shape) > 2 else itf)
-        audio.append(atf.squeeze() if len(atf.shape) > 2 else atf)
-        video.append(vtf.squeeze() if len(vtf.shape) > 2 else vtf)
+        text.append(input["text_features"].squeeze())
+        audio.append(input["audio_features"].squeeze())
+        video.append(input["video_features"].squeeze())
         if must:
             audio_context.append(input["audio_context"].squeeze())
             video_context.append(input["video_context"].squeeze())
         labels.append(label)
-    try:
-        text = pad_sequence(text  , batch_first=True).squeeze(dim=1)
-        audio = pad_sequence(audio, batch_first=True).squeeze(dim=1)
-        video = pad_sequence(video, batch_first=True).squeeze(dim=1)
-    except:
-        breakpoint()
+
+    text = torch.stack(text, dim=0).squeeze(dim=1)
+    audio = torch.stack(audio, dim=0).squeeze(dim=1)
+    video = torch.stack(video, dim=0).squeeze(dim=1)
     
 
     return {
@@ -46,7 +41,7 @@ def collate_batch(batch , must):
     
 
 
-import pdb
+
 class TAVForMAE(nn.Module):
     """
     Model for Multimodal Alignment and Fusion
@@ -64,20 +59,9 @@ class TAVForMAE(nn.Module):
         self.dataset = args["dataset"]
         self.fusion = args["fusion"]
         self.hidden_size = args["hidden_size"]
-        self.must = True if "must" in str(self.dataset).lower() else False
-        self.mosei = True if "mosei" in str(self.dataset).lower() else False
-        self.p = 0.75  # This is to decide how much to weight the context vs the actual features for Mustard
 
         print(f"Using {self.num_layers} layers \nUsing fusion : {self.fusion}", flush=True)
-        if self.mosei:
-            self.text_expansion = nn.Linear(300 , 1024)
-            self.audio_expansion = nn.Linear(64 , 1024)
-            self.video_expansion = nn.Linear(64 , 1024)
-            
-            self.text_expansion = nn.LSTM(input_size=300, hidden_size=1024//2, num_layers=1, batch_first=True , bidirectional=True)
-            self.audio_expansion = nn.LSTM(input_size=64, hidden_size=1024//2, num_layers=1, batch_first=True , bidirectional=True)  
-            self.video_expansion = nn.LSTM(input_size=64, hidden_size=1024//2, num_layers=1, batch_first=True , bidirectional=True)
-            
+        
         self.text_encoder_layers = nn.ModuleList(
             [
                 nn.TransformerEncoderLayer(d_model=1024, nhead=8, dropout=self.dropout , batch_first=True)
@@ -97,6 +81,8 @@ class TAVForMAE(nn.Module):
             ]
         )
 
+        self.must = True if "must" in str(self.dataset).lower() else False
+        self.p = 0.75  # This is to decide how much to weight the context vs the actual features for Mustard
 
         # Everything before this line is unlearnable, everything after is what we are focused on
 
@@ -112,9 +98,6 @@ class TAVForMAE(nn.Module):
                 for _ in range(self.num_layers)
             ]
         )
-        
-            
-            
         if self.fusion == "sota":
             self.fusion_layers = nn.ModuleList(
                 [nn.Linear(1024 * 3, 1024) for _ in range(self.num_layers)]
@@ -145,9 +128,8 @@ class TAVForMAE(nn.Module):
                 Ffusion2, _ = vid_text_layer(
                     feature2, Ffusion2, Ffusion2
                 )
-            tav = torch.cat([Ffusion1.mean(dim=1), Ffusion2.mean(dim=1), 
-                             feature1.mean(dim=1), feature2.mean(dim=1)], 
-                             dim=-1)
+                # What about updating Ffusion1/2 with a  linear layer like above?
+            tav = torch.cat([Ffusion1, Ffusion2 , feature1, feature2], dim=-1)
             return tav
 
     def forward(
@@ -165,11 +147,6 @@ class TAVForMAE(nn.Module):
             del audio_context
             video_features = (video_features * self.p + video_context * (1 - self.p)) / 2
             del video_context
-        
-        if self.mosei:
-            text_features, _ = self.text_expansion(text_features.float())
-            audio_features, _ = self.audio_expansion(audio_features.float())
-            video_features, _ = self.video_expansion(video_features.float())
             
         # Encoder layers
         for i in range(self.num_encoders):
@@ -197,10 +174,10 @@ class TAVForMAE(nn.Module):
                 # run a linear layer over audio_text, video_text and text to become the new text features
                 text_features = fusion_layer(torch.cat([Ffusion1, Ffusion2 , text_features], dim=-1))
             # Concatenate the text features interlaced with audio and video context, with the audio and video features
-            tav = torch.cat([text_features, audio_features, video_features], dim=-1).mean(dim=1)  
+            tav = torch.cat([text_features, audio_features, video_features], dim=-1)
             
         elif self.fusion == "concat":
-            tav = torch.cat([text_features, audio_features], dim=-1).mean(dim=1)  
+            tav = torch.cat([text_features, audio_features], dim=-1)
         elif self.fusion == "dp_tv":
             tav = self.dual_peppe(text_features , video_features)
         elif self.fusion == "dp_av":
@@ -208,6 +185,10 @@ class TAVForMAE(nn.Module):
         elif self.fusion == "dp_ta":
             tav = self.dual_peppe(text_features , audio_features)
         
+            
+        # batch_size , 512 , 1024*3
+
+        tav = tav.mean(dim=1)  
 
         del text_features
         del audio_features
@@ -225,4 +206,4 @@ class TAVForMAE(nn.Module):
         tav = self.linear2(tav)
 
         return tav  
-    # python3 ../tav_nn.py --fusion dp_ta --dataset ../../data/mosei --label_task sentiment --sampler Both
+    

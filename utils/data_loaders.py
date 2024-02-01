@@ -49,6 +49,8 @@ class TextAudioVideoDataset(Dataset):
             dataset = "iemo"
         elif "tiktok" in dataset:
             dataset = "tiktok"
+        elif "mosei" in dataset:
+            dataset = "mosei"
         else:
             dataset = "must"
             self.timings = df["timings"].values.reshape(-1, 2).tolist()
@@ -68,7 +70,7 @@ class TextAudioVideoDataset(Dataset):
 
         if accum:
             self.grad = (
-                (df["dialog"].value_counts() / batch_size)
+                (df["dialog"].value_counts() / batch_size) if dataset != "mosei" else (df["id"].value_counts() / batch_size)
                 .astype(int)
                 .sort_index()
                 .tolist()
@@ -104,7 +106,7 @@ class TextAudioVideoDataset(Dataset):
         video, video_context = self.Data.videoFeatures(
             self.video_path[idx], timings, self.check
         )
-
+        assert text.shape[-1] == 300, f"on index {idx} text has weird features"
         return {
             "text_features": text,
             "audio_features": audio,

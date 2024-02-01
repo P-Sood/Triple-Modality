@@ -4,7 +4,7 @@ command:
   - python3
   - ${program}
   - "--dataset"
-  - "../../data/must"
+  - "../../data/mosei"
 method: bayes
 
 metric:
@@ -13,7 +13,7 @@ metric:
 parameters:
   epoch:
     max: 12
-    min: 6
+    min: 3
     distribution: int_uniform
   learning_rate:
     values: [1e-6 , 1e-5 , 1e-4  , 5e-5 , 5e-6]
@@ -44,9 +44,9 @@ parameters:
   hidden_size:
     values: [64, 128, 256, 384, 768, 1536]
   label_task:
-    values: [sarcasm]
+    values: ['sentiment']
   fusion:
-    values: ["dp_tv" , "dp_av" , "dp_ta"]
+    values: ["dp_tv", "dp_ta"]
   model:
     values: ['MAE_encoder']
   loss:

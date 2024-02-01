@@ -46,7 +46,7 @@ parameters:
   label_task:
     values: ['emotion']
   fusion:
-    values: ["sota_dual"]
+    values: ["dp_tv" , "dp_av" , "dp_ta"]
   model:
     values: ['MAE_encoder']
   loss:

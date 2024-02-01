@@ -224,7 +224,7 @@ def main():
         "patience": config.patience,
         "lr": config.learning_rate,
         "clip": config.clip,
-        "batch_size": config.batch_size,
+        "batch_size": 256, #config.batch_size,
         "weight_decay": config.weight_decay,
         "model": config.model,
         "T_max": config.T_max,
@@ -272,9 +272,7 @@ def main():
         number_index = "sarcasm"
         label_index = "sarcasm_label"
         df = df[df["context"] == False]
-    elif (
-        param_dict["label_task"] == "content"
-    ):  # Needs this to be content too not tiktok
+    elif param_dict["label_task"] == "content":  # Needs this to be content too not tiktok
         number_index = "content"
         label_index = "content_label"
     else:
