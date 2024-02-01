@@ -56,8 +56,9 @@ class TextAudioVideoDataset(Dataset):
             self.video_path = df[feature_col2].values.reshape(-1, 2).tolist()
             df = df[df["context"] == False]
 
-        # fh = f"{data_path}{dataset}.final.seq_len.features.hdf5"
-        fh = "/home/zeerak.talat/trimodal/data/iemo.TAE.features.hdf5"
+        fh = f"{data_path}{dataset}.final.seq_len.features.hdf5"
+        if "iemo" in dataset:
+            fh = "/home/zeerak.talat/trimodal/data/iemo.TAE.features.hdf5"
 
         self.Data = Data(file=fh)
         self.check = check
@@ -197,9 +198,14 @@ class Data:
     def textFeatures(self, path, timings, check):
 
         if not self.must:
-            text = torch.tensor(
-                self.FILE[f"{check}/{path.split('/')[-1][:-4]}_{timings}/text"][()]
-            )
+            try:
+                text = torch.tensor(
+                    self.FILE[f"{check}/{path.split('/')[-1][:-4]}_{timings}/new_text"][()]
+                )
+            except:
+                text = torch.tensor(
+                    self.FILE[f"{check}/{path.split('/')[-1][:-4]}_{timings}/text"][()]
+                )
                 
         else:
             try:
