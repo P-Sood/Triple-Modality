@@ -47,3 +47,5 @@ TripleModels/outputs/*
 TripleModels/outputs/meld_fusion.txt
 download
 results/*
+CMU-MultimodalSDK/*
+emoberta/*
