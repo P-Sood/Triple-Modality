@@ -50,6 +50,6 @@ parameters:
   model:
     values: ['MAE_encoder']
   loss:
-    values: ['NewCrossEntropy' , 'CrossEntropy' , 'WeightedCrossEntropy', 'Both_NoAccum' , 'Iter_Accum']
+    values: ['NewCrossEntropy' , 'CrossEntropy' , 'WeightedCrossEntropy']
   sampler:
-    values: ['Both' , 'Iterative' , 'Weighted']
+    values: ['Both' , 'Iterative' , 'Weighted', 'Both_NoAccum' , 'Iter_Accum']

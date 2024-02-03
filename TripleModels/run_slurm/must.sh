@@ -10,6 +10,4 @@
 #SBATCH --cpus-per-task=6 # maximum CPU cores per GPU request: 6 on Cedar, 16 on Graham.
 #SBATCH --output=../outputs/mustfusion.txt
 
-# wandb agent ddi/Fusion/ph1w0vvg
-# wandb agent ddi/MustFusion/im41427r
-wandb agent ddi/MustFusion/haq66ypn
+wandb agent ddi/Must_All/zkj2kj82
