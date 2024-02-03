@@ -70,7 +70,7 @@ class TextAudioVideoDataset(Dataset):
 
         if accum:
             self.grad = (
-                (df["dialog"].value_counts() / batch_size) if dataset != "mosei" else (df["id"].value_counts() / batch_size)
+                (df["dialog"].value_counts() / batch_size) #if dataset != "mosei" else (df["id"].value_counts() / batch_size)
                 .astype(int)
                 .sort_index()
                 .tolist()

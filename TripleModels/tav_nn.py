@@ -54,7 +54,7 @@ def prepare_dataloader(
     dataset = TextAudioVideoDataset(
         df,
         dataset,
-        batch_size = 1 if sampler == "Both" else batch_size,
+        batch_size = 1 if (sampler == "Both" or sampler == "Iter_Accum") else batch_size,
         feature_col1="audio_path",
         feature_col2="video_path",
         feature_col3="text",
@@ -213,7 +213,9 @@ def main():
     project_name = "MLP_test_text"
     config = arg_parse(project_name)
 
-    wandb.init(entity="ddi", config=config)
+    wandb.init(entity="ddi", config=config, project = "Iemo-Ablations" if "iemo" in config.dataset else 
+                                                      "Must-Ablations" if "must" in config.dataset else 
+                                                      "URFunny-Ablations")
     config = wandb.config
 
     np.random.seed(config.seed)
