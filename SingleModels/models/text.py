@@ -23,6 +23,7 @@ def collate_batch(batch , must):  # batch is a pseudo pandas array of two column
         }
 
     return audio_features, torch.Tensor(np.array(label_list)).long()
+
 class BertClassifier(nn.Module):
     def __init__(self, args):
         super(BertClassifier, self).__init__()
@@ -31,7 +32,7 @@ class BertClassifier(nn.Module):
         self.dataset = args["dataset"]
         self.BertModel = args["BertModel"]
         
-        self.must = True if "must" in str(self.dataset).lower() else False
+        self.must = True if "must" in str(self.dataset).lower() or "urfunny" in str(self.dataset).lower() else False
         self.p = 0.75
         
         self.bert = AutoModel.from_pretrained(self.BertModel)

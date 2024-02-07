@@ -43,13 +43,14 @@ def prepare_dataloader(
     dataset on each GPU
     say we have 32 data points, if batch size = 8 then it will make 4 dataloaders of size 8 each
     """
-    must = True if "must" in str(dataset).lower() else False
+    must = True if "must" in str(dataset).lower() or "urfunny" in str(dataset).lower() else False
     
     dataset = BertDataset(
         df, dataset, batch_size = 1 if sampler == "Both" else batch_size, feature_col=feature_col, label_col=label_task , accum=accum , bert   = bert
     )
 
     if check == "train":
+        df = df[df['context'] == False] if must else df
         labels = df[label_task].value_counts()
         class_counts = torch.Tensor(
             list(dict(sorted((dict((labels)).items()))).values())
@@ -206,7 +207,7 @@ def main():
         "patience": config.patience,
         "lr": config.learning_rate,
         "clip": config.clip,
-        "batch_size": config.batch_size,
+        "batch_size": config.batch_size if config.batch_size < 25 else 16,
         "weight_decay": config.weight_decay,
         "model": config.model,
         "T_max": config.T_max,
@@ -219,6 +220,7 @@ def main():
         "sampler": config.sampler,
         "text_column": config.text_column,
     }
+    
     if param_dict['sampler'] == "Weighted" and param_dict['loss'] == "WeightedCrossEntropy":
         print(f"We are not going to learn anything with sampler == {param_dict['sampler'] } and loss == {param_dict['loss']}. \nKill it" , flush=True)
         return 0
@@ -253,9 +255,9 @@ def main():
         number_index = "content"
         label_index = "content_label"
     else:
-        number_index = "emotion"
-        label_index = "emotion_label"
-
+        number_index = "humour"
+        label_index = "humour_label"
+        df = df[df["context"] == False]
     """
     Due to data imbalance we are going to reweigh our CrossEntropyLoss
     To do this we calculate 1 - (num_class/len(df)) the rest of the functions are just to order them properly and then convert to a tensor

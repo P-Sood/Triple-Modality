@@ -6,6 +6,7 @@ import pandas as pd
 from pytorchvideo.data.encoded_video import EncodedVideo
 import pdb
 import ast
+import subprocess
 
 from pytorchvideo.transforms import (
     ApplyTransformToKey,
@@ -52,8 +53,9 @@ def draw(img , bbox):
     return black_img
 
 def body_face(test_vid : torch.Tensor , bbox):
+#   breakpoint()
   test_vid = test_vid.permute(1,0,2,3)
-  bbox = ast.literal_eval(bbox)
+  bbox = ast.literal_eval(bbox) if type(bbox) == str else bbox
   for i , img in enumerate(test_vid):
     img = img.permute(1 , 2 , 0).numpy()
     output_image =  torch.Tensor(draw(img , bbox[i])).permute(2 , 0 , 1)
@@ -63,18 +65,25 @@ def body_face(test_vid : torch.Tensor , bbox):
 
 
 def videoMAE_features(path, timings, check, speaker, bbox):
+    cmd = f"ffprobe -v error -select_streams v:0 -show_entries stream=start_time -of default=noprint_wrappers=1:nokey=1 {path}"
+    start_time_offset = float(subprocess.check_output(cmd, shell=True))
+    
     if timings == None:
         beg = 0
         end = 500
     else:
-        try:
-            timings = ast.literal_eval(timings)
-        except:
-            pass
-        beg = timings[0]
-        end = timings[1]
-        if end - beg < 0.1:
+        beg = timings[0] - start_time_offset
+        end = timings[1] - start_time_offset
+        if end - beg < .1:
             beg = 0
+            end = 500
+        elif beg < 0 and end <0:
+            beg += 2*start_time_offset
+            end += 2*start_time_offset 
+        elif beg < 0:
+            beg = 0
+            end2 = timings[1]
+        elif end < 0:
             end = 500
 
     # feature_extractor = VideoMAEFeatureExtractor.from_pretrained("MCG-NJU/videomae-base")
@@ -102,9 +111,10 @@ def videoMAE_features(path, timings, check, speaker, bbox):
                             UniformTemporalSubsample(num_frames_to_sample),
                             Lambda(lambda x: x / 255.0),
                             NormalizeVideo(mean, std),
-                            RandomHorizontalFlip(p=0) if speaker == None else Crop((120,2,245,355)) if speaker else Crop((120,362,245,355)), # Hone in on either the left_speaker or right_speaker in the video
+                            #RandomHorizontalFlip(p=0) if speaker == None else Crop((120,2,245,355)) if speaker else Crop((120,362,245,355)), # Hone in on either the left_speaker or right_speaker in the video
                             Resize((resize_to, resize_to)),
-                            Lambda(lambda x: body_face(x , bbox)), # cropped bodies only
+                            Lambda(lambda x: x if bbox == "FAIL" else body_face(x , bbox) ), # cropped bodies only
+                            
                         ]
                     ),
                 ),
@@ -120,9 +130,9 @@ def videoMAE_features(path, timings, check, speaker, bbox):
                             UniformTemporalSubsample(num_frames_to_sample),
                             Lambda(lambda x: x / 255.0),
                             NormalizeVideo(mean, std),
-                            RandomHorizontalFlip(p=0) if speaker == None else Crop((120,2,245,355)) if speaker else Crop((120,362,245,355)),
+                            #RandomHorizontalFlip(p=0) if speaker == None else Crop((120,2,245,355)) if speaker else Crop((120,362,245,355)),
                             Resize((resize_to, resize_to)),
-                            Lambda(lambda x: body_face(x , bbox)), # cropped bodies only
+                            Lambda(lambda x: x if bbox == "FAIL" else body_face(x , bbox) ), # cropped bodies only
                         ]
                     ),
                 ),
@@ -130,17 +140,34 @@ def videoMAE_features(path, timings, check, speaker, bbox):
         )
 
     video = EncodedVideo.from_path(path, decode_audio=False)
+    # breakpoint()
     video_data = video.get_clip(start_sec=beg, end_sec=end)
+    try:
+        video_data = transform(video_data)['video']
+    except:
+        try:
+            video_data = video.get_clip(start_sec=beg, end_sec=end2)
+            video_data = transform(video_data)['video']
+        except:
+            try:
+                video_data = video.get_clip(start_sec=beg, end_sec=500)
+                video_data = transform(video_data)['video']
+            except:
+                video_data = video.get_clip(start_sec=0, end_sec=500)
+                video_data = transform(video_data)['video']
+            
+        
     del video
-    video_data = transform(video_data)
     del transform
-    return video_data["video"].numpy()
+    return video_data.numpy()
 
 
 def write2File(writefile: h5py, path, timings, check, speaker , bbox):
     filename = f"{check}_{path.split('/')[-1][:-4]}_{timings}"
     # print(filename , flush = True)
     # generate some data for this piece of data
+    if filename in writefile:
+        return
     data = videoMAE_features(path[3:], timings, check, speaker , bbox)
     writefile.create_dataset(filename, data=data)
     del data
@@ -158,7 +185,7 @@ def arg_parse():
         "--dataset",
         "-d",
         help="The dataset we are using currently, or the folder the dataset is inside",
-        default="../data/meld.pkl",
+        default="../data/urfunny.pkl",
     )
 
     return parser.parse_args()
@@ -173,8 +200,11 @@ def main():
         name = "meld"
     elif "iemo" in args.dataset.lower():
         name = "iemo"
-    else:
+    elif "must" in args.dataset.lower():
         name = "must"
+    else:
+        name = "urfunny"
+    print(f"name is {name}")
     f = h5py.File(f"../data/{name}_videos_blackground.hdf5", "a", libver="latest", swmr=True)
     f.swmr_mode = True
     tqdm.pandas()

@@ -47,31 +47,11 @@ def prepare_dataloader(
     say we have 32 data points, if batch size = 8 then it will make 4 dataloaders of size 8 each
     """
     num_workers = 4
-    must = True if "must" in str(dataset).lower() else False
-    if accum:
-        batch_size = 1
-        # df , dataset , batch_size , feature_col , label_col , accum = False , check = "test"
-        dataset = Wav2VecAudioDataset(
-            df,
-            dataset,
-            batch_size,
-            feature_col="audio_path",
-            label_col=label_task,
-            accum=accum,
-            check=check,
-        )
-    else:
-        dataset = Wav2VecAudioDataset(
-            df,
-            dataset,
-            batch_size,
-            feature_col="audio_path",
-            label_col=label_task,
-            accum=accum,
-            check=check,
-        )
+    must = True if "must" in str(dataset).lower() or "urfunny" in str(dataset).lower() else False
+    dataset = Wav2VecAudioDataset( df, dataset, batch_size = 1 if sampler == "Both" else batch_size, feature_col="audio_path", label_col=label_task, accum=accum, check=check)
 
     if check == "train":
+        df = df[df['context'] == False] if must else df
         labels = df[label_task].value_counts()
         class_counts = torch.Tensor(
             list(dict(sorted((dict((labels)).items()))).values())
@@ -242,9 +222,15 @@ def main():
         number_index = "sarcasm"
         label_index = "sarcasm_label"
         df = df[df["context"] == False]
+    elif (
+        param_dict["label_task"] == "content"
+    ):  # Needs this to be content too not tiktok
+        number_index = "content"
+        label_index = "content_label"
     else:
-        number_index = "emotion"
-        label_index = "emotion_label"
+        number_index = "humour"
+        label_index = "humour_label"
+        df = df[df["context"] == False]
 
     """
     Due to data imbalance we are going to reweigh our CrossEntropyLoss

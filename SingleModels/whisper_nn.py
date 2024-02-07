@@ -47,13 +47,14 @@ def prepare_dataloader(
     dataset on each GPU
     say we have 32 data points, if batch size = 8 then it will make 4 dataloaders of size 8 each
     """
-    must = True if "must" in str(dataset).lower() else False
+    must = True if "must" in str(dataset).lower() or "urfunny" in str(dataset).lower() else False
     print(f"Are we running on mustard? {must}", flush=True) 
     dataset = WhisperDataset(
         df, dataset, batch_size = 1 if sampler == "Both" else batch_size, feature_col="audio_path", label_col=label_task , accum=accum ,check=check
     )
 
     if check == "train":
+        df = df[df['context'] == False] if must else df
         labels = df[label_task].value_counts()
         class_counts = torch.Tensor(
             list(dict(sorted((dict((labels)).items()))).values())
@@ -157,27 +158,31 @@ def runModel(accelerator, df_train, df_val, df_test, param_dict, model_param):
         df_test, dataset, batch_size, label_task, epoch_switch, check="test", sampler = sampler )
 
     model = WhisperForEmotionClassification(model_param).to(device)
+    
+    checkpoint = torch.load(model_name)
+    model.load_state_dict(checkpoint['model_state_dict'])
     wandb.watch(model, log="all")
    
 
     trainer = Trainer(big_batch=3 , num_steps=1)
     
-    model = trainer.train_network(
-        model,
-        [df_train_no_accum, df_train_accum , sampler],
-        df_val,
-        criterion,
-        lr,
-        epoch,
-        weight_decay,
-        T_max,
-        Metric,
-        patience,
-        clip,
-        epoch_switch,
-        checkpoint = None,
-    )
+    # model = trainer.train_network(
+    #     model,
+    #     [df_train_no_accum, df_train_accum , sampler],
+    #     df_val,
+    #     criterion,
+    #     lr,
+    #     epoch,
+    #     weight_decay,
+    #     T_max,
+    #     Metric,
+    #     patience,
+    #     clip,
+    #     epoch_switch,
+    #     checkpoint = None,
+    # )
     trainer.evaluate(model, df_test, Metric)
+    wandb.finish()
 
 
 def main():
@@ -196,7 +201,7 @@ def main():
         "patience": config.patience,
         "lr": config.learning_rate,
         "clip": config.clip,
-        "batch_size": config.batch_size,
+        "batch_size": config.batch_size if config.batch_size < 3 else 2,
         "weight_decay": config.weight_decay,
         "model": config.model,
         "T_max": config.T_max,
@@ -208,6 +213,7 @@ def main():
         "epoch_switch": config.epoch_switch,
         "sampler": config.sampler,
     }
+    print(f"we are on config.model = {config.model}")
     if param_dict['sampler'] == "Weighted" and param_dict['loss'] == "WeightedCrossEntropy":
         print(f"We are not going to learn anything with sampler == {param_dict['sampler'] } and loss == {param_dict['loss']}. \nKill it" , flush=True)
         return 0
@@ -231,13 +237,16 @@ def main():
     elif param_dict["label_task"] == "sarcasm":
         number_index = "sarcasm"
         label_index = "sarcasm_label"
-        df = df[df["context"] == False] # I do this after i split them into train/test/val
-    elif param_dict["label_task"] == "content": # Needs this to be content too not tiktok
+        df = df[df["context"] == False]
+    elif (
+        param_dict["label_task"] == "content"
+    ):  # Needs this to be content too not tiktok
         number_index = "content"
         label_index = "content_label"
     else:
-        number_index = "emotion"
-        label_index = "emotion_label"
+        number_index = "humour"
+        label_index = "humour_label"
+        df = df[df["context"] == False]
 
     """
     Due to data imbalance we are going to reweigh our CrossEntropyLoss

@@ -387,11 +387,12 @@ def load_model(model, optimizer, criterion, path):
     model_params = [
         param for param in model.parameters() if param.requires_grad == True
     ]
+    return model
     optimizer = AdamW(model_params)
     optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
     criterion.load_state_dict(checkpoint["loss"])
-
     return model, optimizer, criterion
+
 
 
 def arg_parse(description):

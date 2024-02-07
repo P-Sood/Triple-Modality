@@ -54,9 +54,11 @@ class TextAudioVideoDataset(Dataset):
         try:
             df[timings] = df[timings].replace({np.nan:None})
             self.timings = df[timings].values.tolist()
+            self.audio_timings = df['audio_timings'].values.tolist()
 
         except:
             self.timings = [None] * len(self.audio_path)
+            self.audio_timings = [None] * len(self.audio_path)
 
         if "meld" in dataset.lower():
             dataset = "meld"
@@ -65,8 +67,9 @@ class TextAudioVideoDataset(Dataset):
         elif "tiktok" in dataset.lower():
             dataset = "tiktok"
         else:
-            dataset = "must"
+            dataset = "must" if "must" in dataset.lower() else "urfunny"
             self.timings = df["timings"].values.reshape(-1, 2).tolist()
+            self.audio_timings = df["audio_timings"].values.reshape(-1, 2).tolist()
             self.audio_path = df[feature_col1].values.reshape(-1, 2).tolist()
             self.video_path = df[feature_col2].values.reshape(-1, 2).tolist()
             self.texts = []
@@ -127,7 +130,7 @@ class TextAudioVideoDataset(Dataset):
         return [
             self.texts[idx],
             self.Data.speech_file_to_array_fn(
-                self.audio_path[idx], self.timings[idx], self.check
+                self.audio_path[idx], self.audio_timings[idx], self.check
             ),
             self.Data.videoMAE_features(
                 self.video_path[idx], self.timings[idx], self.check
@@ -173,7 +176,7 @@ class VideoDataset(Dataset):
         elif "tiktok" in dataset:
             dataset = "tiktok"
         else:
-            dataset = "must"
+            dataset = "must" if "must" in dataset.lower() else "urfunny"
             self.timings = df["timings"].values.reshape(-1, 2).tolist()
             self.video_path = df[feature_col].values.reshape(-1, 2).tolist()
             df = df[df["context"] == False]
@@ -181,15 +184,8 @@ class VideoDataset(Dataset):
         self.Data = Data(video=f"../../data/{dataset}_videos_blackground.hdf5", audio=None)
         self.check = check
         # Make the mappings the exact same
-        id_mapping = {
-                        0: 1,  # 'frustrated' to 'frustration'
-                        1: 0,  # 'neutral' to 'neutral'
-                        2: 3,  # 'angry' to 'anger'
-                        3: 2,  # 'sad' to 'sadness'
-                        4: 4,   # 'excited' to 'excited'
-                        5: 5,  # 'happy' to 'happiness'
-                    }
-        self.labels = df[label_col].apply(lambda x: id_mapping[x]).values.tolist()
+
+        self.labels = df[label_col].values.tolist()
         
 
 
@@ -236,8 +232,8 @@ class WhisperDataset(Dataset):
 
         
         try:
-            df['timings'] = df['timings'].replace({np.nan:None})
-            self.timings = df['timings'].values.tolist()
+            df['audio_timings'] = df['audio_timings'].replace({np.nan:None})
+            self.timings = df['audio_timings'].values.tolist()
 
         except:
             self.timings = [None] * len(self.audio_path)
@@ -251,8 +247,11 @@ class WhisperDataset(Dataset):
         elif "tiktok" in dataset:
             dataset = "tiktok"
         else:
-            dataset = "must"
-            self.timings = df["timings"].values.reshape(-1, 2).tolist()
+            dataset = "must" if "must" in dataset.lower() else "urfunny"
+            try:
+                self.timings = df["audio_timings"].values.reshape(-1, 2).tolist()
+            except:
+                self.timings = df["timings"].values.reshape(-1, 2).tolist()
             self.audio_path = df[feature_col].values.reshape(-1, 2).tolist()
             # 0 is context, 1 is utterance
             df = df[df["context"] == False]
@@ -324,7 +323,7 @@ class BertDataset(Dataset):
         elif "tiktok" in dataset:
             dataset = "tiktok"
         else:
-            dataset = "must"
+            dataset = "must" if "must" in dataset.lower() else "urfunny"
             
             self.texts = []
             self.text_str = []
@@ -407,12 +406,12 @@ class Data:
         self.must = False
 
         if video is not None:
-            self.must = True if "must" in video else False
+            self.must = True if "must" in video or "urfunny" in video else False
             self.iemo = True if "iemo" in video else False
             self.tiktok = True if "tiktok" in video else False
 
         elif audio is not None:
-            self.must = True if "must" in audio else False
+            self.must = True if "must" in audio or "urfunny" in audio else False
             self.iemo = True if "iemo" in audio else False
             self.tiktok = True if "tiktok" in audio else False
         
@@ -512,3 +511,4 @@ class Data:
                 speech_array_target += singular_func_(speech_array_target, SNR=100 , path = path)
             # print(f"path is {path}\nshape of ret is {ret.shape}\n" , flush = True)
             return path , speech_array_target, speech_array_context , timings
+# python3 ../text_nn.py -d ../../data/urfunny --sampler Weighted --loss CrossEntropy --label_task humour

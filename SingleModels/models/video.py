@@ -54,7 +54,7 @@ class VideoClassification(nn.Module):
         self.num_layers = args["num_layers"]
         self.dataset = args["dataset"]
 
-        self.must = True if "must" in str(self.dataset).lower() else False
+        self.must = True if "must" in str(self.dataset).lower() or "urfunny" in str(self.dataset).lower() else False
         self.p = 0.75
         self.videomae = VideoMAEModel.from_pretrained(
             "MCG-NJU/videomae-large"

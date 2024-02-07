@@ -22,6 +22,7 @@ import numpy as np
 from numpy.random import choice
 from torch.nn.utils.rnn import pad_sequence
 from torch import nn
+import gc
 
 
 FEAT = WhisperFeatureExtractor.from_pretrained("openai/whisper-medium")
@@ -33,11 +34,14 @@ def collate_batch(batch, must):  # batch is a pseudo pandas array of two columns
     """
 
     video_list = []
+    video_list_context = []
 
     speech_list = []
+    speech_list_context = []
     label_list = []
     input_list = []
     text_mask = []
+    aud_path = []
     path_video = []
     target_timings = []
  
@@ -49,11 +53,30 @@ def collate_batch(batch, must):  # batch is a pseudo pandas array of two columns
         audio_path = input[1]
         vid_features = input[2]  # [6:] for debug
         
-        path_video.append(vid_features[0])
-        target_timings.append(vid_features[2])
-        
-        speech_list.append(FEAT(audio_path[1] , sampling_rate=16000).input_features[0])
-        video_list.append(vid_features[1])
+        if not must:
+            path , speech_array , aud_timings = audio_path
+            vid_path , video, vid_timings = vid_features
+            path_video.append(vid_path)
+            target_timings.append(vid_timings)
+            
+            speech_list.append(FEAT(speech_array , sampling_rate=16000).input_features[0])
+            video_list.append(video)
+        else:
+            aud_path , speech_array_target, speech_array_context , aud_timings = audio_path 
+            vid_path , video_target, video_context, vid_timings = vid_features
+            
+            path_video.append(vid_path)
+            target_timings.append(vid_timings)
+            
+            speech_list.append(FEAT(speech_array_target , sampling_rate=16000).input_features[0])
+            speech_list_context.append(FEAT(speech_array_context , sampling_rate=16000).input_features[0])
+            video_list.append(video_target)
+            video_list_context.append(video_context)
+            del speech_array_target
+            del speech_array_context
+            del video_target
+            del video_context
+            gc.collect()
         
 
         label_list.append(label)
@@ -74,6 +97,7 @@ def collate_batch(batch, must):  # batch is a pseudo pandas array of two columns
 
     audio_features = {
         "audio_features": torch.Tensor(np.array(speech_list)),
+        "context_audio": torch.Tensor(np.array(speech_list_context)),
         
        
     }
@@ -81,9 +105,11 @@ def collate_batch(batch, must):  # batch is a pseudo pandas array of two columns
     visual_embeds = {
         "video_path" : path_video,
         "video_embeds": torch.stack(video_list).permute(0, 2, 1, 3, 4),
+        "context_video": torch.stack(video_list_context).permute(0, 2, 1, 3, 4),
         
         "video_mask": vid_mask,
     }
+    
     return {**text , **audio_features , **visual_embeds}, torch.Tensor(np.array(label_list)).long()
 
 
@@ -125,7 +151,7 @@ class TAVForMAE_HDF5(nn.Module):
             
             f"{dataset_name}_video/myt3iav2/rose-sweep-69/best.pt",
             ]
-        else:
+        elif "must" in str(self.dataset).lower():
             dataset_name = "must"
             self.must = True
             path = [
@@ -135,10 +161,20 @@ class TAVForMAE_HDF5(nn.Module):
             
             f"{dataset_name}_video/apl9ufpx/crisp-sweep-51/best.pt",
             ]
+        else:
+            dataset_name = "UrFunny"
+            self.must = True
+            path = [
+            f"{dataset_name}_Text1/z38msbsw/playful-sweep-39/best.pt", # done
+            
+            f"{dataset_name}_Audio1/z5c8hmm7/dandy-sweep-16/best.pt", # done
+            
+            f"{dataset_name}_Video1/rus6qbu3/confused-sweep-40/best.pt", # TODO:
+            ]
             
         print(path , flush = True)
             
-        self.f = h5py.File(f"../../data/iemo.TAE.features.hdf5", "r+", libver="latest", swmr=True)
+        self.f = h5py.File(f"../../data/{dataset_name.lower()}.final.seq_len.features.hdf5", "a", libver="latest", swmr=True)
         try:
             self.f.swmr_mode = True
         except:
@@ -146,71 +182,39 @@ class TAVForMAE_HDF5(nn.Module):
 
         self.p = 0.75
 
-        # self.bert = BertClassifier(args)
-        # self.whisper = WhisperForEmotionClassification(args)
-        # self.videomae = VideoClassification(args)
+        self.bert = BertClassifier(args)
+        self.whisper = WhisperForEmotionClassification(args)
+        self.videomae = VideoClassification(args)
         
         
 
         # Load in our finetuned models, exactly as they should be
         
-        # for i, model in enumerate([ self.bert , self.whisper, self.videomae]):
-        #     print(f"Loading from {path[i]}, " , flush = True)                           # GO BACK TO CUDA
-        #     ckpt =  torch.load(f"../../../TAV_Train/{path[i]}" , map_location=torch.device("cuda" if torch.cuda.is_available() else "cpu"))['model_state_dict']
-        #     model.load_state_dict(ckpt)
-        
-            
-        # ckpt = torch.load("../../results/IEMOCAP/roberta-large/final/2021-05-09-12-19-54-speaker_mode-upper-num_past_utterances-1000-num_future_utterances-0-batch_size-4-seed-4/checkpoint-5975/pytorch_model.bin",map_location=torch.device("cuda" if torch.cuda.is_available() else "cpu"))
-        # self.bert = AutoModel.from_pretrained("roberta-large")
-        # new_state_dict = OrderedDict()
-        # for k, v in ckpt.items():
-        #     name = k.replace("roberta." , "")  # remove 'roberta.' prefix
-            
-        #     new_state_dict[name] = v
-
-        # # Load the new state dictionary into your model
-        # self.bert.load_state_dict(new_state_dict , strict = False)
-        # # self.bert.load_state_dict(ckpt)
-        # # print(self.bert.classifier.out_proj.bias , flush = True)
+        for i, model in enumerate([ self.bert , self.whisper, self.videomae]):
+            print(f"Loading from {path[i]}, " , flush = True)                           # GO BACK TO CUDA
+            ckpt =  torch.load(f"../../../TAV_Train/{path[i]}" , map_location=torch.device("cuda" if torch.cuda.is_available() else "cpu"))['model_state_dict']
+            model.load_state_dict(ckpt)
         
         
-        # # Zero out all gradients. Might not need this anymore though
-        # # for i, model in enumerate([self.bert, self.whisper, self.videomae]):
-        # for i, model in enumerate([self.bert]):
-        #     for param in model.parameters():
-        #         param.requires_grad = False
-
-        # # Put the models onto eval mode
-        # self.bert.eval()
-        
-        ckpt = torch.load("../../results/IEMOCAP/roberta-large/final/2021-05-09-12-19-54-speaker_mode-upper-num_past_utterances-1000-num_future_utterances-0-batch_size-4-seed-4/checkpoint-5975/pytorch_model.bin",map_location=torch.device("cuda" if torch.cuda.is_available() else "cpu"))
-        self.bert2 = AutoModelForSequenceClassification.from_pretrained("roberta-large" , num_labels = 6)
-        
-        # Load the new state dictionary into your model
-        self.bert2.load_state_dict(ckpt , strict = False)
-        # self.bert2.load_state_dict(ckpt)
-        # print(self.bert2.classifier.out_proj.bias , flush = True)
-
-
         # Zero out all gradients. Might not need this anymore though
-        # for i, model in enumerate([self.bert2, whisper, videomae]):
-        for i, model in enumerate([self.bert2]):
+        for i, model in enumerate([self.bert, self.whisper, self.videomae]):
             for param in model.parameters():
                 param.requires_grad = False
 
         # Put the models onto eval mode
-        self.bert2.eval()
-        
-        # self.whisper.eval()
-        # self.videomae.eval()
+        self.bert.eval()
+        self.whisper.eval()
+        self.videomae.eval()
 
     def forward(
         self,
         input_ids,
         text_attention_mask,
         audio_features,
+        context_audio,
         
         video_embeds,
+        context_video,
         video_mask,
         
         video_path,
@@ -228,73 +232,55 @@ class TAVForMAE_HDF5(nn.Module):
         
         
         
-        # last_hidden_text_state, text_outputs = self.bert.bert(
-        #     input_ids=input_ids, attention_mask=text_attention_mask, return_dict=False
-        # )
-
-        outputs = self.bert2(input_ids=input_ids, attention_mask=text_attention_mask)
-        logits , last_hidden_text_state = outputs.logits, outputs.hidden_states
-        # print("Calculation worked" , flush = True)
+        last_hidden_text_state, text_outputs = self.bert.bert(
+            input_ids=input_ids, attention_mask=text_attention_mask, return_dict=False
+        )
+        del input_ids
+        del text_attention_mask
         
-        # if self.must:
-        #     delete = 3
-        #     self.f.create_dataset(f"{check}/{video_path[0][1].split('/')[-1][:-4]}_{timings[0][1]}/text", data=last_hidden_text_state.cpu().detach().numpy())
-        # else:
-        #     delete = 3
-        # self.f.create_dataset(f"{check}/{video_path[0].split('/')[-1][:-4]}_{timings[0]}/text", data=last_hidden_text_state.cpu().detach().numpy())
-        self.f.create_dataset(f"{check}/{video_path[0].split('/')[-1][:-4]}_{timings[0]}/new_text", data=last_hidden_text_state.cpu().detach().numpy())
-        # data = self.f[f"{check}/{video_path[0].split('/')[-1][:-4]}_{timings[0]}/text"][()]
-        # data[...] = last_hidden_text_state.cpu().detach().numpy()
+        if self.must:
+            delete = 3
+            self.f.create_dataset(f"{check}/{video_path[0][1].split('/')[-1][:-4]}_{timings[0][1]}/text", data=last_hidden_text_state.cpu().detach().numpy())
+        else:
+            delete = 3
+            self.f.create_dataset(f"{check}/{video_path[0].split('/')[-1][:-4]}_{timings[0]}/text", data=last_hidden_text_state.cpu().detach().numpy())
         
-        return logits
-        
-        # print(f"{text_outputs} \n Shape of text_ouptuts is {text_outputs.shape} \n Shape of last_hidden_text_state is {last_hidden_text_state.shape} " , flush = True)
-
-        # aud_outputs = self.whisper.whisper.encoder(audio_features)[0][:,:512,:]
-        
-        # if self.must:
-        #     aud_context = self.whisper.whisper.encoder(context_audio)[0][:,:512,:]
-        #     del context_audio
-        #     new_aud_context = torch.zeros_like(aud_context[:,:512,:]) # Cut it to be this, now assign it
-        #     for i , row in enumerate(aud_context):
-        #         if context_timings_list[i] == None:
-        #             new_aud_context[i] = row[:512] # If less then 10.24 seconds then take first 10.24 seconds
-                    
-        #         elif context_timings_list[i][1] - context_timings_list[i][0] < 10.24:
-        #             new_aud_context[i] = row[:512] # If less then 10.24 seconds then take first 10.24 seconds
-                    
-        #         else: # Take the last 10.24 seconds
-        #             new_aud_context[i] = row[-512:]
-        #     del aud_context
+        aud_outputs = self.whisper.whisper.encoder(audio_features)[0][:,:512,:]
+        del audio_features
+        if self.must:
+            aud_context = self.whisper.whisper.encoder(context_audio)[0][:,:512,:]
+            del context_audio
                 
-        #     self.f.create_dataset(f"{check}/{video_path[0][0].split('/')[-1][:-4]}_{timings[0][0]}/audio_context", data=new_aud_context.cpu().detach().numpy())
-        #     self.f.create_dataset(f"{check}/{video_path[0][1].split('/')[-1][:-4]}_{timings[0][1]}/audio", data=aud_outputs.cpu().detach().numpy())
-        #     aud_outputs = (aud_outputs.mean(dim=1) * self.p + new_aud_context.mean(dim=1) * (1 - self.p)) / 2
+            self.f.create_dataset(f"{check}/{video_path[0][0].split('/')[-1][:-4]}_{timings[0][0]}/audio_context", data=aud_context.cpu().detach().numpy())
+            self.f.create_dataset(f"{check}/{video_path[0][1].split('/')[-1][:-4]}_{timings[0][1]}/audio", data=aud_outputs.cpu().detach().numpy())
+            aud_outputs = (aud_outputs.mean(dim=1) * self.p + aud_context.mean(dim=1) * (1 - self.p)) / 2
             
-        # else:
-        # self.f.create_dataset(f"{check}/{video_path[0].split('/')[-1][:-4]}_{timings[0]}/audio", data=aud_outputs.cpu().detach().numpy())
-        # aud_outputs = aud_outputs.mean(dim=1)
+        else:
+            self.f.create_dataset(f"{check}/{video_path[0].split('/')[-1][:-4]}_{timings[0]}/audio", data=aud_outputs.cpu().detach().numpy())
+            aud_outputs = aud_outputs.mean(dim=1)
 
-        # vid_outputs = self.videomae.videomae(video_embeds, bool_masked_pos = video_mask)[0]  
-
-        # if self.must:
-        #     vid_context = self.videomae.videomae(video_context, bool_masked_pos = video_mask)[0]
-            
-        #     self.f.create_dataset(f"{check}/{video_path[0][0].split('/')[-1][:-4]}_{timings[0][0]}/video_context", data=vid_context.cpu().detach().numpy())
-        #     self.f.create_dataset(f"{check}/{video_path[0][1].split('/')[-1][:-4]}_{timings[0][1]}/video", data=vid_outputs.cpu().detach().numpy())
-        #     vid_outputs = (vid_outputs[:,0] * self.p + vid_context[:,0] * (1 - self.p)) / 2
-        # else:
-        # self.f.create_dataset(f"{check}/{video_path[0].split('/')[-1][:-4]}_{timings[0]}/video", data=vid_outputs.cpu().detach().numpy())
-        # vid_outputs = vid_outputs[:,0]
-        # text_outputs = self.bert.linear1(text_outputs)
+        vid_outputs = self.videomae.videomae(video_embeds, bool_masked_pos = video_mask)[0]  
+        del video_embeds
+        if self.must:
+            vid_context = self.videomae.videomae(context_video, bool_masked_pos = video_mask)[0]
+            del context_video
+            del video_mask
+            self.f.create_dataset(f"{check}/{video_path[0][0].split('/')[-1][:-4]}_{timings[0][0]}/video_context", data=vid_context.cpu().detach().numpy())
+            self.f.create_dataset(f"{check}/{video_path[0][1].split('/')[-1][:-4]}_{timings[0][1]}/video", data=vid_outputs.cpu().detach().numpy())
+            vid_outputs = (vid_outputs[:,0] * self.p + vid_context[:,0] * (1 - self.p)) / 2
+        else:
+            del video_mask
+            self.f.create_dataset(f"{check}/{video_path[0].split('/')[-1][:-4]}_{timings[0]}/video", data=vid_outputs.cpu().detach().numpy())
+            vid_outputs = vid_outputs[:,0]
+        del timings
+        del video_path
         
-        # aud_outputs = self.whisper.linear1(aud_outputs)
+        text_outputs = self.bert.linear1(text_outputs)
         
-        # vid_outputs = self.videomae.linear1(vid_outputs)
+        aud_outputs = self.whisper.linear1(aud_outputs)
         
-        # tav = (text_outputs + aud_outputs + vid_outputs) / 3
-        # tav = torch.rand((1 , self.output_dim ),dtype = torch.float32) 
-        tav = torch.rand((1 , self.output_dim ),dtype = torch.float32) 
+        vid_outputs = self.videomae.linear1(vid_outputs)
+        
+        tav = (text_outputs + aud_outputs + vid_outputs) / 3
         
         return tav
-

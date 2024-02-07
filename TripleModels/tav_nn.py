@@ -36,7 +36,7 @@ def prepare_dataloader(
     label_task,
     epoch_switch,
     pin_memory=True,
-    num_workers=4,
+    num_workers=0,
     check="train",
     accum=False,
     sampler = None,
@@ -46,7 +46,7 @@ def prepare_dataloader(
     dataset on each GPU
     say we have 32 data points, if batch size = 8 then it will make 4 dataloaders of size 8 each
     """
-    must = True if "must" in str(dataset).lower() else False
+    must = True if "must" in str(dataset).lower() or "urfunny" in str(dataset).lower() else False
     dataset = TextAudioVideoDataset(
         df, 
         dataset, 
@@ -167,12 +167,15 @@ def main():
         number_index = "sarcasm"
         label_index = "sarcasm_label"
         df = df[df["context"] == False]
-    elif param_dict["label_task"] == "content": # Needs this to be content too not tiktok
+    elif (
+        param_dict["label_task"] == "content"
+    ):  # Needs this to be content too not tiktok
         number_index = "content"
         label_index = "content_label"
     else:
-        number_index = "emotion"
-        label_index = "emotion_label"
+        number_index = "humour"
+        label_index = "humour_label"
+        df = df[df["context"] == False]
 
     """
     Due to data imbalance we are going to reweigh our CrossEntropyLoss

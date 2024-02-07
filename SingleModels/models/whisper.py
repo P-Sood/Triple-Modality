@@ -56,7 +56,7 @@ class WhisperForEmotionClassification(nn.Module):
         self.dropout = args["dropout"]
         self.dataset = args["dataset"]
 
-        self.must = True if "must" in str(self.dataset).lower() else False
+        self.must = True if "must" in str(self.dataset).lower() or "urfunny" in str(self.dataset).lower() else False
         self.p = 0.75
 
         self.whisper = WhisperForAudioClassification.from_pretrained("openai/whisper-medium")
@@ -71,21 +71,24 @@ class WhisperForEmotionClassification(nn.Module):
         if self.must:
             aud_context = self.whisper.encoder(context_audio)[0]
             del context_audio
-            new_aud_context = torch.zeros_like(aud_context[:,:512,:]) # Cut it to be this, now assign it
-            for i , row in enumerate(aud_context):
-                if context_timings_list[i] == None:
-                    new_aud_context[i] = row[:512] # If less then 10.24 seconds then take first 10.24 seconds
+            # new_aud_context = torch.zeros_like(aud_context[:,:512,:]) # Cut it to be this, now assign it
+            # for i , row in enumerate(aud_context):
+            #     if context_timings_list[i] == None:
+            #         new_aud_context[i] = row[:512] # If less then 10.24 seconds then take first 10.24 seconds
                     
-                elif context_timings_list[i][1] - context_timings_list[i][0] < 10.24:
-                    new_aud_context[i] = row[:512] # If less then 10.24 seconds then take first 10.24 seconds
+            #     elif context_timings_list[i][1] - context_timings_list[i][0] < 10.24:
+            #         new_aud_context[i] = row[:512] # If less then 10.24 seconds then take first 10.24 seconds
                     
-                else: # Take the last 10.24 seconds
-                    new_aud_context[i] = row[-512:]
-            del aud_context
+            #     else: # Take the last 10.24 seconds
+            #         new_aud_context[i] = row[-512:]
+            # del aud_context
                 
-            new_aud_context = new_aud_context.mean(dim=1)
-            aud_outputs = (aud_outputs * self.p + new_aud_context * (1 - self.p)) / 2
-            del new_aud_context
+            aud_context = aud_context.mean(dim=1)
+            aud_outputs = (aud_outputs * self.p + aud_context * (1 - self.p)) / 2
+            del aud_context
+            # new_aud_context = new_aud_context.mean(dim=1)
+            # aud_outputs = (aud_outputs * self.p + new_aud_context * (1 - self.p)) / 2
+            # del new_aud_context
 
         if check == "train":
             aud_outputs = self.dropout(aud_outputs)

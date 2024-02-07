@@ -39,7 +39,15 @@ class Trainer:
         output = model(**input, check=check)
 
         Metric.update_metrics(torch.argmax(output, dim=1), label)
-
+        if criterion is not None:
+            if criterion.__class__.__name__ == "NewCrossEntropyLoss":
+                batch_loss = criterion(
+                    output, label, epoch=epoch if epoch is not None else 0
+                )  # TODO: Turn this on with Sampler
+            else:
+                batch_loss = criterion(output, label)
+        del output
+        del label
         return batch_loss
 
 
@@ -274,13 +282,16 @@ class Trainer:
         total_loss_val = 0
         with torch.no_grad():
             for val_input, val_label in tqdm(val_dataloader, desc=name):
-                self.get_statistics(
+                val_batch_loss = self.get_statistics(
                     val_input, val_label, model, criterion, Metric, name, epoch=None
                 )
-                
+                if criterion is not None:
+                    total_loss_val += val_batch_loss.item()
+                del val_input
+                del val_label
             weightedF1 = self.log(
                 Metric,
-                0,
+                total_loss_val / len(val_dataloader) if criterion is not None else 0,
                 name,
             )
         return total_loss_val / len(val_dataloader), weightedF1
@@ -429,7 +440,7 @@ class Trainer:
             )
             if self.patient_iter == patience:
                 break
-        model, _, _ = load_model(model, optimizer, criterion, path)
+        model = load_model(model, optimizer, criterion, path)
         return model
 
 

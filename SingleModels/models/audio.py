@@ -66,8 +66,8 @@ class Wav2Vec2ForSpeechClassification(nn.Module):
         self.num_layers = args["num_layers"]
         self.dataset = args["dataset"]
 
-        self.must = True if "must" in str(self.dataset).lower() else False
-        self.p = 0.6
+        self.must = True if "must" in str(self.dataset).lower() or "urfunny" in str(self.dataset).lower() else False
+        self.p = 0.75
         self.test_ctr = 1
         self.train_ctr = 1
 

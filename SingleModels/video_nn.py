@@ -45,13 +45,14 @@ def prepare_dataloader(
     dataset on each GPU
     say we have 32 data points, if batch size = 8 then it will make 4 dataloaders of size 8 each
     """
-    must = True if "must" in str(dataset).lower() else False
+    must = True if "must" in str(dataset).lower() or "urfunny" in str(dataset).lower() else False
     print(f"Are we running on mustard? {must}", flush=True) 
     dataset = VideoDataset(
         df, dataset, batch_size = 1 if sampler == "Both" else batch_size, feature_col="video_path", label_col=label_task , accum=accum ,check=check
     )
 
     if check == "train":
+        df = df[df['context'] == False] if must else df
         labels = df[label_task].value_counts()
         class_counts = torch.Tensor(
             list(dict(sorted((dict((labels)).items()))).values())
@@ -194,7 +195,7 @@ def main():
         "patience": config.patience,
         "lr": config.learning_rate,
         "clip": config.clip,
-        "batch_size": config.batch_size,
+        "batch_size": config.batch_size // 3,
         "weight_decay": config.weight_decay,
         "model": config.model,
         "T_max": config.T_max,
@@ -221,6 +222,7 @@ def main():
     df_test = df[df["split"] == "test"]
     df_val = df[df["split"] == "val"]
 
+
     if param_dict["label_task"] == "sentiment":
         number_index = "sentiment"
         label_index = "sentiment_label"
@@ -228,12 +230,15 @@ def main():
         number_index = "sarcasm"
         label_index = "sarcasm_label"
         df = df[df["context"] == False]
-    elif param_dict["label_task"] == "content": # Needs this to be content too not tiktok
+    elif (
+        param_dict["label_task"] == "content"
+    ):  # Needs this to be content too not tiktok
         number_index = "content"
         label_index = "content_label"
     else:
-        number_index = "emotion"
-        label_index = "emotion_label"
+        number_index = "humour"
+        label_index = "humour_label"
+        df = df[df["context"] == False]
 
     """
     Due to data imbalance we are going to reweigh our CrossEntropyLoss
