@@ -52,7 +52,7 @@ class TextAudioVideoDataset(Dataset):
         elif "mosei" in dataset:
             dataset = "mosei"
         else:
-            dataset = "must"
+            dataset = "must" if "must" in dataset else "urfunny"
             self.timings = df["timings"].values.reshape(-1, 2).tolist()
             self.audio_path = df[feature_col1].values.reshape(-1, 2).tolist()
             self.video_path = df[feature_col2].values.reshape(-1, 2).tolist()
@@ -124,7 +124,7 @@ class Data:
 
     def __init__(self, file) -> None:
         self.FILE = h5py.File(file, "r", libver="latest", swmr=True)
-        self.must = True if "must" in file else False
+        self.must = True if "must" in file or 'urfunny' in file  else False
         self.iemo = True if "iemo" in file else False
         self.tiktok = True if "tiktok" in file else False
         self.meld = True if "meld" in file else False
@@ -209,6 +209,7 @@ class Data:
                 )
                 
         else:
+            # breakpoint()
             try:
                 text = torch.tensor(
                     self.FILE[f"{check}/{path[1].split('/')[-1][:-4]}_{timings[1]}/text"][()]

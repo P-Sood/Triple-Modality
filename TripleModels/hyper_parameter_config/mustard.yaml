@@ -46,7 +46,7 @@ parameters:
   label_task:
     values: ['sarcasm']
   fusion:
-    values: ["dp_tv" , "dp_av" , "dp_ta", "sota" , "t_c" , "d_c" , "t_p"]
+    values: ["d_c_av" , "d_c_tv"]
   model:
     values: ['MAE_encoder']
   loss:

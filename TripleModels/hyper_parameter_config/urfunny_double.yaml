@@ -4,7 +4,7 @@ command:
   - python3
   - ${program}
   - "--dataset"
-  - "../../data/iemo"
+  - "../../data/urfunny"
 method: bayes
 
 metric:
@@ -13,7 +13,7 @@ metric:
 parameters:
   epoch:
     max: 12
-    min: 6
+    min: 3
     distribution: int_uniform
   learning_rate:
     values: [1e-6 , 1e-5 , 1e-4  , 5e-5 , 5e-6]
@@ -44,7 +44,7 @@ parameters:
   hidden_size:
     values: [64, 128, 256, 384, 768, 1536]
   label_task:
-    values: ['emotion']
+    values: ['humour']
   fusion:
     values: ["d_c_av" , "d_c_tv"]
   model:

@@ -50,7 +50,7 @@ def prepare_dataloader(
 
     Otherwise we just create a regular dataloader for val/test that just do shuffle
     """
-    must = True if "must" in str(dataset).lower() else False
+    must = True if "must" in str(dataset).lower() or "urfunny" in str(dataset).lower() else False
     dataset = TextAudioVideoDataset(
         df,
         dataset,
@@ -65,6 +65,7 @@ def prepare_dataloader(
     )
 
     if check == "train":
+        df = df[df['context'] == False] if must else df
         labels = df[label_task].value_counts()
         class_counts = torch.Tensor(
             list(dict(sorted((dict((labels)).items()))).values())
@@ -213,9 +214,7 @@ def main():
     project_name = "MLP_test_text"
     config = arg_parse(project_name)
 
-    wandb.init(entity="ddi", config=config, project = "Iemo-Ablations" if "iemo" in config.dataset else 
-                                                      "Must-Ablations" if "must" in config.dataset else 
-                                                      "URFunny-Ablations")
+    wandb.init(entity="ddi", config=config, project = "Iemo-Ablations" if "iemo" in config.dataset else "Must-Ablations" if "must" in config.dataset else "URFunny-Ablations")
     config = wandb.config
 
     np.random.seed(config.seed)
@@ -266,9 +265,9 @@ def main():
         df_test = df[df["split"] == "test"]
         df_val = df[df["split"] == "val"]
 
-    if param_dict["label_task"] == "sentiment":
-        number_index = "sentiment"
-        label_index = "sentiment_label"
+    if param_dict["label_task"] == "emotion":
+        number_index = "emotion"
+        label_index = "emotion_label"
         # df = df[df["sentiment_label"] != "Neutral"] if "mosei" in config.dataset else df
     elif param_dict["label_task"] == "sarcasm":
         number_index = "sarcasm"
@@ -278,8 +277,9 @@ def main():
         number_index = "content"
         label_index = "content_label"
     else:
-        number_index = "emotion"
-        label_index = "emotion_label"
+        number_index = "humour"
+        label_index = "humour_label"
+        df = df[df["context"] == False]
 
     """
     Due to data imbalance we are going to reweigh our CrossEntropyLoss

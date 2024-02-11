@@ -64,7 +64,7 @@ class TAVForMAE(nn.Module):
         self.dataset = args["dataset"]
         self.fusion = args["fusion"]
         self.hidden_size = args["hidden_size"]
-        self.must = True if "must" in str(self.dataset).lower() else False
+        self.must = True if "must" in str(self.dataset).lower() or "urfunny" in str(self.dataset).lower() else False
         self.mosei = True if "mosei" in str(self.dataset).lower() else False
         self.p = 0.75  # This is to decide how much to weight the context vs the actual features for Mustard
 
@@ -134,7 +134,7 @@ class TAVForMAE(nn.Module):
             
         elif "dp" in self.fusion:
             self.linear1 = nn.Linear(1024 * 4, self.hidden_size)
-        elif self.fusion == "d_c": # double concat
+        elif "d_c" in self.fusion: # double concat
             self.linear1 = nn.Linear(1024 * 2, self.hidden_size)
         elif self.fusion == "t_c": # triple concat
             self.linear1 = nn.Linear(1024 * 3, self.hidden_size)
@@ -225,6 +225,10 @@ class TAVForMAE(nn.Module):
             
         elif self.fusion == "d_c":
             tav = torch.cat([text_features, audio_features], dim=-1).mean(dim=1)  
+        elif self.fusion == "d_c_av":
+            tav = torch.cat([video_features, audio_features], dim=-1).mean(dim=1)  
+        elif self.fusion == "d_c_tv":
+            tav = torch.cat([text_features, video_features], dim=-1).mean(dim=1)  
         elif self.fusion == "t_c":
             tav = torch.cat([text_features, audio_features, video_features], dim=-1).mean(dim=1)  
         elif self.fusion == "dp_tv":
