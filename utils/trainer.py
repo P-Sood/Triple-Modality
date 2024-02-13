@@ -266,18 +266,18 @@ class Trainer:
             val_dataloader, model, criterion, Metric, name="val"
         )
         if weightedF1 > prev_f1:
-            print(
-                f"we have seen weightedF1 increase the previous best and we are updating our best f1 score to {weightedF1}"
-            )
             prev_f1 = weightedF1
-            save_model(model, optimizer, criterion, scheduler, epoch, step, path, log_val)
         if val_loss < prev_val_loss:
+            print(
+                f"we have seen loss decrease the previous best and we are updating our model \n weighted f1 is now {weightedF1}" ,  flush = True
+            )
             self.patient_iter = 0
             prev_val_loss = val_loss
+            save_model(model, optimizer, criterion, scheduler, epoch, step, path, log_val)
         else:
             self.patient_iter += 1
             print(
-                f"we have seen loss increase for {self.patient_iter} steps and validation loss is {val_loss}, and previous best validation loss is {prev_val_loss}"
+                f"we have seen loss increase for {self.patient_iter} steps and validation loss is {val_loss}, and previous best validation loss is {prev_val_loss}" , flush = True
             )
         return prev_val_loss, prev_f1
 
@@ -531,3 +531,6 @@ class Trainer:
         wandb.log({**d1, **multiF1, **multiRec, **multiPrec, **multiAcc})
         Metric.reset_metrics()
         return F1Weighted
+
+
+

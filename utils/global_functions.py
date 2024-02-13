@@ -23,7 +23,8 @@ import collections
 from torch.optim import AdamW
 from torch.utils.data.sampler import Sampler
 from torch import nn
-
+import random
+from transformers import set_seed as transformers_set_seed
 
 class MySampler(Sampler):
     def __init__(self, weights, num_samples, replacement=True, epoch=0, epoch_switch=2):
@@ -561,3 +562,17 @@ def arg_parse(description):
         default='sota',
         type=str)
     return parser.parse_args()
+
+def set_seed(seed_value):
+    """Set seed for reproducibility."""
+    np.random.seed(seed_value)
+    random.seed(seed_value)
+    torch.random.manual_seed(seed_value)
+    torch.manual_seed(seed_value)
+    
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed(seed_value)
+        torch.cuda.manual_seed_all(seed_value)
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
+    transformers_set_seed(seed_value)
