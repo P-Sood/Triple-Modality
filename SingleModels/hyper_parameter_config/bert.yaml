@@ -1,0 +1,69 @@
+program: ../text_nn.py
+command:
+  - ${env}
+  - python3
+  - ${program}
+  - "--dataset"
+  - "../../data/meld"
+method: grid
+
+metric:
+  goal: maximize
+  name: val/weighted-f1-score
+parameters:
+  BertModel:
+    values: [roberta-large]
+  T_max:
+    values: [3]
+  batch_size:
+    values: [24]
+  beta:
+    values: [1]
+  clip:
+    values: [0.1]
+  dropout:
+    values: [0.5]
+  early_div:
+    values: [false]
+  epoch:
+    values: [7]
+  epoch_switch:
+    values: [3]
+  hidden_size:
+    values: [768]
+  label_task:
+    values: [sentiment]
+  learn_PosEmbeddings:
+    values: [false]
+  learning_rate:
+    values: [1.0e-06]
+  loss:
+    values: [CrossEntropy]
+  mask:
+    values: [false]
+  model:
+    values: [MAE_encoder]
+  num_layers:
+    values: [6]
+  patience:
+    values: [14]
+  sampler:
+    values: [Both]
+  seed:
+    values: [100 , 101 , 102 , 103 , 104]
+  sota:
+    values: [false]
+  text_column:
+    values: [text]
+  weight_decay:
+    values: [0.001]
+  dataset:
+    values: [../../data/meld]
+  input_dim:
+    values: [2]
+  output_dim:
+    values: [7]
+  lstm_layers:
+    values: [1]
+
+python ../text_nn.py -d ../../data/meld  --BertModel roberta-large --T_max 3 --batch_size 24 --beta 1 --clip 0.1 --dropout 0.5 --early_div false --epoch 7 --epoch_switch 3 --hidden_size 768 --label_task sentiment --learn_PosEmbeddings false --learning_rate 1.0e-06 --loss CrossEntropy --mask false --model MAE_encoder --num_layers 6 --patience 14 --sampler Both --seed 100 --sota false --text_column text --weight_decay 0.001 --dataset ../../data/meld --input_dim 2 --output_dim 7 --lstm_layers 1

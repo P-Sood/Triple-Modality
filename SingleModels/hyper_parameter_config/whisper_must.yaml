@@ -1,0 +1,67 @@
+program: ../whisper_nn.py
+command:
+  - ${env}
+  - python3
+  - ${program}
+  - "--dataset"
+  - "../../data/must"
+method: grid
+
+metric:
+  goal: maximize
+  name: val/weighted-f1-score
+parameters:
+  BertModel:
+    values: [openai/whisper-medium]
+  T_max:
+    values: [3]
+  batch_size:
+    values: [2]
+  beta:
+    values: [1]
+  clip:
+    values: [1]
+  dropout:
+    values: [0.3]
+  early_div:
+    values: [false]
+  epoch:
+    values: [6]
+  epoch_switch:
+    values: [3]
+  hidden_size:
+    values: [768]
+  label_task:
+    values: [sarcasm]
+  learn_PosEmbeddings:
+    values: [false]
+  learning_rate:
+    values: [5.0e-06]
+  loss:
+    values: [CrossEntropy]
+  mask:
+    values: [false]
+  model:
+    values: [MAE_encoder]
+  num_layers:
+    values: [3]
+  patience:
+    values: [14]
+  sampler:
+    values: [Both]
+  seed:
+    values: [100 , 101 , 102 , 103 , 104]
+  sota:
+    values: [false]
+  text_column:
+    values: [audio_path]
+  weight_decay:
+    values: [0.0001]
+  dataset:
+    values: [../../data/must]
+  input_dim:
+    values: [2]
+  output_dim:
+    values: [7]
+  lstm_layers:
+    values: [1]

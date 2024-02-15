@@ -1,0 +1,71 @@
+program: ../whisper_nn.py
+command:
+  - ${env}
+  - python3
+  - ${program}
+  - "--dataset"
+  - "../../data/iemo"
+method: grid
+
+metric:
+  goal: maximize
+  name: val/weighted-f1-score
+parameters:
+  BertModel:
+    values: [openai/whisper-large]
+  T_max:
+    values: [3]
+  batch_size:
+    values: [1]
+  beta:
+    values: [1]
+  clip:
+    values: [0.1]
+  dropout:
+    values: [0.3]
+  early_div:
+    values: [false]
+  epoch:
+    values: [8]
+  epoch_switch:
+    values: [2]
+  hidden_size:
+    values: [64]
+  label_task:
+    values: [emotion]
+  learn_PosEmbeddings:
+    values: [false]
+  learning_rate:
+    values: [5.0e-06]
+  loss:
+    values: [NewCrossEntropy]
+  mask:
+    values: [false]
+  model:
+    values: [MAE_encoder]
+  num_layers:
+    values: [4]
+  patience:
+    values: [14]
+  sampler:
+    values: [Both]
+  seed:
+    values: [100 , 101 , 102 , 103 , 104]
+  sota:
+    values: [true]
+  text_column:
+    values: [audio_path]
+  weight_decay:
+    values: [0.01]
+  dataset:
+    values: [../../data/iemo]
+  input_dim:
+    values: [2]
+  output_dim:
+    values: [7]
+  lstm_layers:
+    values: [1]
+
+python ../whisper_nn.py -d ../../data/iemo   --BertModel openai/whisper-large --T_max 3 --batch_size 1 --beta 1 --clip 0.1 --dropout 0.3 --early_div false --epoch 8 --epoch_switch 2 --hidden_size 64 --label_task emotion --learn_PosEmbeddings false --learning_rate 5.0e-06 --loss NewCrossEntropy --mask false --model MAE_encoder --num_layers 4 --patience 14 --sampler Both --seed 100 , 101 , 102 , 103 , 104 --sota true --text_column audio_path --weight_decay 0.01 --dataset ../../data/iemo --input_dim 2 --output_dim 7 --lstm_layers 1
+python ../whisper_nn.py -d ../../data/iemo   --BertModel openai/whisper-large --T_max 3 --batch_size 1 --beta 1 --clip 0.1 --dropout 0.3 --early_div false --epoch 8 --epoch_switch 2 --hidden_size 64 --label_task emotion --learn_PosEmbeddings false --learning_rate 5.0e-06 --loss NewCrossEntropy --mask false --model MAE_encoder --num_layers 4 --patience 14 --sampler Both --seed 100 , 101 , 102 , 103 , 104 --sota true --text_column audio_path --weight_decay 0.01 --dataset ../../data/iemo --input_dim 2 --output_dim 7 --lstm_layers 1
+python ../whisper_nn.py -d ../../data/iemo   --BertModel openai/whisper-large --T_max 3 --batch_size 1 --beta 1 --clip 0.1 --dropout 0.3 --early_div false --epoch 8 --epoch_switch 2 --hidden_size 64 --label_task emotion --learn_PosEmbeddings false --learning_rate 5.0e-06 --loss NewCrossEntropy --mask false --model MAE_encoder --num_layers 4 --patience 14 --sampler Both --seed 100 , 101 , 102 , 103 , 104 --sota true --text_column audio_path --weight_decay 0.01 --dataset ../../data/iemo --input_dim 2 --output_dim 7 --lstm_layers 1
