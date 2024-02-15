@@ -8,28 +8,30 @@ command:
 method: bayes
 
 metric:
-  goal: maximize
-  name: val/weighted-f1-score
+  goal: minimize
+  name: val/loss
 parameters:
   epoch:
     max: 12
     min: 3
     distribution: int_uniform
   learning_rate:
-    values: [1e-6 , 1e-5 , 1e-4  , 5e-5 , 5e-6]
+    distribution: log_uniform_values
+    min: 1e-7
+    max: 1e-3
   weight_decay:
-    values: [1e-5 , 1e-4, 1e-3, 1e-2]
+    distribution: log_uniform_values
+    min: 1e-5
+    max: 1e-2
   batch_size:
-    values: [24, 32]
+    values: [16, 24, 32]
   seed:
-    values: [32, 64, 96]
-  mask:
-    values: [False]
-  early_div:
-    values: [False]
-  learn_PosEmbeddings:
-    values: [False]
+    max: 1000
+    min: 1
+    distribution: int_uniform
   num_layers:
+    values: [3, 4, 5, 6, 7, 8]
+  num_encoders:
     values: [3, 4, 5, 6, 7, 8]
   patience:
     values: [14]
@@ -43,13 +45,12 @@ parameters:
    values: [2 , 3]
   hidden_size:
     values: [64, 128, 256, 384, 768, 1536]
+  fusion:
+    distribution: categorical
+    values: ["dp_ta", "t_p"]
+  sampler:
+    values: ['Both']
   label_task:
     values: ['humour']
-  fusion:
-    values: ["d_c_av" , "d_c_tv"]
-  model:
-    values: ['MAE_encoder']
-  loss:
-    values: ['NewCrossEntropy' , 'CrossEntropy' , 'WeightedCrossEntropy']
-  sampler:
-    values: ['Both' , 'Iterative' , 'Weighted', 'Both_NoAccum' , 'Iter_Accum']
+
+

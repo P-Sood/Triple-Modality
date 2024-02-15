@@ -8,8 +8,8 @@ command:
 method: bayes
 
 metric:
-  goal: maximize
-  name: val/weighted-f1-score
+  goal: minimize
+  name: val/loss
 parameters:
   epoch:
     max: 12

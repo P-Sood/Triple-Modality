@@ -412,9 +412,6 @@ def arg_parse(description):
         "--epoch", "-e", help="Set the number of epochs", default=3, type=int
     )
     parser.add_argument(
-        "--sota", "-so", help="Should we use SOTA or not", default=False, type=bool
-    )
-    parser.add_argument(
         "--batch_size", "-b", help="Set the batch_size", default=2, type=int
     )
     parser.add_argument(
@@ -438,31 +435,10 @@ def arg_parse(description):
         type=str,
     )
     parser.add_argument(
-        "--BertModel",
-        "-bm",
-        help="Set Model for bert",
-        default="roberta-large",
-        type=str,
-    )
-    parser.add_argument(
-        "--text_column",
-        "-tc",
-        help="Set text to use for features",
-        default="text",
-        type=str,
-    )
-    parser.add_argument(
         "--patience", "-p", help="Set the patience", default=10.0, type=float
     )
     parser.add_argument(
         "--T_max", "-t", help="Set the gradient T_max", default=2, type=int
-    )
-    parser.add_argument(
-        "--mask",
-        "-ma",
-        help="True/False on if we want to use masking in model",
-        default=False,
-        type=bool,
     )
     parser.add_argument(
         "--loss",
@@ -471,20 +447,12 @@ def arg_parse(description):
         default="NewCrossEntropy",
         type=str,
     )
-    parser.add_argument(
-        "--beta",
-        "-beta",
-        help="For FBeta loss, what beta to pick",
-        default=1,
-        type=float,
-    )
 
     # Set the seed
     parser.add_argument(
         "--seed", "-s", help="Set the random seed", default=32, type=int
     )
 
-    # These are values in the yaml that we set
     parser.add_argument(
         "--dataset",
         "-d",
@@ -492,24 +460,10 @@ def arg_parse(description):
         default="../../data/meld",
     )
     parser.add_argument(
-        "--model", "-m", help="The model we are using currently", default="MAE_encoder"
-    )
-    parser.add_argument(
         "--label_task",
         "-lt",
         help="What specific classification label we are using: Emotion or Sentiment",
         default="emotion",
-    )
-
-    # These are args that we use as input to the model
-    parser.add_argument(
-        "--input_dim", "-z", help="Set the input dimension", default=2, type=int
-    )
-    parser.add_argument(
-        "--output_dim", "-y", help="Set the output dimension", default=7, type=int
-    )
-    parser.add_argument(
-        "--lstm_layers", "-ll", help="set number of LSTM layers", default=1, type=int
     )
     parser.add_argument(
         "--hidden_size",
@@ -517,13 +471,6 @@ def arg_parse(description):
         help="values corresponding to each hidden layer",
         default=768,
         type=int,
-    )
-    parser.add_argument(
-        "--early_div",
-        "-ed",
-        help="If we should do division earlier in the transformer",
-        default=False,
-        type=bool,
     )
     parser.add_argument(
         "--dropout",
@@ -547,20 +494,10 @@ def arg_parse(description):
         type=int,
     )
     parser.add_argument(
-        "--learn_PosEmbeddings",
-        "-lpe",
-        help="If we should learn our positional embeddings",
-        default=True,
-        type=bool,
-    )
-    parser.add_argument(
-        "--hidden_layers",
-        default=512,
-        type=int)
-    parser.add_argument(
         "--fusion",
         default='sota',
         type=str)
+
     return parser.parse_args()
 
 def set_seed(seed_value):

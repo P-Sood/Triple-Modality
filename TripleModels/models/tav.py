@@ -58,7 +58,6 @@ class TAVForMAE(nn.Module):
         super(TAVForMAE, self).__init__()
         self.output_dim = args["output_dim"]
         self.dropout = args["dropout"]
-        self.learn_PosEmbeddings = args["learn_PosEmbeddings"]
         self.num_layers = args["num_layers"]
         self.num_encoders = args["num_encoders"]
         self.dataset = args["dataset"]

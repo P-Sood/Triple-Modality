@@ -19,13 +19,15 @@ class Trainer:
     """ big_batch: if batch > big_batch then we will use checkpointing to save memory.
         num_steps: number of steps to divide an epoch into. Used in conjunction with patience for early stopping
     """
-    def __init__(self , big_batch: int , num_steps : int , ) -> None:
+    def __init__(self , big_batch: int , num_steps : int , LOSS : bool = False ) -> None:
         
         self.big_batch = big_batch
         self.num_steps = num_steps
         
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.patient_iter = 0    
+        
+        self.LOSS = LOSS
     
     def get_statistics(self , 
         input: dict, label: np.array, model, criterion, Metric, check="train", epoch=None
@@ -245,6 +247,36 @@ class Trainer:
                 break
         return model, optimizer, criterion, prev_val_loss, prev_f1
 
+    def early_stopping(self , weightedF1, prev_f1, val_loss, prev_val_loss , LOSS = False):
+        if LOSS == False:
+            if weightedF1 >= prev_f1:
+                prev_f1 = weightedF1
+                save = True
+                print(
+                    f"we have seen f1 increase the previous best and we are updating our model" ,  flush = True
+                )
+                self.patient_iter = 0
+            else:
+                save = False
+                self.patient_iter += 1
+                print(
+                    f"we have seen weighted-f1 decrease  for {self.patient_iter} steps and current f1 is {weightedF1}, and previous best f1 loss is {prev_f1}" , flush = True
+                )
+        else:
+            if val_loss <= prev_val_loss:
+                print(
+                    f"we have seen loss decrease the previous best and we are updating our model" ,  flush = True
+                )
+                save = True
+                self.patient_iter = 0
+                prev_val_loss = val_loss
+            else:
+                save = False
+                self.patient_iter += 1
+                print(
+                    f"we have seen loss increase for {self.patient_iter} steps and validation loss is {val_loss}, and previous best validation loss is {prev_val_loss}" , flush = True
+                )
+        return prev_val_loss, prev_f1, save
 
     def run_validation(self , 
         epoch,
@@ -262,23 +294,10 @@ class Trainer:
         path,
     ):
         self.log(Metric, curr_loss, "train")
-        val_loss, weightedF1 = self.validate(
-            val_dataloader, model, criterion, Metric, name="val"
-        )
-        if weightedF1 > prev_f1:
-            prev_f1 = weightedF1
-        if val_loss < prev_val_loss:
-            print(
-                f"we have seen loss decrease the previous best and we are updating our model \n weighted f1 is now {weightedF1}" ,  flush = True
-            )
-            self.patient_iter = 0
-            prev_val_loss = val_loss
+        val_loss, weightedF1 = self.validate(val_dataloader, model, criterion, Metric, name="val")
+        prev_val_loss, prev_f1, save = self.early_stopping(weightedF1, prev_f1, val_loss, prev_val_loss , LOSS = False)
+        if save:
             save_model(model, optimizer, criterion, scheduler, epoch, step, path, log_val)
-        else:
-            self.patient_iter += 1
-            print(
-                f"we have seen loss increase for {self.patient_iter} steps and validation loss is {val_loss}, and previous best validation loss is {prev_val_loss}" , flush = True
-            )
         return prev_val_loss, prev_f1
 
 
@@ -531,6 +550,3 @@ class Trainer:
         wandb.log({**d1, **multiF1, **multiRec, **multiPrec, **multiAcc})
         Metric.reset_metrics()
         return F1Weighted
-
-
-

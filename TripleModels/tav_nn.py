@@ -18,7 +18,7 @@ from utils.data_loaders import TextAudioVideoDataset
 import pandas as pd
 import torch
 import numpy as np
-from utils.global_functions import arg_parse, Metrics, MySampler, NewCrossEntropyLoss
+from utils.global_functions import arg_parse, Metrics, MySampler, NewCrossEntropyLoss, set_seed
 from torch.utils.data import DataLoader
 from torch.utils.data.sampler import WeightedRandomSampler
 
@@ -132,10 +132,9 @@ def runModel(accelerator, df_train, df_val, df_test, param_dict, model_param):
     weights = param_dict["weights"]
     id2label = param_dict["id2label"]
     label_task = param_dict["label_task"]
-    model_name = param_dict["model"]
-    mask = param_dict["mask"]
     epoch_switch = param_dict["epoch_switch"]
     sampler = param_dict["sampler"]
+    LOSS = param_dict["LOSS"]
 
     num_labels = model_param["output_dim"]
     dataset = model_param["dataset"]
@@ -188,7 +187,7 @@ def runModel(accelerator, df_train, df_val, df_test, param_dict, model_param):
 
     wandb.watch(model, log="all")
     
-    trainer = Trainer(2**5 , 4)
+    trainer = Trainer(big_batch = 2**5 , num_steps=4, LOSS = LOSS)
 
     model = trainer.train_network(
         model,
@@ -214,11 +213,14 @@ def main():
     project_name = "MLP_test_text"
     config = arg_parse(project_name)
 
-    wandb.init(entity="ddi", config=config, project = "Iemo-Ablations" if "iemo" in config.dataset else "Must-Ablations" if "must" in config.dataset else "URFunny-Ablations")
+    wandb.init(entity="ddi", config=config, project = "Iemo-F1-Ablations" if "iemo" in config.dataset else "Must-F1-Ablations" if "must" in config.dataset else "URFunny-F1-Ablations")
+    
+    wandb.define_metric("val/loss", summary="min")
+    wandb.define_metric("val/weighted-f1-score", summary="max")
+    wandb.define_metric("val/acc", summary="max")
+    
     config = wandb.config
-
-    np.random.seed(config.seed)
-    torch.random.manual_seed(config.seed)
+    set_seed(config.seed)
     param_dict = {
         "epoch": config.epoch,
         "patience": config.patience,
@@ -226,32 +228,24 @@ def main():
         "clip": config.clip,
         "batch_size": config.batch_size,
         "weight_decay": config.weight_decay,
-        "model": config.model,
         "T_max": config.T_max,
         "seed": config.seed,
         "label_task": config.label_task,
-        "mask": config.mask,
-        "loss": config.loss,
         "epoch_switch": config.epoch_switch,
         "sampler": config.sampler,
+        "LOSS": False,
     }
+    
+    
     s = param_dict['sampler']
-    l = param_dict['loss']
-    if s == "Weighted" and l == "WeightedCrossEntropy":
-        print(f"We are not going to learn anything with sampler == {s } and loss == {l}. \nKill it" , flush=True)
-        return 0
-    elif s == "Iterative" and l == "CrossEntropy":
-        print(f"We are not going to learn anything with sampler == {s } and loss == {l}. \nKill it" , flush=True)
-        return 0
-    elif s == "Iter_Accum" and l == "CrossEntropy":
-        print(f"We are not going to learn anything with sampler == {s } and loss == {l}. \nKill it" , flush=True)
-        return 0
-    elif (s == "Iterative" or s == "Weighted" or s == "Iter_Accum") and l == "NewCrossEntropy":
-        print(f"We are not going to learn anything with sampler == {s } and loss == {l}. \nKill it" , flush=True)
-        return 0
-    # elif (s == "Both_NoAccum" or s == "Both") and (l == "WeightedCrossEntropy" or l == "CrossEntropy"):
-    #     print(f"We are not going to learn anything with sampler == {s } and loss == {l}. \nKill it" , flush=True)
-    #     return 0
+    if s == "Weighted":
+        param_dict['loss'] = "CrossEntropy"
+        
+    elif s == "Iterative" or s == "Iter_Accum":
+        param_dict['loss'] = "WeightedCrossEntropy"
+        
+    elif (s == "Both" or s == "Both_NoAccum") :
+        param_dict['loss'] = "NewCrossEntropy"
         
 
     df = pd.read_pickle(f"{config.dataset}.pkl")
@@ -303,18 +297,15 @@ def main():
         df.drop_duplicates(label_index).set_index(label_index).to_dict()[number_index]
     )
     id2label = {v: k for k, v in label2id.items()}
-
-    print(config.hidden_layers)
+    
     model_param = {
         "output_dim": len(weights),
         "dropout": config.dropout,
-        "early_div": config.early_div,
         "num_layers": config.num_layers,
         "num_encoders": config.num_encoders,
-        "learn_PosEmbeddings": config.learn_PosEmbeddings,
         "dataset": config.dataset,
         "fusion": config.fusion,
-        "hidden_size": int(config.hidden_layers),
+        "hidden_size": config.hidden_size,
     }
     param_dict["weights"] = weights
     param_dict["label2id"] = label2id
@@ -328,3 +319,20 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
