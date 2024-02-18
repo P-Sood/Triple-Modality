@@ -25,6 +25,7 @@ class TextAudioVideoDataset(Dataset):
         feature_col2,
         feature_col3,
         label_col,
+        early_stop,
         timings=None,
         accum=False,
         check="test",
@@ -43,24 +44,22 @@ class TextAudioVideoDataset(Dataset):
         else:
             self.timings = [None] * len(self.audio_path)
 
-        if "meld" in dataset:
+        if "meld" in dataset.lower():
             dataset = "meld"
-        elif "iemo" in dataset:
+        elif "iemo" in dataset.lower():
             dataset = "iemo"
-        elif "tiktok" in dataset:
+        elif "tiktok" in dataset.lower():
             dataset = "tiktok"
-        elif "mosei" in dataset:
+        elif "mosei" in dataset.lower():
             dataset = "mosei"
         else:
-            dataset = "must" if "must" in dataset else "urfunny"
+            dataset = "must" if "must" in dataset.lower() else "urfunny"
             self.timings = df["timings"].values.reshape(-1, 2).tolist()
             self.audio_path = df[feature_col1].values.reshape(-1, 2).tolist()
             self.video_path = df[feature_col2].values.reshape(-1, 2).tolist()
             df = df[df["context"] == False]
 
-        fh = f"{data_path}{dataset}.final.seq_len.features.hdf5"
-        if "iemo" in dataset:
-            fh = "/home/zeerak.talat/trimodal/data/iemo.TAE.features.hdf5"
+        fh = f"{data_path}{dataset}.{early_stop}.final.seq_len.features.hdf5"
 
         self.Data = Data(file=fh)
         self.check = check
@@ -124,10 +123,10 @@ class Data:
 
     def __init__(self, file) -> None:
         self.FILE = h5py.File(file, "r", libver="latest", swmr=True)
-        self.must = True if "must" in file or 'urfunny' in file  else False
-        self.iemo = True if "iemo" in file else False
-        self.tiktok = True if "tiktok" in file else False
-        self.meld = True if "meld" in file else False
+        self.must = True if "must" in file.lower() or 'urfunny' in file.lower()  else False
+        self.iemo = True if "iemo" in file.lower() else False
+        self.tiktok = True if "tiktok" in file.lower() else False
+        self.meld = True if "meld" in file.lower() else False
 
     def videoFeatures(self, path, timings, check):
         if not self.must:
@@ -199,15 +198,9 @@ class Data:
     def textFeatures(self, path, timings, check):
 
         if not self.must:
-            try:
-                text = torch.tensor(
-                    self.FILE[f"{check}/{path.split('/')[-1][:-4]}_{timings}/new_text"][()]
-                )
-            except:
-                text = torch.tensor(
-                    self.FILE[f"{check}/{path.split('/')[-1][:-4]}_{timings}/text"][()]
-                )
-                
+            text = torch.tensor(
+                self.FILE[f"{check}/{path.split('/')[-1][:-4]}_{timings}/text"][()]
+            ) 
         else:
             # breakpoint()
             try:
