@@ -30,12 +30,11 @@ class BertClassifier(nn.Module):
         self.dropout = args["dropout"]
         self.output_dim = args["output_dim"]
         self.dataset = args["dataset"]
-        self.BertModel = args["BertModel"]
         
         self.must = True if "must" in str(self.dataset).lower() or "urfunny" in str(self.dataset).lower() else False
         self.p = 0.75
         
-        self.bert = AutoModel.from_pretrained(self.BertModel)
+        self.bert = AutoModel.from_pretrained("roberta-large")
 
         self.dropout = nn.Dropout(self.dropout)
 

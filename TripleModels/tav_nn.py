@@ -20,7 +20,6 @@ import torch
 import numpy as np
 from utils.global_functions import arg_parse, Metrics, MySampler, NewCrossEntropyLoss, set_seed
 from torch.utils.data import DataLoader
-from torch.utils.data.sampler import WeightedRandomSampler
 
 
 TESTING_PIPELINE = False
@@ -37,6 +36,7 @@ def prepare_dataloader(
     batch_size,
     label_task,
     epoch_switch,
+    LOSS = False,
     pin_memory=True,
     num_workers=0,
     check="train",
@@ -59,6 +59,7 @@ def prepare_dataloader(
         feature_col2="video_path",
         feature_col3="text",
         label_col=label_task,
+        LOSS = LOSS,
         timings="timings",
         accum=accum,
         check=check,
@@ -163,6 +164,7 @@ def runModel(accelerator, df_train, df_val, df_test, param_dict, model_param):
         batch_size,
         label_task,
         epoch_switch,
+        LOSS,
         check="train",
         accum=False,
     )
@@ -172,6 +174,7 @@ def runModel(accelerator, df_train, df_val, df_test, param_dict, model_param):
         batch_size,
         label_task,
         epoch_switch,
+        LOSS,
         check="val" if TESTING_PIPELINE == False else "train",
     )
     df_test = prepare_dataloader(
@@ -180,6 +183,7 @@ def runModel(accelerator, df_train, df_val, df_test, param_dict, model_param):
         batch_size,
         label_task,
         epoch_switch,
+        LOSS,
         check="test" if TESTING_PIPELINE == False else "train",
     )
 
@@ -213,11 +217,7 @@ def main():
     project_name = "MLP_test_text"
     config = arg_parse(project_name)
 
-    wandb.init(entity="ddi", config=config, project = "Iemo-F1-Ablations" if "iemo" in config.dataset else "Must-F1-Ablations" if "must" in config.dataset else "URFunny-F1-Ablations")
-    
-    wandb.define_metric("val/loss", summary="min")
-    wandb.define_metric("val/weighted-f1-score", summary="max")
-    wandb.define_metric("val/acc", summary="max")
+    wandb.init(entity="ddi", config=config, project = "Iemo-F1-Ablations" if "iemo" in config.dataset.lower() else "Must-F1-Ablations" if "must" in config.dataset.lower() else "URFunny-F1-Ablations")
     
     config = wandb.config
     set_seed(config.seed)
@@ -233,7 +233,7 @@ def main():
         "label_task": config.label_task,
         "epoch_switch": config.epoch_switch,
         "sampler": config.sampler,
-        "LOSS": False,
+        "LOSS": False,#config.LOSS,
     }
     
     

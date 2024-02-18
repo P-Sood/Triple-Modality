@@ -4,7 +4,7 @@ command:
   - python3
   - ${program}
   - "--dataset"
-  - "../../data/iemo"
+  - "../../data/more_text_IEMO"
 method: bayes
 
 metric:
@@ -44,8 +44,10 @@ parameters:
     distribution: int_uniform
   fusion:
     distribution: categorical
-    values: ["t_p"]
+    values: ["t_p", "dp_ta"]
   sampler:
     values: ['Both']
+  LOSS:
+    values: [false]
   label_task:
     values: ['emotion']

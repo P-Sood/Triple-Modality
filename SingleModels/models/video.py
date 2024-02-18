@@ -50,8 +50,6 @@ class VideoClassification(nn.Module):
 
         self.output_dim = args["output_dim"]
         self.dropout = args["dropout"]
-        self.learn_PosEmbeddings = args["learn_PosEmbeddings"]
-        self.num_layers = args["num_layers"]
         self.dataset = args["dataset"]
 
         self.must = True if "must" in str(self.dataset).lower() or "urfunny" in str(self.dataset).lower() else False
@@ -68,7 +66,6 @@ class VideoClassification(nn.Module):
         vid_outputs = vid_outputs[:, 0] 
         # take the first token now it has 2 dimensions
         del video_embeds
-    
 
         if self.must:
             vid_context = self.videomae(video_context, bool_masked_pos = video_mask)[0]

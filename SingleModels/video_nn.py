@@ -6,7 +6,7 @@ __package__ = "SingleModels"
 
 import torch
 from .models.video import VideoClassification
-from utils.data_loaders import VideoDataset
+from utils.uni_data_loaders import VideoDataset
 import wandb
 import numpy as np
 import pandas as pd
@@ -48,7 +48,8 @@ def prepare_dataloader(
     must = True if "must" in str(dataset).lower() or "urfunny" in str(dataset).lower() else False
     print(f"Are we running on mustard? {must}", flush=True) 
     dataset = VideoDataset(
-        df, dataset, batch_size = 1 if sampler == "Both" else batch_size, feature_col="video_path", label_col=label_task , accum=accum ,check=check
+        df, dataset, batch_size = 1 if (sampler == "Both" or sampler == "Iter_Accum") else batch_size, 
+        feature_col="video_path", label_col=label_task , accum=accum ,check=check
     )
 
     if check == "train":
@@ -114,15 +115,14 @@ def runModel(accelerator, df_train, df_val, df_test, param_dict, model_param):
     T_max = param_dict["T_max"]
     batch_size = param_dict["batch_size"]
     loss = param_dict["loss"]
-    beta = param_dict["beta"]
     weight_decay = param_dict["weight_decay"]
     weights = param_dict["weights"]
     id2label = param_dict["id2label"]
     label_task = param_dict["label_task"]
-    model_name = param_dict["model"]
-    mask = param_dict["mask"]
     epoch_switch = param_dict["epoch_switch"]
     sampler = param_dict["sampler"]
+    early_stop = param_dict["early_stop"]
+
     num_labels = model_param["output_dim"]
     dataset = model_param["dataset"]
 
@@ -159,7 +159,7 @@ def runModel(accelerator, df_train, df_val, df_test, param_dict, model_param):
     wandb.watch(model, log="all")
    
 
-    trainer = Trainer(big_batch=31 , num_steps=1)
+    trainer = Trainer(big_batch=31 , num_steps=1, early_stop = early_stop)
     
     model = trainer.train_network(
         model,
@@ -195,27 +195,24 @@ def main():
         "patience": config.patience,
         "lr": config.learning_rate,
         "clip": config.clip,
-        "batch_size": config.batch_size // 3,
+        "batch_size": config.batch_size,
         "weight_decay": config.weight_decay,
-        "model": config.model,
         "T_max": config.T_max,
         "seed": config.seed,
         "label_task": config.label_task,
-        "mask": config.mask,
-        "loss": config.loss,
-        "beta": config.beta,
         "epoch_switch": config.epoch_switch,
         "sampler": config.sampler,
+        "early_stop": config.early_stop,
     }
-    if param_dict['sampler'] == "Weighted" and param_dict['loss'] == "WeightedCrossEntropy":
-        print(f"We are not going to learn anything with sampler == {param_dict['sampler'] } and loss == {param_dict['loss']}. \nKill it" , flush=True)
-        return 0
-    elif param_dict['sampler'] == "Iterative" and param_dict['loss'] == "CrossEntropy":
-        print(f"We are not going to learn anything with sampler == {param_dict['sampler'] } and loss == {param_dict['loss']}. \nKill it" , flush=True)
-        return 0
-    elif (param_dict['sampler'] == "Iterative" or param_dict['sampler'] == "Weighted") and param_dict['loss'] == "NewCrossEntropy":
-        print(f"We are not going to learn anything with sampler == {param_dict['sampler'] } and loss == {param_dict['loss']}. \nKill it" , flush=True)
-        return 0
+    s = param_dict['sampler']
+    if s == "Weighted":
+        param_dict['loss'] = "CrossEntropy"
+        
+    elif s == "Iterative" or s == "Iter_Accum":
+        param_dict['loss'] = "WeightedCrossEntropy"
+        
+    elif (s == "Both" or s == "Both_NoAccum") :
+        param_dict['loss'] = "NewCrossEntropy"
 
     df = pd.read_pickle(f"{config.dataset}.pkl")
     df_train = df[df["split"] == "train"]
@@ -223,16 +220,15 @@ def main():
     df_val = df[df["split"] == "val"]
 
 
-    if param_dict["label_task"] == "sentiment":
-        number_index = "sentiment"
-        label_index = "sentiment_label"
+    if param_dict["label_task"] == "emotion":
+        number_index = "emotion"
+        label_index = "emotion_label"
+        # df = df[df["sentiment_label"] != "Neutral"] if "mosei" in config.dataset else df
     elif param_dict["label_task"] == "sarcasm":
         number_index = "sarcasm"
         label_index = "sarcasm_label"
         df = df[df["context"] == False]
-    elif (
-        param_dict["label_task"] == "content"
-    ):  # Needs this to be content too not tiktok
+    elif param_dict["label_task"] == "content":  # Needs this to be content too not tiktok
         number_index = "content"
         label_index = "content_label"
     else:
@@ -258,6 +254,9 @@ def main():
         )
     ).values
     weights = weights / weights.sum()
+    if "iemo" in config.dataset.lower():
+        weights = torch.Tensor([weights[1], weights[0] , weights[3] , weights[2] , weights[4] , weights[5]])
+        #This is because the text model has different labels then what we use, which is weird but it is what it is
     label2id = (
         df.drop_duplicates(label_index).set_index(label_index).to_dict()[number_index]
     )
@@ -266,11 +265,7 @@ def main():
     model_param = {
         "output_dim": len(weights),
         "dropout": config.dropout,
-        "early_div": config.early_div,
-        "num_layers": config.num_layers,
-        "learn_PosEmbeddings": config.learn_PosEmbeddings,
         "dataset": config.dataset,
-        "sota": config.sota,
     }
     param_dict["weights"] = weights
     param_dict["label2id"] = label2id
