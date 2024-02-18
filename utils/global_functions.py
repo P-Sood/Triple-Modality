@@ -498,6 +498,11 @@ def arg_parse(description):
         default='sota',
         type=str)
 
+    parser.add_argument(
+        "--early_stop",
+        "-e_s",
+        default="f1",
+        type=str)
     return parser.parse_args()
 
 def set_seed(seed_value):
