@@ -1,15 +1,15 @@
-program: ../video_nn.py
+program: ../whisper_nn.py
 command:
   - ${env}
   - python3
   - ${program}
   - "--dataset"
-  - "../../data/iemo"
+  - "../../data/must"
 method: bayes
 
 metric:
-  goal: minimize
-  name: val/loss
+  goal: maximize
+  name: val/weighted-f1-score
   
 parameters:
   epoch:
@@ -33,12 +33,12 @@ parameters:
     min: 1
     distribution: int_uniform
   label_task:
-    values: ['emotion']
+    values: ['sarcasm']
   epoch_switch:
     values: [2 , 3]
   sampler:
     values: ['Both','Both_NoAccum','Iterative','Weighted','Iter_Accum']
   LOSS:
-    values: [true]
+    values: ["f1"]
   dropout:
     values: [ 0.2 , 0.3 , 0.4 , 0.5, 0.6 ]

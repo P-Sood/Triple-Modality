@@ -4,12 +4,12 @@ command:
   - python3
   - ${program}
   - "--dataset"
-  - "../../data/iemo"
+  - "../../data/urfunny"
 method: bayes
 
 metric:
-  goal: minimize
-  name: val/loss
+  goal: maximize
+  name: val/weighted-f1-score
   
 parameters:
   epoch:
@@ -33,12 +33,12 @@ parameters:
     min: 1
     distribution: int_uniform
   label_task:
-    values: ['emotion']
+    values: ['humour']
   epoch_switch:
     values: [2 , 3]
   sampler:
     values: ['Both','Both_NoAccum','Iterative','Weighted','Iter_Accum']
   LOSS:
-    values: [true]
+    values: ["acc"]
   dropout:
     values: [ 0.2 , 0.3 , 0.4 , 0.5, 0.6 ]

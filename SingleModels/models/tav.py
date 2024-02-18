@@ -128,10 +128,8 @@ class TAVForMAE_HDF5(nn.Module):
         self.output_dim = args["output_dim"]
         self.dropout = args["dropout"]
         self.dataset = args["dataset"]
-        self.LOSS = args["LOSS"]
-        
-        args['BertModel'] = 'roberta-large'
-        
+        self.early_stop = args["early_stop"]
+                
         self.must = False
         if "iemo" in str(self.dataset).lower():
             dataset_name = "iemo"
@@ -165,7 +163,7 @@ class TAVForMAE_HDF5(nn.Module):
             
         print(path , flush = True)
             
-        self.f = h5py.File(f"../../data/{dataset_name.lower()}.{'f1' if self.LOSS == False else 'loss'}.final.seq_len.features.hdf5", "a", libver="latest", swmr=True)
+        self.f = h5py.File(f"../../data/{dataset_name.lower()}.{self.early_stop}.final.seq_len.features.hdf5", "a", libver="latest", swmr=True)
         try:
             self.f.swmr_mode = True
         except:

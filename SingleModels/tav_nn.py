@@ -193,7 +193,7 @@ def main():
         "output_dim": len(weights),
         "dropout": config.dropout,
         "dataset": config.dataset,
-        "LOSS": config.LOSS,
+        "early_stop": config.early_stop,
     }
     param_dict["weights"] = weights
     param_dict["label2id"] = label2id
