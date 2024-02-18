@@ -7,7 +7,7 @@ from utils.trainer import Trainer
 from .models.text import BertClassifier , collate_batch
 import wandb
 
-from utils.data_loaders import BertDataset
+from utils.uni_data_loaders import BertDataset
 from utils.global_functions import arg_parse
 import pandas as pd
 import torch
@@ -30,12 +30,10 @@ def prepare_dataloader(
     batch_size,
     label_task,
     epoch_switch,
-    feature_col="text",
     pin_memory=True,
     num_workers=0,
     check="train",
     accum=False,
-    bert = None,
     sampler = None,
 ):
     """
@@ -46,7 +44,8 @@ def prepare_dataloader(
     must = True if "must" in str(dataset).lower() or "urfunny" in str(dataset).lower() else False
     
     dataset = BertDataset(
-        df, dataset, batch_size = 1 if sampler == "Both" else batch_size, feature_col=feature_col, label_col=label_task , accum=accum , bert   = bert
+        df, dataset, batch_size = 1 if (sampler == "Both" or sampler == "Iter_Accum") else batch_size, 
+        feature_col="text", label_col=label_task , accum=accum 
     )
 
     if check == "train":
@@ -113,24 +112,16 @@ def runModel(accelerator, df_train, df_val, df_test, param_dict, model_param):
     T_max = param_dict["T_max"]
     batch_size = param_dict["batch_size"]
     loss = param_dict["loss"]
-    beta = param_dict["beta"]
     weight_decay = param_dict["weight_decay"]
     weights = param_dict["weights"]
     id2label = param_dict["id2label"]
     label_task = param_dict["label_task"]
-    model_name = param_dict["model"] 
-    mask = param_dict["mask"]
     epoch_switch = param_dict["epoch_switch"]
     sampler = param_dict["sampler"]
-    text_column = param_dict["text_column"]
-    
-    
+    early_stop = param_dict["early_stop"]
+
     num_labels = model_param["output_dim"]
     dataset = model_param["dataset"]
-    BertModel = model_param["BertModel"]
-    # TODO: IF TF BERTA IS TOO BIG
-    # if BertModel == "arpanghoshal/EmoRoBERTa":
-    #     batch_size = 4
         
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     if loss == "CrossEntropy":
@@ -146,25 +137,20 @@ def runModel(accelerator, df_train, df_val, df_test, param_dict, model_param):
     print(loss, flush=True)
     Metric = Metrics(num_classes=num_labels, id2label=id2label, rank=device)
     df_train_accum = prepare_dataloader(
-        df_train, dataset, batch_size, label_task, epoch_switch , feature_col = text_column, check="train", accum=True , bert = BertModel , sampler = sampler
-    )
+        df_train, dataset, batch_size, label_task, epoch_switch, check="train", accum=True, sampler = sampler )
     df_train_no_accum = prepare_dataloader(
         df_train,
         dataset,
         batch_size,
         label_task,
-        epoch_switch, 
-        feature_col = text_column,
+        epoch_switch,
         check="train",
-        accum=False,
-        bert = BertModel
-    )
+        accum=False, 
+        sampler = sampler )
     df_val = prepare_dataloader(
-        df_val, dataset, batch_size, label_task, epoch_switch , feature_col = text_column, check="val" , bert = BertModel
-    )
+        df_val, dataset, batch_size, label_task, epoch_switch, check="val", sampler  = sampler )
     df_test = prepare_dataloader(
-        df_test, dataset, batch_size, label_task, epoch_switch , feature_col = text_column, check="test" , bert = BertModel
-    )
+        df_test, dataset, batch_size, label_task, epoch_switch, check="test", sampler = sampler )
 
     model = BertClassifier(model_param).to(device)
 
@@ -172,7 +158,7 @@ def runModel(accelerator, df_train, df_val, df_test, param_dict, model_param):
     wandb.watch(model, log="all")
     checkpoint = None 
     
-    trainer = Trainer(big_batch=23 , num_steps=1)
+    trainer = Trainer(big_batch=23 , num_steps=4, early_stop = early_stop)
     
     model = trainer.train_network(
         model,
@@ -207,51 +193,40 @@ def main():
         "patience": config.patience,
         "lr": config.learning_rate,
         "clip": config.clip,
-        "batch_size": config.batch_size if config.batch_size < 25 else 16,
+        "batch_size": config.batch_size,
         "weight_decay": config.weight_decay,
-        "model": config.model,
         "T_max": config.T_max,
         "seed": config.seed,
         "label_task": config.label_task,
-        "mask": config.mask,
-        "loss": config.loss,
-        "beta": config.beta,
         "epoch_switch": config.epoch_switch,
         "sampler": config.sampler,
-        "text_column": config.text_column,
+        "early_stop": config.early_stop,
     }
     
-    if param_dict['sampler'] == "Weighted" and param_dict['loss'] == "WeightedCrossEntropy":
-        print(f"We are not going to learn anything with sampler == {param_dict['sampler'] } and loss == {param_dict['loss']}. \nKill it" , flush=True)
-        return 0
-    elif param_dict['sampler'] == "Iterative" and param_dict['loss'] == "CrossEntropy":
-        print(f"We are not going to learn anything with sampler == {param_dict['sampler'] } and loss == {param_dict['loss']}. \nKill it" , flush=True)
-        return 0
-    elif (param_dict['sampler'] == "Iterative" or param_dict['sampler'] == "Weighted") and param_dict['loss'] == "NewCrossEntropy":
-        print(f"We are not going to learn anything with sampler == {param_dict['sampler'] } and loss == {param_dict['loss']}. \nKill it" , flush=True)
-        return 0
+    s = param_dict['sampler']
+    if s == "Weighted":
+        param_dict['loss'] = "CrossEntropy"
+        
+    elif s == "Iterative" or s == "Iter_Accum":
+        param_dict['loss'] = "WeightedCrossEntropy"
+        
+    elif (s == "Both" or s == "Both_NoAccum") :
+        param_dict['loss'] = "NewCrossEntropy"
 
     df = pd.read_pickle(f"{config.dataset}.pkl")
+    df_train = df[df["split"] == "train"]
+    df_test = df[df["split"] == "test"]
+    df_val = df[df["split"] == "val"]
 
-    if TESTING_PIPELINE:
-        df_train = df[df["split"] == "train"].head(100)
-        df_test = df[df["split"] == "train"].head(100)
-        df_val = df[df["split"] == "train"].head(100)
-    else:
-        df_train = df[df["split"] == "train"]
-        df_test = df[df["split"] == "test"]
-        df_val = df[df["split"] == "val"]
-
-    if param_dict["label_task"] == "sentiment":
-        number_index = "sentiment"
-        label_index = "sentiment_label"
+    if param_dict["label_task"] == "emotion":
+        number_index = "emotion"
+        label_index = "emotion_label"
+        # df = df[df["sentiment_label"] != "Neutral"] if "mosei" in config.dataset else df
     elif param_dict["label_task"] == "sarcasm":
         number_index = "sarcasm"
         label_index = "sarcasm_label"
         df = df[df["context"] == False]
-    elif (
-        param_dict["label_task"] == "content"
-    ):  # Needs this to be content too not tiktok
+    elif param_dict["label_task"] == "content":  # Needs this to be content too not tiktok
         number_index = "content"
         label_index = "content_label"
     else:
@@ -284,13 +259,7 @@ def main():
     model_param = {
         "output_dim": len(weights),
         "dropout": config.dropout,
-        "early_div": config.early_div,
-        "num_layers": config.num_layers,
-        "learn_PosEmbeddings": config.learn_PosEmbeddings,
         "dataset": config.dataset,
-        "sota": config.sota,
-        "hidden_size": config.hidden_size,
-        "BertModel": config.BertModel,
     }
     param_dict["weights"] = weights
     param_dict["label2id"] = label2id

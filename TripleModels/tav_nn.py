@@ -135,7 +135,7 @@ def runModel(accelerator, df_train, df_val, df_test, param_dict, model_param):
     label_task = param_dict["label_task"]
     epoch_switch = param_dict["epoch_switch"]
     sampler = param_dict["sampler"]
-    LOSS = param_dict["LOSS"]
+    early_stop = param_dict["early_stop"]
 
     num_labels = model_param["output_dim"]
     dataset = model_param["dataset"]
@@ -164,7 +164,7 @@ def runModel(accelerator, df_train, df_val, df_test, param_dict, model_param):
         batch_size,
         label_task,
         epoch_switch,
-        LOSS,
+        early_stop,
         check="train",
         accum=False,
     )
@@ -174,7 +174,7 @@ def runModel(accelerator, df_train, df_val, df_test, param_dict, model_param):
         batch_size,
         label_task,
         epoch_switch,
-        LOSS,
+        early_stop,
         check="val" if TESTING_PIPELINE == False else "train",
     )
     df_test = prepare_dataloader(
@@ -183,7 +183,7 @@ def runModel(accelerator, df_train, df_val, df_test, param_dict, model_param):
         batch_size,
         label_task,
         epoch_switch,
-        LOSS,
+        early_stop,
         check="test" if TESTING_PIPELINE == False else "train",
     )
 
@@ -191,7 +191,7 @@ def runModel(accelerator, df_train, df_val, df_test, param_dict, model_param):
 
     wandb.watch(model, log="all")
     
-    trainer = Trainer(big_batch = 2**5 , num_steps=4, LOSS = LOSS)
+    trainer = Trainer(big_batch = 2**5 , num_steps=4, early_stop = early_stop)
 
     model = trainer.train_network(
         model,
@@ -233,7 +233,7 @@ def main():
         "label_task": config.label_task,
         "epoch_switch": config.epoch_switch,
         "sampler": config.sampler,
-        "LOSS": False,#config.LOSS,
+        "early_stop": config.early_stop,
     }
     
     

@@ -301,12 +301,12 @@ class BertDataset(Dataset):
     Load text dataset for BERT processing.
     """
 
-    def __init__(self, df, dataset, batch_size, feature_col, label_col, accum=False , bert = "roberta-large"):
+    def __init__(self, df, dataset, batch_size, feature_col, label_col, accum=False):
         
         
         
         max_len = 512# max([len(text.split()) for text in df[feature_col]]) + 2 # For CLS and SEP tokens
-        tokenizer = AutoTokenizer.from_pretrained(bert)
+        tokenizer = AutoTokenizer.from_pretrained("roberta-large")
         self.texts = [
             tokenizer(
                 text,

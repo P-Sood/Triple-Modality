@@ -123,7 +123,7 @@ def runModel(accelerator, df_train, df_val, df_test, param_dict, model_param):
     label_task = param_dict["label_task"]
     epoch_switch = param_dict["epoch_switch"]
     sampler = param_dict["sampler"]
-    LOSS = param_dict["LOSS"]
+    early_stop = param_dict["early_stop"]
 
     num_labels = model_param["output_dim"]
     dataset = model_param["dataset"]
@@ -162,7 +162,7 @@ def runModel(accelerator, df_train, df_val, df_test, param_dict, model_param):
     wandb.watch(model, log="all")
    
 
-    trainer = Trainer(big_batch=3 , num_steps=1,  LOSS = LOSS)
+    trainer = Trainer(big_batch=3 , num_steps=4,  early_stop = early_stop)
     
     model = trainer.train_network(
         model,
@@ -206,7 +206,7 @@ def main():
         "label_task": config.label_task,
         "epoch_switch": config.epoch_switch,
         "sampler": config.sampler,
-        "LOSS": config.LOSS,
+        "early_stop": config.early_stop,
     }
 
     s = param_dict['sampler']

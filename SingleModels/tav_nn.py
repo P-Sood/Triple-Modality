@@ -140,7 +140,7 @@ def main():
         "label_task": config.label_task,
         "epoch_switch": config.epoch_switch,
         "sampler": config.sampler,
-        "LOSS": config.LOSS,
+        "early_stop": config.early_stop,
     }
 
     df = pd.read_pickle(f"{config.dataset}.pkl")
