@@ -9,6 +9,6 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=6 # maximum CPU cores per GPU request: 6 on Cedar, 16 on Graham.
 
-#SBATCH --output=../outputs/whisper_start.txt
+#SBATCH --output=../outputs/videoMAE_fullseq.txt
 
-wandb agent ddi/UrFunny_Video1/rus6qbu3
+wandb agent ddi/UrFunny_Video_Final_4_Steps/yhf1da0r

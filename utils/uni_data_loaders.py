@@ -72,7 +72,7 @@ class TextAudioVideoDataset(Dataset):
         else:
             dataset = "must" if "must" in dataset.lower() else "urfunny"
             self.timings = df["timings"].values.reshape(-1, 2).tolist()
-            self.audio_timings = df["audio_timings"].values.reshape(-1, 2).tolist()
+            self.audio_timings = df["audio_timings"].values.reshape(-1, 2).tolist() if dataset == "urfunny" else self.timings
             self.audio_path = df[feature_col1].values.reshape(-1, 2).tolist()
             self.video_path = df[feature_col2].values.reshape(-1, 2).tolist()
             self.texts = []

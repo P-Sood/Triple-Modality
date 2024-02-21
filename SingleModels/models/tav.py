@@ -134,7 +134,7 @@ class TAVForMAE_HDF5(nn.Module):
         if "iemo" in str(self.dataset).lower():
             dataset_name = "iemo"
             path = [
-            # f"{dataset_name}_bert/ylhfsh3s/fresh-sweep-16/best.pt",
+            f"{dataset_name}_bert/ylhfsh3s/fresh-sweep-16/best.pt",
             
             f"Iemo_Whisper_F1_Final/e5g03ntz/eager-sweep-14/best.pt",
             
@@ -144,21 +144,21 @@ class TAVForMAE_HDF5(nn.Module):
             dataset_name = "must"
             self.must = True
             path = [
-            f"{dataset_name}_bert/aoago6hk/flowing-sweep-99/best.pt",
+            f"Must_Text_Final_4_Steps/ownygcfg/cosmic-sweep-48/best.pt",
             
-            f"{dataset_name}_whisper/qzyfm99j/astral-sweep-24/best.pt",
+            f"Must_Whisper_Final_4_Steps/y6jjeyyg/dulcet-sweep-7/best.pt",
             
-            f"{dataset_name}_video/apl9ufpx/crisp-sweep-51/best.pt",
+            f"Must_Video_Final_4_Steps/kt7q6lf9/earnest-sweep-16/best.pt",
             ]
         else:
             dataset_name = "UrFunny"
             self.must = True
             path = [
-            f"{dataset_name}_Text1/z38msbsw/playful-sweep-39/best.pt", 
+            f"UrFunny_Text_Final_4_Steps/2bq5ig7b/clean-sweep-2/best.pt",
             
-            f"{dataset_name}_Audio1/z5c8hmm7/dandy-sweep-16/best.pt", 
+            f"UrFunny_Whisper_Final_4_Steps/drojten5/smooth-sweep-5/best.pt",
             
-            f"{dataset_name}_Video1/rus6qbu3/confused-sweep-40/best.pt",
+            f"UrFunny_Video_Final_4_Steps/yhf1da0r/ruby-sweep-10/best.pt",
             ]
             
         print(path , flush = True)
@@ -179,15 +179,15 @@ class TAVForMAE_HDF5(nn.Module):
 
         # Load in our finetuned models, exactly as they should be
         
-        for i, model in enumerate([self.whisper, self.videomae]):
+        for i, model in enumerate([self.bert, self.whisper, self.videomae] if self.must else [self.whisper, self.videomae]):
             print(f"Loading from {path[i]}, " , flush = True)                           # GO BACK TO CUDA
             ckpt =  torch.load(f"../../../TAV_Train/{path[i]}" , map_location=torch.device("cuda" if torch.cuda.is_available() else "cpu"))['model_state_dict']
-            model.load_state_dict(ckpt)
+            model.load_state_dict(ckpt)        
         
-        ckpt = torch.load("../../results/IEMOCAP/roberta-large/final/2021-05-09-12-19-54-speaker_mode-upper-num_past_utterances-1000-num_future_utterances-0-batch_size-4-seed-4/checkpoint-5975/pytorch_model.bin",map_location=torch.device("cuda" if torch.cuda.is_available() else "cpu"))
-        self.bert = AutoModelForSequenceClassification.from_pretrained("roberta-large" , num_labels = 6)
-        self.bert.load_state_dict(ckpt , strict = False)
-        
+        if not self.must:
+            ckpt = torch.load("../../results/IEMOCAP/roberta-large/final/2021-05-09-12-19-54-speaker_mode-upper-num_past_utterances-1000-num_future_utterances-0-batch_size-4-seed-4/checkpoint-5975/pytorch_model.bin",map_location=torch.device("cuda" if torch.cuda.is_available() else "cpu"))
+            self.bert = AutoModelForSequenceClassification.from_pretrained("roberta-large" , num_labels = 6)
+            self.bert.load_state_dict(ckpt , strict = False)
 
         
         # Zero out all gradients. Might not need this anymore though
@@ -217,13 +217,15 @@ class TAVForMAE_HDF5(nn.Module):
         
         check="train",
     ):
-
-        # last_hidden_text_state, text_outputs = self.bert.bert(
-        #     input_ids=input_ids, attention_mask=text_attention_mask, return_dict=False
-        # )
-        
-        outputs = self.bert(input_ids=input_ids, attention_mask=text_attention_mask)
-        text_outputs , last_hidden_text_state = outputs.logits, outputs.hidden_states
+        if self.must:
+            last_hidden_text_state, text_outputs = self.bert.bert(
+                input_ids=input_ids, attention_mask=text_attention_mask, return_dict=False
+            )
+        else:
+            # IEMO ONLY
+            outputs = self.bert(input_ids=input_ids, attention_mask=text_attention_mask)
+            text_outputs , last_hidden_text_state = outputs.logits, outputs.hidden_states
+            
         del input_ids
         del text_attention_mask
         if self.must:

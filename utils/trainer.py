@@ -265,7 +265,7 @@ class Trainer:
     ):
         self.log(Metric, curr_train_loss, "train")
         val_loss, curr_metric = self.validate(val_dataloader, model, criterion, Metric, name="val")
-        prev_val_loss, prev_metric, save = self.early_stopping(curr_metric, prev_metric, val_loss, prev_val_loss , LOSS = False)
+        prev_val_loss, prev_metric, save = self.early_stopping(curr_metric, prev_metric, val_loss, prev_val_loss )
         if save:
             save_model(model, optimizer, criterion, scheduler, epoch, step, path, log_val)
         return prev_val_loss, prev_metric
@@ -288,8 +288,8 @@ class Trainer:
             )
         return total_loss_val / len(val_dataloader), curr_metric
 
-    def early_stopping(self , curr_metric, prev_metric, val_loss, prev_val_loss , early_stop = "f1"):
-        if early_stop == "loss":
+    def early_stopping(self , curr_metric, prev_metric, val_loss, prev_val_loss):
+        if self.early_stop == "loss":
             if val_loss <= prev_val_loss:
                 print(
                     f"we have seen loss decrease the previous best and we are updating our model" ,  flush = True
@@ -308,14 +308,14 @@ class Trainer:
                 prev_metric = curr_metric
                 save = True
                 print(
-                    f"we have seen {early_stop} increase the previous best and we are updating our model" ,  flush = True
+                    f"we have seen {self.early_stop} increase the previous best and we are updating our model" ,  flush = True
                 )
                 self.patient_iter = 0
             else:
                 save = False
                 self.patient_iter += 1
                 print(
-                    f"we have seen {early_stop} decrease for {self.patient_iter} steps and current {early_stop} is {curr_metric}, and previous best metric is {prev_metric}" , flush = True
+                    f"we have seen {self.early_stop} decrease for {self.patient_iter} steps and current {self.early_stop} is {curr_metric}, and previous best metric is {prev_metric}" , flush = True
                 )
         return prev_val_loss, prev_metric, save
 

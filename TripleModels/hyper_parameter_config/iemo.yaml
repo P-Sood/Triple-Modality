@@ -46,8 +46,8 @@ parameters:
     distribution: categorical
     values: ["t_p", "dp_ta"]
   sampler:
-    values: ['Both']
-  LOSS:
-    values: [false]
+    values: ['Both','Both_NoAccum','Iterative','Weighted','Iter_Accum']
+  early_stop:
+    values: ["f1"]
   label_task:
     values: ['emotion']

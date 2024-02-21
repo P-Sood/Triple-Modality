@@ -217,7 +217,10 @@ def main():
     project_name = "MLP_test_text"
     config = arg_parse(project_name)
 
-    wandb.init(entity="ddi", config=config, project = "Iemo-F1-Ablations" if "iemo" in config.dataset.lower() else "Must-F1-Ablations" if "must" in config.dataset.lower() else "URFunny-F1-Ablations")
+    wandb.init(entity="ddi", config=config, 
+               project = "Iemo-Final-F1-Ablations" if "iemo" in config.dataset.lower() else 
+                         "Must-Final-F1-Ablations" if "must" in config.dataset.lower() else 
+                         "URFunny-Final-F1-Ablations")
     
     config = wandb.config
     set_seed(config.seed)

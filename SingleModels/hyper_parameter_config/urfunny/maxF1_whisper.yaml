@@ -13,8 +13,8 @@ metric:
   
 parameters:
   epoch:
-    max: 12
-    min: 6
+    max: 8
+    min: 4
     distribution: int_uniform
   patience:
     values: [14]
@@ -23,7 +23,7 @@ parameters:
   clip:
     values: [0.1 , 1 , 5]
   batch_size:
-    values: [2, 4, 8, 16]
+    values: [1, 2]
   weight_decay:
     values: [1e-5, 1e-4, 1e-3, 1e-2]
   T_max:
@@ -38,7 +38,9 @@ parameters:
     values: [2 , 3]
   sampler:
     values: ['Both','Both_NoAccum','Iterative','Weighted','Iter_Accum']
-  LOSS:
+  early_stop:
     values: ["acc"]
   dropout:
     values: [ 0.2 , 0.3 , 0.4 , 0.5, 0.6 ]
+
+# wandb sweep -p UrFunny_Whisper_Final -e ddi ../hyper_parameter_config/urfunny/maxF1_whisper.yaml 

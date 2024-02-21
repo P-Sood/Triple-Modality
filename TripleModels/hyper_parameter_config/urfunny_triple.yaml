@@ -8,29 +8,24 @@ command:
 method: bayes
 
 metric:
-  goal: minimize
-  name: val/loss
+  goal: maximize
+  name: val/weighted-f1-score
+
 parameters:
   epoch:
     max: 12
-    min: 3
+    min: 6
     distribution: int_uniform
   learning_rate:
     values: [1e-6 , 1e-5 , 1e-4  , 5e-5 , 5e-6]
   weight_decay:
-    values: [1e-5 , 1e-4, 1e-3, 1e-2]
+    values: [1e-5, 1e-4, 1e-3, 1e-2]
   batch_size:
-    values: [24, 32]
-  seed:
-    values: [32, 64, 96]
-  mask:
-    values: [False]
-  early_div:
-    values: [False]
-  learn_PosEmbeddings:
-    values: [False]
+    values: [2, 4, 8, 16, 24, 32]
   num_layers:
-    values: [3, 4, 5, 6, 7, 8]
+    values: [1, 2, 3, 4, 5, 6, 7, 8]
+  num_encoders:
+    values: [1, 2, 3, 4, 5, 6]
   patience:
     values: [14]
   clip:
@@ -38,18 +33,22 @@ parameters:
   epoch_switch:
     values: [2 , 3]
   dropout:
-    values: [ 0.2 , 0.3 , 0.4 , 0.5 ]
+    values: [ 0.2 , 0.3 , 0.4 , 0.5, 0.6 ]
   T_max:
    values: [2 , 3]
   hidden_size:
     values: [64, 128, 256, 384, 768, 1536]
+  seed:
+    max: 1000
+    min: 1
+    distribution: int_uniform
+  fusion:
+    distribution: categorical
+    values: ["t_p", "dp_ta"]
+  sampler:
+    distribution: categorical
+    values: ['Both','Both_NoAccum','Iterative','Weighted','Iter_Accum']
+  early_stop:
+    values: ["acc"]
   label_task:
     values: ['humour']
-  fusion:
-    values: [ "sota" , "t_c"  , "t_p"]
-  model:
-    values: ['MAE_encoder']
-  loss:
-    values: ['NewCrossEntropy' , 'CrossEntropy' , 'WeightedCrossEntropy']
-  sampler:
-    values: ['Both' , 'Iterative' , 'Weighted', 'Both_NoAccum' , 'Iter_Accum']
