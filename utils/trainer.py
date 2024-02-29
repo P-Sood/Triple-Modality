@@ -493,9 +493,10 @@ class Trainer:
         prev_metric = 0
         path = "/".join(os.getcwd().split("/")[:-3]) + "/TAV_Train"
         if checkpoint is not None:
-            # epoch_num = checkpoint['epoch']
+            epoch_num = checkpoint['epoch']
             optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
             scheduler.load_state_dict(checkpoint["scheduler_state_dict"])
+            
         for epoch_num in tqdm(range(epochs), desc="epochs"):
             wandb.log({"epoch": epoch_num, "learning_rate": scheduler.get_last_lr()[0]})
             optimizer.zero_grad()  # Zero out gradients before each epoch.

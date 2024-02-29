@@ -11,4 +11,4 @@
 
 #SBATCH --output=../outputs/videoMAE_fullseq.txt
 
-python ../tav_nn.py -e 1 -b 1 -d ../../data/must -lt emotion --sampler Iterative --seed 36 # 4 for best, 
+python ../tav_nn.py -e 1 -b 1 -d ../../data/must -lt sarcasm --sampler Iterative --seed 36 

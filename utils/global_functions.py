@@ -440,13 +440,6 @@ def arg_parse(description):
     parser.add_argument(
         "--T_max", "-t", help="Set the gradient T_max", default=2, type=int
     )
-    parser.add_argument(
-        "--loss",
-        "-ls",
-        help="Which Loss function we are going to use",
-        default="NewCrossEntropy",
-        type=str,
-    )
 
     # Set the seed
     parser.add_argument(
@@ -495,7 +488,7 @@ def arg_parse(description):
     )
     parser.add_argument(
         "--fusion",
-        default='sota',
+        default='t_p',
         type=str)
 
     parser.add_argument(

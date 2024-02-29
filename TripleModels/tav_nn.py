@@ -36,7 +36,7 @@ def prepare_dataloader(
     batch_size,
     label_task,
     epoch_switch,
-    LOSS = False,
+    early_stop,
     pin_memory=True,
     num_workers=0,
     check="train",
@@ -59,7 +59,7 @@ def prepare_dataloader(
         feature_col2="video_path",
         feature_col3="text",
         label_col=label_task,
-        LOSS = LOSS,
+        early_stop = early_stop,
         timings="timings",
         accum=accum,
         check=check,
@@ -156,7 +156,8 @@ def runModel(accelerator, df_train, df_val, df_test, param_dict, model_param):
     print(f"num_classes is {num_labels} \n" , flush = True)
     Metric = Metrics(num_classes=num_labels, id2label=id2label, rank=device, ignore_index = ignore)
     df_train_accum = prepare_dataloader(
-        df_train, dataset, batch_size, label_task, epoch_switch, check="train", accum=True , sampler=sampler
+        df_train, dataset, batch_size, label_task, epoch_switch, 
+        early_stop, check="train", accum=True , sampler=sampler
     )
     df_train_no_accum = prepare_dataloader(
         df_train,
