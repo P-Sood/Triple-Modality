@@ -47,3 +47,5 @@ do
     python ../tav_nn.py --fusion "t_c" --sampler "Iterative"  --seed $i --clip 0.1 --T_max 3 --epoch 10 --dataset "../../data/must" --dropout 0.5 --patience 14 --batch_size 24 --early_stop "f1" --label_task "sarcasm" --num_layers 8 --hidden_size 1536 --epoch_switch 2 --num_encoders 1 --weight_decay 0.001 --learning_rate 0.000001
     python ../tav_nn.py --fusion "t_c" --sampler "Weighted"  --seed $i --clip 0.1 --T_max 3 --epoch 10 --dataset "../../data/must" --dropout 0.5 --patience 14 --batch_size 24 --early_stop "f1" --label_task "sarcasm" --num_layers 8 --hidden_size 1536 --epoch_switch 2 --num_encoders 1 --weight_decay 0.001 --learning_rate 0.000001
 done
+
+wandb agent ddi/Must_Tri_Acc_Final/vazpjoco

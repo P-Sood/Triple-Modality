@@ -21,3 +21,5 @@ do
     python ../tav_nn.py --fusion "dp_ta" --sampler "Iterative" --seed $i --clip 1  --T_max 3 --epoch 8 --fusion "dp_ta" --dataset "../../data/more_text_IEMO" --dropout 0.6  --patience 14 --batch_size 32 --label_task "emotion" --early_stop "f1" --num_layers 8 --hidden_size 768 --epoch_switch 2 --num_encoders 2 --weight_decay 0.01 --learning_rate 0.00001
     python ../tav_nn.py --fusion "dp_ta" --sampler "Weighted" --seed $i --clip 1  --T_max 3 --epoch 8 --fusion "dp_ta" --dataset "../../data/more_text_IEMO" --dropout 0.6  --patience 14 --batch_size 32 --label_task "emotion" --early_stop "f1" --num_layers 8 --hidden_size 768 --epoch_switch 2 --num_encoders 2 --weight_decay 0.01 --learning_rate 0.00001
 done
+
+wandb agent ddi/Must_Tri_Acc_Final/vazpjoco
