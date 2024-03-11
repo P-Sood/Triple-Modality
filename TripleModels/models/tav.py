@@ -155,17 +155,24 @@ class TAVForMAE(nn.Module):
                 Ffusion2, _ = vid_text_layer(
                     feature2, Ffusion2, Ffusion2
                 )
-            tav = torch.cat([Ffusion1.mean(dim=1), Ffusion2.mean(dim=1), 
+
+            dual = torch.cat([Ffusion1.mean(dim=1), Ffusion2.mean(dim=1), 
                              feature1.mean(dim=1), feature2.mean(dim=1)], 
                              dim=-1)
             del Ffusion1
             del Ffusion2
-            return tav # Now it has only 2 dimensions
+            return dual # Now it has only 2 dimensions
         
     def triple_peppe(self, text , audio, video):
-        ta = self.dual_peppe(text , audio, self.aud_text_layers , self.vid_text_layers)
+        ta =  self.dual_peppe(text , audio, self.aud_text_layers , self.vid_text_layers)
         tv = self.dual_peppe(text , video, self.layers1 , self.layers2)
-        
+        # Run them through an attention layer
+
+
+        # return self.dual_peppe(ta , tv, self.layers1 , self.layers2)
+        # linear layer on ta/tv respectively
+        # linear layer on tav, rather then concatenation
+        # combination of the three
         tav = torch.cat([ta, tv] , dim = -1)
         del ta
         del tv
