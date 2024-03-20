@@ -68,11 +68,7 @@ class TAVForMAE(nn.Module):
         self.p = 0.75  # This is to decide how much to weight the context vs the actual features for Mustard
 
         print(f"Using {self.num_layers} layers \nUsing fusion : {self.fusion}", flush=True)
-        if self.mosei:            
-            self.text_expansion = nn.LSTM(input_size=300, hidden_size=1024//2, num_layers=1, batch_first=True , bidirectional=True)
-            self.audio_expansion = nn.LSTM(input_size=64, hidden_size=1024//2, num_layers=1, batch_first=True , bidirectional=True)  
-            self.video_expansion = nn.LSTM(input_size=64, hidden_size=1024//2, num_layers=1, batch_first=True , bidirectional=True)
-            
+                    
         self.text_encoder_layers = nn.ModuleList(
             [
                 nn.TransformerEncoderLayer(d_model=1024, nhead=8, dropout=self.dropout , batch_first=True)
@@ -93,13 +89,13 @@ class TAVForMAE(nn.Module):
         )
 
 
-        self.aud_text_layers = nn.ModuleList(
+        self.layers1 = nn.ModuleList(
             [
                 nn.MultiheadAttention(embed_dim=1024, num_heads=8, batch_first=True)
                 for _ in range(self.num_layers)
             ]
         )
-        self.vid_text_layers = nn.ModuleList(
+        self.layers2 = nn.ModuleList(
             [
                 nn.MultiheadAttention(embed_dim=1024, num_heads=8, batch_first=True)
                 for _ in range(self.num_layers)
@@ -116,20 +112,20 @@ class TAVForMAE(nn.Module):
             self.linear1 = nn.Linear(1024 * 3, self.hidden_size)
         
         elif "t_p" in self.fusion:
-            self.layers1 = nn.ModuleList(
+            self.layers3 = nn.ModuleList(
                 [
                     nn.MultiheadAttention(embed_dim=1024, num_heads=8, batch_first=True)
                     for _ in range(self.num_layers)
                 ]
             )
-            self.layers2 = nn.ModuleList(
-                [
-                    nn.MultiheadAttention(embed_dim=1024, num_heads=8, batch_first=True)
-                    for _ in range(self.num_layers)
-                ]
-            )
+            # self.layers4 = nn.ModuleList(
+            #     [
+            #         nn.MultiheadAttention(embed_dim=1024, num_heads=8, batch_first=True)
+            #         for _ in range(self.num_layers)
+            #     ]
+            # )
             
-            self.linear1 = nn.Linear(1024 * 8 , self.hidden_size)
+            self.linear1 = nn.Linear(1024 * 3 , self.hidden_size)
             
         elif "dp" in self.fusion:
             self.linear1 = nn.Linear(1024 * 4, self.hidden_size)
@@ -143,18 +139,20 @@ class TAVForMAE(nn.Module):
         self.relu = nn.ReLU()
     
     def dual_peppe(self, feature1 , feature2, fusion_layer1 , fusion_layer2):
-            Ffusion1 = feature1
-            Ffusion2 = feature1
+            Ffusion1 = feature1 # text
+            Ffusion2 = feature1 # text
             for i in range(self.num_layers):
-                aud_text_layer = fusion_layer1[i]
-                vid_text_layer = fusion_layer2[i]
+                layer1 = fusion_layer1[i]
+                layer2 = fusion_layer2[i]
                 # Query the same, Key and Value are the other modality
-                Ffusion1, _ = aud_text_layer(
+                Ffusion1, _ = layer1(
                     Ffusion1, feature2, feature2
                 )
-                Ffusion2, _ = vid_text_layer(
+                # first fusion we modify the query at every step
+                Ffusion2, _ = layer2(
                     feature2, Ffusion2, Ffusion2
                 )
+                # second fusion we modify the key,value at every step
 
             dual = torch.cat([Ffusion1.mean(dim=1), Ffusion2.mean(dim=1), 
                              feature1.mean(dim=1), feature2.mean(dim=1)], 
@@ -162,21 +160,43 @@ class TAVForMAE(nn.Module):
             del Ffusion1
             del Ffusion2
             return dual # Now it has only 2 dimensions
-        
+
     def triple_peppe(self, text , audio, video):
-        ta =  self.dual_peppe(text , audio, self.aud_text_layers , self.vid_text_layers)
-        tv = self.dual_peppe(text , video, self.layers1 , self.layers2)
-        # Run them through an attention layer
+            Ffusion1 = text # text
+            Ffusion2 = text # text
+            Ffusion3 = text # text
+            for i in range(self.num_layers):
+                layer1 = self.layers1[i]
+                layer2 = self.layers2[i]
+                layer3 = self.layers3[i]
 
+                #1 keep text as query
+                #2 relevant modality as query, and use text as our
 
-        # return self.dual_peppe(ta , tv, self.layers1 , self.layers2)
-        # linear layer on ta/tv respectively
-        # linear layer on tav, rather then concatenation
-        # combination of the three
-        tav = torch.cat([ta, tv] , dim = -1)
-        del ta
-        del tv
-        return tav
+                # Query the same, Key and Value are the other modality
+                Ffusion1, _ = layer1(
+                    Ffusion1, audio, audio
+                )
+                # first fusion we modify the query at every step
+                Ffusion2, _ = layer2(
+                    audio, Ffusion2, Ffusion2
+                )
+
+                Ffusion3, _ = layer3(
+                    video, Ffusion3, Ffusion3
+                )
+                # second fusion we modify the key,value at every step
+
+            triple = torch.cat(
+                [
+                    Ffusion1.mean(dim=1), Ffusion2.mean(dim=1), Ffusion3.mean(dim=1)
+                ], 
+            dim=-1)
+            del Ffusion1
+            del Ffusion2
+            del Ffusion3
+            return triple # Now it has only 2 dimensions
+        
 
     def forward(
         self,
@@ -206,30 +226,8 @@ class TAVForMAE(nn.Module):
             video_features  = self.video_encoder_layers[i](video_features)
 
         # Model Head
-        if self.fusion == "sota":
-            
-            for i in range(self.num_layers):
-                Ffusion1 = text_features
-                Ffusion2 = text_features
-                aud_text_layer = self.aud_text_layers[i]
-                vid_text_layer = self.vid_text_layers[i]
-                fusion_layer = self.fusion_layers[i]
-                # Q, K , V inputs
-                # Fuse audio/video to the textual dimension
-                Ffusion1, _ = aud_text_layer(
-                    Ffusion1, audio_features, Ffusion1
-                )
-                Ffusion2, _ = vid_text_layer(
-                    Ffusion2, video_features, Ffusion2
-                )
-                # run a linear layer over audio_text, video_text and text to become the new text features
-                text_features = fusion_layer(torch.cat([Ffusion1, Ffusion2 , text_features], dim=-1))
-            # Concatenate the text features interlaced with audio and video context, with the audio and video features
-            del Ffusion1
-            del Ffusion2
-            tav = torch.cat([text_features, audio_features, video_features], dim=-1).mean(dim=1)  
-            
-        elif self.fusion == "d_c":
+                    
+        if self.fusion == "d_c":
             tav = torch.cat([text_features, audio_features], dim=-1).mean(dim=1)  
         elif self.fusion == "d_c_av":
             tav = torch.cat([video_features, audio_features], dim=-1).mean(dim=1)  
@@ -238,11 +236,11 @@ class TAVForMAE(nn.Module):
         elif self.fusion == "t_c":
             tav = torch.cat([text_features, audio_features, video_features], dim=-1).mean(dim=1)  
         elif self.fusion == "dp_tv":
-            tav = self.dual_peppe(text_features , video_features, self.aud_text_layers , self.vid_text_layers)
+            tav = self.dual_peppe(text_features , video_features, self.layers1 , self.layers2)
         elif self.fusion == "dp_av":
-            tav = self.dual_peppe(audio_features , video_features, self.aud_text_layers , self.vid_text_layers)
+            tav = self.dual_peppe(audio_features , video_features, self.layers1 , self.layers2)
         elif self.fusion == "dp_ta":
-            tav = self.dual_peppe(text_features , audio_features, self.aud_text_layers , self.vid_text_layers)
+            tav = self.dual_peppe(text_features , audio_features, self.layers1 , self.layers2)
         elif self.fusion == "t_p":
             tav = self.triple_peppe(text_features , audio_features, video_features)
         
@@ -262,3 +260,10 @@ class TAVForMAE(nn.Module):
 
         return tav  
     # python3 ../tav_nn.py --fusion t_p --dataset ../../data/iemo --label_task emotion --sampler Both_NoAccum
+
+
+
+"""
+    So get the outputs of the text attended wiht audio, and text attended with video. 
+    combine and concatenate and that becomes our new "text" which we then supply back to audio/video
+"""

@@ -44,7 +44,7 @@ parameters:
     distribution: int_uniform
   fusion:
     distribution: categorical
-    values: ["d_c", "d_c_av", "d_v_tv"]
+    values: ["t_p"]
   sampler:
     values: ['Both','Both_NoAccum','Iterative','Weighted','Iter_Accum']
   early_stop:
