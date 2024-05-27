@@ -4,6 +4,9 @@ import sys
 sys.path.insert(0, "/".join(os.getcwd().split("/")[:-2]))
 __package__ = "TripleModels"
 
+os.environ['TRANSFORMERS_CACHE'] = '/l/users/zeerak.talat/TAV_Train/.cache'
+os.environ['HF_HOME'] = '/l/users/zeerak.talat/TAV_Train/.cache'
+
 from transformers import logging
 
 logging.set_verbosity_error()
