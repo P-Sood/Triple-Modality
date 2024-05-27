@@ -57,3 +57,6 @@ TripleModels/run_zeerak*/*
 
 VoiceBite/*
 *.pt
+TripleModels/run_slurm/*
+TripleModels/outputs/*
+emoberta/erc
