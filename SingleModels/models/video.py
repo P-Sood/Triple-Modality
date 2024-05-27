@@ -62,13 +62,19 @@ class VideoClassification(nn.Module):
         self.linear1 = nn.Linear(1024, self.output_dim)
 
     def forward(self, video_embeds, video_mask, video_context, check="train"):
-        vid_outputs = self.videomae(video_embeds, bool_masked_pos = video_mask)[0]
+        if check == "train":
+            vid_outputs = self.videomae(video_embeds, bool_masked_pos = video_mask)[0]
+        else:
+            vid_outputs = self.videomae(video_embeds)[0]
         vid_outputs = vid_outputs[:, 0] 
         # take the first token now it has 2 dimensions
         del video_embeds
 
         if self.must:
-            vid_context = self.videomae(video_context, bool_masked_pos = video_mask)[0]
+            if check == "train":
+                vid_outputs = self.videomae(video_embeds, bool_masked_pos = video_mask)[0]
+            else:
+                vid_outputs = self.videomae(video_embeds)[0]
             vid_context = vid_context[:, 0] 
             del video_context
             vid_outputs = (vid_outputs * self.p + vid_context * (1 - self.p)) / 2

@@ -249,10 +249,10 @@ class TAVForMAE_HDF5(nn.Module):
             self.f.create_dataset(f"{check}/{video_path[0].split('/')[-1][:-4]}_{timings[0]}/audio", data=aud_outputs.cpu().detach().numpy())
             aud_outputs = aud_outputs.mean(dim=1)
 
-        vid_outputs = self.videomae.videomae(video_embeds, bool_masked_pos = video_mask)[0]  
+        vid_outputs = self.videomae.videomae(video_embeds)[0]  
         del video_embeds
         if self.must:
-            vid_context = self.videomae.videomae(context_video, bool_masked_pos = video_mask)[0]
+            vid_context = self.videomae.videomae(context_video)[0]
             del context_video
             del video_mask
             self.f.create_dataset(f"{check}/{video_path[0][0].split('/')[-1][:-4]}_{timings[0][0]}/video_context", data=vid_context.cpu().detach().numpy())
