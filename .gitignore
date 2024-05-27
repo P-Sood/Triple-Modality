@@ -49,3 +49,11 @@ download
 results/*
 CMU-MultimodalSDK/*
 emoberta/*
+.locks/*
+TripleModels/run_iemo/*
+TripleModels/run_urfunny/*
+TripleModels/run_must/*
+TripleModels/run_zeerak*/*
+
+VoiceBite/*
+*.pt
