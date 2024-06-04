@@ -1,4 +1,4 @@
-from transformers import AutoModel , RobertaForSequenceClassification
+from transformers import AutoModel , RobertaModel
 import torch.nn as nn
 import torch
 import numpy as np
@@ -34,7 +34,7 @@ class BertClassifier(nn.Module):
         self.must = True if "must" in str(self.dataset).lower() or "urfunny" in str(self.dataset).lower() else False
         self.p = 0.75
         
-        self.bert = AutoModel.from_pretrained("roberta-large")
+        self.bert = RobertaModel.from_pretrained("roberta-large")
 
         self.dropout = nn.Dropout(self.dropout)
 
