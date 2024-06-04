@@ -60,3 +60,4 @@ VoiceBite/*
 TripleModels/run_slurm/*
 TripleModels/outputs/*
 emoberta/erc
+TripleModels/outputs/mustfusion.txt
