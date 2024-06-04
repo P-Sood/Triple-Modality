@@ -4,10 +4,25 @@ import warnings
 from torch import nn
 from transformers import logging
 from torch.nn.utils.rnn import pad_sequence
+import ast
 
 logging.set_verbosity_error()
 warnings.filterwarnings("ignore")
 import pdb
+
+def create_time_mask(duration, frame_time=20):
+    """
+    take duration in seconds and computes mask
+    """
+    if duration is None:
+        return torch.zeros(1500).bool() 
+    # Calculate the number of frames
+    num_frames = int(duration*1000 / frame_time)
+
+    # Create a mask with False values up to num_frames and True values after
+    mask = torch.arange(0, 1500) >= num_frames # whisper sequence length is 1500
+
+    return mask
 
 def collate_batch(batch , must):
     text = []
@@ -16,6 +31,8 @@ def collate_batch(batch , must):
     video = []
     video_context = []
     labels = []
+    audio_mask_context = []
+    audio_mask = []
 
     for input, label in batch:
         itf = input["text_features"]
@@ -24,9 +41,18 @@ def collate_batch(batch , must):
         text.append(itf.squeeze()  if len(itf.shape) > 2 else itf)
         audio.append(atf.squeeze() if len(atf.shape) > 2 else atf)
         video.append(vtf.squeeze() if len(vtf.shape) > 2 else vtf)
+        
         if must:
+            t = input["timings"][1]
+            audio_mask.append(create_time_mask(None if t is None else t[1] - t[0]))
+            t_c = input["timings"][0]
+            audio_mask_context.append(create_time_mask(None if t_c is None  else t_c[1] - t_c[0]))
             audio_context.append(input["audio_context"].squeeze())
             video_context.append(input["video_context"].squeeze())
+        else:
+            t = ast.literal_eval(input["timings"])
+            audio_mask.append(create_time_mask(t[1] - t[0]))
+
         labels.append(label)
     try:
         text = pad_sequence(text  , batch_first=True).squeeze(dim=1)
@@ -42,6 +68,8 @@ def collate_batch(batch , must):
         "audio_context": torch.stack(audio_context, dim=0).squeeze(dim=1) if must else torch.Tensor([]),
         "video_features": video,
         "video_context": torch.stack(video_context, dim=0).squeeze(dim=1) if must else torch.Tensor([]),
+        "audio_mask": torch.stack(audio_mask, dim=0).squeeze(dim=1),
+        "audio_context_mask": torch.stack(audio_mask_context, dim=0).squeeze(dim=1) if must else torch.Tensor([]),
     }, torch.Tensor(np.array(labels)).long()
     
 
@@ -101,8 +129,6 @@ class TAVForMAE(nn.Module):
             ]
         )
         
-        
-            
             
         if self.fusion == "sota":
             self.fusion_layers = nn.ModuleList(
@@ -137,7 +163,7 @@ class TAVForMAE(nn.Module):
         self.linear2 = nn.Linear(self.hidden_size, self.output_dim)
         self.relu = nn.ReLU()
     
-    def dual_peppe(self, feature1 , feature2, fusion_layer1 , fusion_layer2):
+    def dual_peppe(self, feature1 , feature2, fusion_layer1 , fusion_layer2, feature1_mask = None , feature2_mask = None):
             Ffusion1 = feature1 # text
             Ffusion2 = feature1 # text
             for i in range(self.num_layers):
@@ -145,11 +171,11 @@ class TAVForMAE(nn.Module):
                 layer2 = fusion_layer2[i]
                 # Query the same, Key and Value are the other modality
                 Ffusion1, _ = layer1(
-                    Ffusion1, feature2, feature2
+                    Ffusion1, feature2, feature2, key_padding_mask = feature2_mask if feature2_mask is not None else None
                 )
                 # first fusion we modify the query at every step
                 Ffusion2, _ = layer2(
-                    feature2, Ffusion2, Ffusion2
+                    feature2, Ffusion2, Ffusion2, key_padding_mask = feature1_mask if feature1_mask is not None else None
                 )
                 # second fusion we modify the key,value at every step
 
@@ -160,7 +186,7 @@ class TAVForMAE(nn.Module):
             del Ffusion2
             return dual # Now it has only 2 dimensions
 
-    def triple_peppe(self, text , audio, video):
+    def triple_peppe(self, text , audio, video, text_mask = None, audio_mask = None, video_mask = None):
             Ffusion1 = text # text
             Ffusion2 = text # text
             Ffusion3 = text # text
@@ -174,15 +200,15 @@ class TAVForMAE(nn.Module):
 
                 # Query the same, Key and Value are the other modality
                 Ffusion1, _ = layer1(
-                    Ffusion1, audio, audio
+                    Ffusion1, audio, audio, key_padding_mask = audio_mask if audio_mask is not None else None
                 )
                 # first fusion we modify the query at every step
                 Ffusion2, _ = layer2(
-                    audio, Ffusion2, Ffusion2
+                    audio, Ffusion2, Ffusion2, key_padding_mask = text_mask if text_mask is not None else None
                 )
 
                 Ffusion3, _ = layer3(
-                    video, Ffusion3, Ffusion3
+                    Ffusion3, video, video, key_padding_mask = video_mask if video_mask is not None else None
                 )
                 # second fusion we modify the key,value at every step
 
@@ -204,12 +230,18 @@ class TAVForMAE(nn.Module):
         audio_context: torch.Tensor,
         video_features: torch.Tensor,
         video_context: torch.Tensor,
+        audio_mask : torch.Tensor = None,
+        audio_context_mask : torch.Tensor = None,
+        video_mask : torch.Tensor = None,
+        video_context_mask : torch.Tensor = None,
         check="train",
     ):
         # Transformer Time
         if self.must:
+
             audio_features = (audio_features * self.p + audio_context * (1 - self.p)) / 2
             del audio_context
+            audio_mask = audio_mask | audio_context_mask
             video_features = (video_features * self.p + video_context * (1 - self.p)) / 2
             del video_context
         
@@ -239,7 +271,7 @@ class TAVForMAE(nn.Module):
         elif self.fusion == "dp_av":
             tav = self.dual_peppe(audio_features , video_features, self.layers1 , self.layers2)
         elif self.fusion == "dp_ta":
-            tav = self.dual_peppe(text_features , audio_features, self.layers1 , self.layers2)
+            tav = self.dual_peppe(text_features , audio_features, self.layers1 , self.layers2, feature1_mask=None, feature2_mask=audio_mask)
         elif self.fusion == "t_p":
             tav = self.triple_peppe(text_features , audio_features, video_features)
         
