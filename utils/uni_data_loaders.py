@@ -4,16 +4,12 @@ warnings.filterwarnings("ignore")
 import numpy as np
 import torch
 from torch.utils.data import Dataset
-from transformers import BertTokenizer, AutoTokenizer
+from transformers import RobertaTokenizer, AutoTokenizer
 import h5py
 import random
-from torchvision.transforms import (
-    Compose,
-    RandomHorizontalFlip,
-    RandomVerticalFlip,
-)
+from utils.global_functions import ComposeMultiInput , RandomHorizontalFlipImageBbox , RandomVerticalFlipImageBbox
 import pdb
-
+import ast
 # ------------------------------------------------------------TRIPLE MODELS BELOW--------------------------------------------------------------------
 class TextAudioVideoDataset(Dataset):
     """
@@ -39,7 +35,7 @@ class TextAudioVideoDataset(Dataset):
         self.video_path = df[feature_col2].values
 
         max_len = 512# max([len(text.split()) for text in df[feature_col]]) + 2 # For CLS and SEP tokens
-        tokenizer = AutoTokenizer.from_pretrained("roberta-large")
+        tokenizer = RobertaTokenizer.from_pretrained("roberta-large")
         self.texts = [
             tokenizer(
                 text,
@@ -51,6 +47,7 @@ class TextAudioVideoDataset(Dataset):
             for text in df[feature_col3]
         ]
         
+        self.bbox = df['bbox'].values.tolist()
         try:
             df['audio_timings'] = df['audio_timings'].replace({np.nan:None})
             self.timings = df['audio_timings'].values.tolist()
@@ -72,6 +69,7 @@ class TextAudioVideoDataset(Dataset):
         else:
             dataset = "must" if "must" in dataset.lower() else "urfunny"
             self.timings = df["timings"].values.reshape(-1, 2).tolist()
+            self.bbox = df["bbox"].values.reshape(-1, 2).tolist()
             self.audio_timings = df["audio_timings"].values.reshape(-1, 2).tolist() if dataset == "urfunny" else self.timings
             self.audio_path = df[feature_col1].values.reshape(-1, 2).tolist()
             self.video_path = df[feature_col2].values.reshape(-1, 2).tolist()
@@ -136,7 +134,7 @@ class TextAudioVideoDataset(Dataset):
                 self.audio_path[idx], self.audio_timings[idx], self.check
             ),
             self.Data.videoMAE_features(
-                self.video_path[idx], self.timings[idx], self.check
+                self.video_path[idx], self.bbox[idx], self.timings[idx], self.check
             ),
         ], np.array(self.labels[idx])
         
@@ -163,7 +161,7 @@ class VideoDataset(Dataset):
         check="test",
     ):
         self.video_path = df[feature_col].values
-
+        self.bbox = df['bbox'].values.tolist()
         try:
             df['timings'] = df['timings'].replace({np.nan:None})
             self.timings = df['timings'].values.tolist()
@@ -181,6 +179,7 @@ class VideoDataset(Dataset):
         else:
             dataset = "must" if "must" in dataset.lower() else "urfunny"
             self.timings = df["timings"].values.reshape(-1, 2).tolist()
+            self.bbox = df['bbox'].values.reshape(-1, 2).tolist()
             self.video_path = df[feature_col].values.reshape(-1, 2).tolist()
             df = df[df["context"] == False]
         
@@ -219,7 +218,7 @@ class VideoDataset(Dataset):
 
     def __getitem__(self, idx):
         return self.Data.videoMAE_features(
-            self.video_path[idx], self.timings[idx], self.check
+            self.video_path[idx], self.bbox[idx], self.timings[idx], self.check
         ), np.array(self.labels[idx])
 class WhisperDataset(Dataset):
     def __init__(
@@ -306,7 +305,7 @@ class BertDataset(Dataset):
         
         
         max_len = 512# max([len(text.split()) for text in df[feature_col]]) + 2 # For CLS and SEP tokens
-        tokenizer = AutoTokenizer.from_pretrained("roberta-large")
+        tokenizer = RobertaTokenizer.from_pretrained("roberta-large")
         self.texts = [
             tokenizer(
                 text,
@@ -409,9 +408,11 @@ class Data:
                 else None
             )
         self.must = False
+        self.urfunny = False
 
         if video is not None:
             self.must = True if "must" in video or "urfunny" in video else False
+            self.urfunny = True if "urfunny" in video else False
             self.iemo = True if "iemo" in video else False
             self.tiktok = True if "tiktok" in video else False
 
@@ -440,18 +441,20 @@ class Data:
     def ret0(self, signal, SNR , path) -> int:
         return 0
 
-    def videoMAE_features(self, path, timings, check):
+    def videoMAE_features(self, path, bbox, timings, check):
         if check == "train":
-            transform = Compose(
+            # Usage:
+            transform = ComposeMultiInput(
                 [
-                    RandomHorizontalFlip(p=0.5),  #
-                    RandomVerticalFlip(p=0.5),  #
+                    RandomHorizontalFlipImageBbox(p=0.5),  #
+                    RandomVerticalFlipImageBbox(p=0.5),  #
                 ]
             )
+
         else:
-            transform = Compose(
+            transform = ComposeMultiInput(
                 [
-                    RandomHorizontalFlip(p=0),
+                    RandomHorizontalFlipImageBbox(p=0),  #
                 ]
             )
 
@@ -467,9 +470,8 @@ class Data:
                 except:
                     video = torch.Tensor(self.VIDEOS[f"val_{path.split('/')[-1][:-4]}_{timings}"][()])  # H5PY, how to remove data after loading it into memory
        
-            
-            video = transform(video)
-            return path , video, timings
+            video, bbox = transform(video, ast.literal_eval(bbox))
+            return path , [video, bbox], timings
         else:
             #TODO: Check which path is to which place. Make sure context and targets are right pathing
             video_context = torch.Tensor(
@@ -478,10 +480,13 @@ class Data:
             video_target = torch.Tensor(
                 self.VIDEOS[f"{check}_{path[1].split('/')[-1][:-4]}_{timings[1]}"][()]
             )  # H5PY, how to remove data after loading it into memory
-            video_context = transform(video_context)
-            video_target = transform(video_target)
-
-            return path , video_target, video_context, timings
+            if not self.urfunny:
+                video_context, bbox_context = transform(video_context, ast.literal_eval(str(bbox[0])))
+                video_target, bbox_target = transform(video_target, ast.literal_eval(str(bbox[1])) )
+            else:
+                video_context, bbox_context = transform(video_context, bbox[0])
+                video_target, bbox_target = transform(video_target, bbox[1])
+            return path , [video_target, bbox_target], [video_context, bbox_context], timings
 
     def speech_file_to_array_fn(self, path, timings, check="train"):
         func_ = [self.ret0, self.get_white_noise]

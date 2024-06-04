@@ -59,7 +59,7 @@ class TextAudioVideoDataset(Dataset):
             self.video_path = df[feature_col2].values.reshape(-1, 2).tolist()
             df = df[df["context"] == False]
 
-        fh = f"{data_path}{dataset}.{early_stop}.final.seq_len.features.hdf5"
+        fh = f"{data_path}{dataset}.{early_stop}.total.seq_len.features.hdf5"
 
         self.Data = Data(file=fh)
         self.check = check
@@ -111,6 +111,7 @@ class TextAudioVideoDataset(Dataset):
             "audio_context": audio_context,
             "video_features": video,
             "video_context": video_context,
+            "timings" : timings,
         }, torch.tensor(np.array(self.labels[idx])).long()
 
 

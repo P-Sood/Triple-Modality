@@ -25,7 +25,7 @@ from torch.utils.data.sampler import Sampler
 from torch import nn
 import random
 from transformers import set_seed as transformers_set_seed
-
+import pdb
 class MySampler(Sampler):
     def __init__(self, weights, num_samples, replacement=True, epoch=0, epoch_switch=2):
         if (
@@ -511,3 +511,72 @@ def set_seed(seed_value):
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False
     transformers_set_seed(seed_value)
+
+
+class RandomHorizontalFlipImageBbox:
+    def __init__(self, p=0.5):
+        self.p = p
+
+    def __call__(self, vid, bbox):
+        if random.random() < self.p:
+            flipped_vid = []
+            for img in vid:
+                flipped_img = F.hflip(img)
+                flipped_vid.append(flipped_img)
+                image_width = 224
+                flipped_bbox = []
+                for box in bbox:
+                    flipped_box = []
+                    if isinstance(box,  list):
+                        for b in box:
+                            x1, y1, x2, y2 = b[0], b[1], b[2], b[3]
+                            flipped_box.append([image_width - x2, y1, image_width - x1, y2])
+                    else:
+                        if box == []:
+                            flipped_box = []
+                        else:
+                            print("WHY" , box , flush = True)
+                    
+                    flipped_bbox.append(flipped_box)
+
+            return torch.stack(flipped_vid), flipped_bbox
+        else:
+            return vid, bbox
+
+class RandomVerticalFlipImageBbox:
+    def __init__(self, p=0.5):
+        self.p = p
+
+    def __call__(self, vid, bbox):
+        if random.random() < self.p:
+            flipped_vid = []
+            for img in vid:
+                flipped_img = F.vflip(img)
+                flipped_vid.append(flipped_img)
+                image_height = 224
+                flipped_bbox = []
+                for box in bbox:
+                    flipped_box = []
+                    if isinstance(box,  list):
+                        for b in box:
+                            x1, y1, x2, y2 = b[0], b[1], b[2], b[3]
+                            flipped_box.append([x1, image_height - y2, x2, image_height - y1])
+                    else:
+                        if box == []:
+                            flipped_box = []
+                        else:
+                            print("WHY" , box , flush = True)
+                    
+                    flipped_bbox.append(flipped_box)
+            return torch.stack(flipped_vid), flipped_bbox
+        else:
+            return vid, bbox
+class ComposeMultiInput:
+    def __init__(self, transforms):
+        self.transforms = transforms
+
+    def __call__(self, img, bbox):
+        for t in self.transforms:
+            img, bbox = t(img, bbox)
+        return img, bbox
+

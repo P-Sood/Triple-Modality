@@ -16,13 +16,16 @@ def collate_batch(batch, must):  # batch is a pseudo pandas array of two columns
     speech_list_context = []
     label_list = []
     speech_list_context_input_values = torch.empty((1))
+    timings_list = []
     context_timings_list = []
     #
     for input, label in batch:
         if not must:
             speech_list.append(FEAT(input[1] , sampling_rate=16000).input_features[0])
+            timings_list.append(input[-1]) 
         else:
             
+            timings_list.append(input[-1][1]) # The 1 is always target 
             context_timings_list.append(input[-1][0]) # The 0 is always context
             speech_list.append(FEAT(input[1], sampling_rate=16000).input_features[0])
             speech_list_context.append(FEAT(input[2], sampling_rate=16000).input_features[0])
@@ -34,6 +37,7 @@ def collate_batch(batch, must):  # batch is a pseudo pandas array of two columns
 
     audio_features = {
         "audio_features": torch.Tensor(np.array(speech_list)),
+        "timings_list": timings_list,  
         "context_audio": speech_list_context_input_values,
         "context_timings_list": context_timings_list,
     }
@@ -64,14 +68,14 @@ class WhisperForEmotionClassification(nn.Module):
         self.dropout = nn.Dropout(self.dropout)
         self.linear1 = nn.Linear(1024, self.output_dim)
 
-    def forward(self, audio_features, context_audio , context_timings_list, check):
-        aud_outputs = self.whisper.encoder(audio_features)[0][:,:512,:]
+    def forward(self, audio_features, context_audio, timings_list , context_timings_list, check):
+        aud_outputs = self.whisper.encoder(audio_features)[0]
         aud_outputs = aud_outputs.mean(dim=1)
         del audio_features
         if self.must:
             aud_context = self.whisper.encoder(context_audio)[0]
             del context_audio
-            # new_aud_context = torch.zeros_like(aud_context[:,:512,:]) # Cut it to be this, now assign it
+            # new_aud_context = torch.zeros_like(aud_context) # Cut it to be this, now assign it
             # for i , row in enumerate(aud_context):
             #     if context_timings_list[i] == None:
             #         new_aud_context[i] = row[:512] # If less then 10.24 seconds then take first 10.24 seconds

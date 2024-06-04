@@ -55,6 +55,8 @@ def collate_batch(batch, must):  # batch is a pseudo pandas array of two columns
         text_mask.append(text["attention_mask"].tolist()[0])
         audio_path = input[1]
         vid_features = input[2]  # [6:] for debug
+        vid_bbox = []
+        vid_context_bbox = []
         
         if not must:
             path , speech_array , aud_timings = audio_path
@@ -63,7 +65,9 @@ def collate_batch(batch, must):  # batch is a pseudo pandas array of two columns
             target_timings.append(vid_timings)
             
             speech_list.append(FEAT(speech_array , sampling_rate=16000).input_features[0])
-            video_list.append(video)
+            video_list.append(video[0])
+            vid_bbox.append(video[1])
+            
         else:
             aud_path , speech_array_target, speech_array_context , aud_timings = audio_path 
             vid_path , video_target, video_context, vid_timings = vid_features
@@ -73,8 +77,12 @@ def collate_batch(batch, must):  # batch is a pseudo pandas array of two columns
             
             speech_list.append(FEAT(speech_array_target , sampling_rate=16000).input_features[0])
             speech_list_context.append(FEAT(speech_array_context , sampling_rate=16000).input_features[0])
-            video_list.append(video_target)
-            video_list_context.append(video_context)
+            
+            video_list.append(video_target[0])
+            vid_bbox.append(video_target[1])
+            video_list_context.append(video_context[0])
+            vid_context_bbox.append(video_context[1])
+
             del speech_array_target
             del speech_array_context
             del video_target
@@ -144,11 +152,11 @@ class TAVForMAE_HDF5(nn.Module):
             dataset_name = "must"
             self.must = True
             path = [
-            f"Must_Text_Final_4_Steps/ownygcfg/cosmic-sweep-48/best.pt",
+            f"Triple-Modality-SingleModels/None/olive-flower-49/best.pt",
             
-            f"Must_Whisper_Final_4_Steps/y6jjeyyg/dulcet-sweep-7/best.pt",
+            f"Must_Whisper_1500/xcwmnly0/eager-sweep-3/best.pt",
             
-            f"Must_Video_Final_4_Steps/kt7q6lf9/earnest-sweep-16/best.pt",
+            f"Must_Video_1568/luqfajb5/young-sweep-8/best.pt",
             ]
         else:
             dataset_name = "UrFunny"
@@ -163,7 +171,7 @@ class TAVForMAE_HDF5(nn.Module):
             
         print(path , flush = True)
             
-        self.f = h5py.File(f"../../data/{dataset_name.lower()}.{self.early_stop}.final.seq_len.features.hdf5", "a", libver="latest", swmr=True)
+        self.f = h5py.File(f"../../data/{dataset_name.lower()}.{self.early_stop}.total.seq_len.features.hdf5", "a", libver="latest", swmr=True)
         try:
             self.f.swmr_mode = True
         except:
@@ -235,10 +243,10 @@ class TAVForMAE_HDF5(nn.Module):
             delete = 3
             self.f.create_dataset(f"{check}/{video_path[0].split('/')[-1][:-4]}_{timings[0]}/text", data=last_hidden_text_state.cpu().detach().numpy())
         
-        aud_outputs = self.whisper.whisper.encoder(audio_features)[0][:,:512,:]
+        aud_outputs = self.whisper.whisper.encoder(audio_features)[0]
         del audio_features
         if self.must:
-            aud_context = self.whisper.whisper.encoder(context_audio)[0][:,:512,:]
+            aud_context = self.whisper.whisper.encoder(context_audio)[0]
             del context_audio
                 
             self.f.create_dataset(f"{check}/{video_path[0][0].split('/')[-1][:-4]}_{timings[0][0]}/audio_context", data=aud_context.cpu().detach().numpy())
